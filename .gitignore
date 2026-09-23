@@ -1,0 +1,15 @@
+# Godot 4
+.godot/
+export.cfg
+export_presets.cfg
+*.translation
+
+# BMad personal configuration
+_bmad/config.user.toml
+_bmad/custom/config.user.toml
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
