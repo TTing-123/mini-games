@@ -8,6 +8,7 @@ extends Node2D
 @onready var aim_line: Line2D = $AimLine
 @onready var hud: CanvasLayer = $HUD
 @onready var camera: Camera2D = $Camera2D
+@onready var endless_level: Node2D = $EndlessLevel
 
 enum State { AIMING, RESOLVING, GAME_OVER }
 
@@ -23,6 +24,8 @@ var active_balls: Array = []
 var state := State.AIMING
 var current_level: Node2D
 var level_cleared := false
+var endless_mode := false
+var endless_level_number := 0
 
 
 func _ready() -> void:
@@ -51,6 +54,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _prepare_level(index: int) -> void:
 	level_index = index
+	endless_mode = false
+	endless_level.visible = false
+	endless_level.process_mode = Node.PROCESS_MODE_DISABLED
 	for level in levels.get_children():
 		level.visible = false
 		level.process_mode = Node.PROCESS_MODE_DISABLED
@@ -158,10 +164,46 @@ func _on_target_destroyed(_target: Area2D) -> void:
 
 
 func _advance_level() -> void:
-	if level_index + 1 >= levels.get_child_count():
-		_finish_round(true)
+	if endless_mode:
+		_start_endless_level()
+	elif level_index + 1 >= levels.get_child_count():
+		_start_endless_level()
 	else:
 		_prepare_level(level_index + 1)
+
+
+func _start_endless_level() -> void:
+	endless_mode = true
+	endless_level_number += 1
+	for level in levels.get_children():
+		level.visible = false
+		level.process_mode = Node.PROCESS_MODE_DISABLED
+	endless_level.visible = true
+	endless_level.process_mode = Node.PROCESS_MODE_INHERIT
+	current_level = endless_level
+
+	for ball in active_balls:
+		ball.queue_free()
+	active_balls.clear()
+	level_cleared = false
+
+	var data: Dictionary = endless_level.generate(endless_level_number)
+	var generated_targets: Array = data["targets"]
+	targets_total = generated_targets.size()
+	targets_remaining = targets_total
+	for target in generated_targets:
+		target.destroyed.connect(_on_target_destroyed)
+	for splitter in data["splitters"]:
+		splitter.split_requested.connect(_on_split_requested)
+	for charger in data["chargers"]:
+		charger.charge_granted.connect(_on_charge_granted)
+
+	shots_max = 4 + mini(2, int((endless_level_number - 1) / 3.0))
+	shots_left = shots_max
+	state = State.AIMING
+	hud.set_targets(targets_remaining, targets_total)
+	hud.set_shots(shots_left, shots_max)
+	hud.play_transition()
 
 
 func _shake_camera(strength: float) -> void:

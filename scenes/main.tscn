@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/ball.tscn" id="2_ball"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/splitter.tscn" id="6_splitter"]
 [ext_resource type="PackedScene" path="res://scenes/charger.tscn" id="7_charger"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="8_hud"]
+[ext_resource type="Script" path="res://scripts/endless_generator.gd" id="9_endless"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_walls"]
 friction = 0.0
@@ -182,6 +183,16 @@ position = Vector2(950, 500)
 
 [node name="ChargerA" parent="Levels/Level4/Chargers" instance=ExtResource("7_charger")]
 position = Vector2(640, 500)
+[node name="EndlessLevel" type="Node2D" parent="."]
+visible = false
+script = ExtResource("9_endless")
+target_scene = ExtResource("3_target")
+bumper_scene = ExtResource("4_bumper")
+gravity_scene = ExtResource("5_gravity")
+splitter_scene = ExtResource("6_splitter")
+charger_scene = ExtResource("7_charger")
+
+[node name="Layout" type="Node2D" parent="EndlessLevel"]
 [node name="BallLayer" type="Node2D" parent="."]
 
 [node name="SpawnPoint" type="Marker2D" parent="."]

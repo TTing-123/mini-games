@@ -100,6 +100,21 @@ func _run() -> void:
 	_require(main.shots_left == shots_before_charge + 1, "charger adds one shot")
 	_require(main.shots_max == max_before_charge + 1, "charger expands shot maximum")
 
+	var endless: Node2D = main.get_node("EndlessLevel")
+	var low_data: Dictionary = endless.generate(1)
+	var high_data: Dictionary = endless.generate(5)
+	_require(high_data["targets"].size() > low_data["targets"].size(), "endless difficulty increases target count")
+
+	main._start_endless_level()
+	await process_frame
+	_require(main.endless_mode and endless.visible, "fourth level completion enters endless mode")
+	_require(main.targets_remaining >= 3, "endless level generates targets")
+	var first_endless_targets: int = main.targets_remaining
+	main._start_endless_level()
+	await process_frame
+	_require(main.endless_level_number == 2, "endless level number advances")
+	_require(main.targets_remaining >= first_endless_targets, "endless target count does not regress")
+
 	main._finish_round(true)
 	_require(hud.result_overlay.visible, "win result overlay is visible")
 
