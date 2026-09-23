@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/ball.tscn" id="2_ball"]
@@ -6,7 +6,8 @@
 [ext_resource type="PackedScene" path="res://scenes/bumper.tscn" id="4_bumper"]
 [ext_resource type="PackedScene" path="res://scenes/gravity_well.tscn" id="5_gravity"]
 [ext_resource type="PackedScene" path="res://scenes/splitter.tscn" id="6_splitter"]
-[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="7_hud"]
+[ext_resource type="PackedScene" path="res://scenes/charger.tscn" id="7_charger"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="8_hud"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_walls"]
 friction = 0.0
@@ -141,6 +142,46 @@ position = Vector2(330, 520)
 [node name="SplitterB" parent="Levels/Level3/Splitters" instance=ExtResource("6_splitter")]
 position = Vector2(950, 520)
 
+[node name="Level4" type="Node2D" parent="Levels"]
+visible = false
+
+[node name="Targets" type="Node2D" parent="Levels/Level4"]
+
+[node name="TargetA" parent="Levels/Level4/Targets" instance=ExtResource("3_target")]
+position = Vector2(300, 180)
+
+[node name="TargetB" parent="Levels/Level4/Targets" instance=ExtResource("3_target")]
+position = Vector2(980, 180)
+
+[node name="TargetC" parent="Levels/Level4/Targets" instance=ExtResource("3_target")]
+position = Vector2(640, 400)
+
+[node name="Bumpers" type="Node2D" parent="Levels/Level4"]
+
+[node name="BumperA" parent="Levels/Level4/Bumpers" instance=ExtResource("4_bumper")]
+position = Vector2(460, 300)
+
+[node name="BumperB" parent="Levels/Level4/Bumpers" instance=ExtResource("4_bumper")]
+position = Vector2(820, 300)
+
+[node name="BumperC" parent="Levels/Level4/Bumpers" instance=ExtResource("4_bumper")]
+position = Vector2(640, 560)
+
+[node name="GravityWell" parent="Levels/Level4" instance=ExtResource("5_gravity")]
+position = Vector2(640, 300)
+
+[node name="Splitters" type="Node2D" parent="Levels/Level4"]
+
+[node name="SplitterA" parent="Levels/Level4/Splitters" instance=ExtResource("6_splitter")]
+position = Vector2(330, 500)
+
+[node name="SplitterB" parent="Levels/Level4/Splitters" instance=ExtResource("6_splitter")]
+position = Vector2(950, 500)
+
+[node name="Chargers" type="Node2D" parent="Levels/Level4"]
+
+[node name="ChargerA" parent="Levels/Level4/Chargers" instance=ExtResource("7_charger")]
+position = Vector2(640, 500)
 [node name="BallLayer" type="Node2D" parent="."]
 
 [node name="SpawnPoint" type="Marker2D" parent="."]
@@ -154,4 +195,4 @@ default_color = Color(0.45, 0.9, 1, 0.75)
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(640, 360)
 
-[node name="HUD" parent="." instance=ExtResource("7_hud")]
+[node name="HUD" parent="." instance=ExtResource("8_hud")]

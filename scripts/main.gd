@@ -11,11 +11,12 @@ extends Node2D
 
 enum State { AIMING, RESOLVING, GAME_OVER }
 
-const SHOTS_PER_LEVEL := [3, 4, 4]
+const SHOTS_PER_LEVEL := [3, 4, 4, 4]
 const LAUNCH_SPEED := 980.0
 
 var level_index := 0
 var shots_left := 0
+var shots_max := 0
 var targets_remaining := 0
 var targets_total := 0
 var active_balls: Array = []
@@ -74,10 +75,16 @@ func _prepare_level(index: int) -> void:
 			splitter.reset_state()
 			splitter.split_requested.connect(_on_split_requested)
 
+	if current_level.has_node("Chargers"):
+		for charger in current_level.get_node("Chargers").get_children():
+			charger.reset_state()
+			charger.charge_granted.connect(_on_charge_granted)
+
 	shots_left = SHOTS_PER_LEVEL[index]
+	shots_max = shots_left
 	state = State.AIMING
 	hud.set_targets(targets_remaining, targets_total)
-	hud.set_shots(shots_left, SHOTS_PER_LEVEL[index])
+	hud.set_shots(shots_left, shots_max)
 	hud.play_transition()
 
 
@@ -91,7 +98,7 @@ func _launch_ball() -> void:
 	shots_left -= 1
 	state = State.RESOLVING
 	aim_line.visible = false
-	hud.set_shots(shots_left, SHOTS_PER_LEVEL[level_index])
+	hud.set_shots(shots_left, shots_max)
 
 
 func _spawn_ball(position: Vector2, velocity: Vector2, can_split: bool) -> void:
@@ -131,6 +138,13 @@ func _on_ball_finished(ball: RigidBody2D) -> void:
 		_finish_round(false)
 	else:
 		state = State.AIMING
+
+
+func _on_charge_granted(_charger: Area2D) -> void:
+	shots_left += 1
+	shots_max += 1
+	hud.set_shots(shots_left, shots_max)
+	hud.play_charge()
 
 
 func _on_target_destroyed(_target: Area2D) -> void:

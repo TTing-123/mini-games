@@ -21,7 +21,16 @@ func set_shots(current: int, maximum: int) -> void:
 
 
 func play_transition() -> void:
+	_flash_overlay(Color(0.2, 0.9, 1.0, 0.32))
+
+
+func play_charge() -> void:
+	_flash_overlay(Color(0.3, 1.0, 0.5, 0.38))
+
+
+func _flash_overlay(color: Color) -> void:
 	transition_overlay.visible = true
+	transition_overlay.color = color
 	transition_overlay.modulate = Color.WHITE
 	var tween := create_tween()
 	tween.tween_property(transition_overlay, "modulate:a", 0.0, 0.35)

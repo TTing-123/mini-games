@@ -1,0 +1,30 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/charger.gd" id="1_charger"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_charger"]
+radius = 28.0
+
+[node name="Charger" type="Area2D"]
+collision_layer = 32
+collision_mask = 1
+script = ExtResource("1_charger")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_charger")
+
+[node name="Glow" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-40, 0, -37, 15, -28, 28, -15, 37, 0, 40, 15, 37, 28, 28, 37, 15, 40, 0, 37, -15, 28, -28, 15, -37, 0, -40, -15, -37, -28, -28, -37, -15)
+color = Color(0.25, 1, 0.45, 0.16)
+
+[node name="Core" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-24, 0, -22, 9, -17, 17, -9, 22, 0, 24, 9, 22, 17, 17, 22, 9, 24, 0, 22, -9, 17, -17, 9, -22, 0, -24, -9, -22, -17, -17, -22, -9)
+color = Color(0.3, 1, 0.5, 0.92)
+
+[node name="Vertical" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-4, -14, 4, -14, 4, 14, -4, 14)
+color = Color(0.02, 0.1, 0.05, 0.95)
+
+[node name="Horizontal" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-14, -4, 14, -4, 14, 4, -14, 4)
+color = Color(0.02, 0.1, 0.05, 0.95)

@@ -46,7 +46,7 @@ func _run() -> void:
 	var level2: Node2D = levels.get_node("Level2")
 	var level3: Node2D = levels.get_node("Level3")
 
-	_require(levels.get_child_count() == 3, "three static levels exist")
+	_require(levels.get_child_count() == 4, "four static levels exist")
 	_require(level1.visible and not level2.visible and not level3.visible, "level one starts visible")
 	_require(level1.get_node("Targets").get_child_count() == 2, "level one target layout")
 	_require(level1.get_node("Bumpers").get_child_count() == 3, "level one bumper layout")
@@ -55,6 +55,8 @@ func _run() -> void:
 	var pull: Vector2 = gravity.get_pull_force_at(gravity.global_position + Vector2(120, 0))
 	_require(pull.x < -400.0, "gravity pull is strong enough to bend the trajectory")
 	_require(level3.has_node("Splitters") and level3.get_node("Splitters").get_child_count() == 2, "level three introduces splitters")
+	var level4: Node2D = levels.get_node("Level4")
+	_require(level4.has_node("Chargers") and level4.get_node("Chargers").get_child_count() == 1, "level four introduces charger")
 	_require(main.shots_left == 3 and main.targets_remaining == 2, "initial counters are correct")
 	_require(aim.visible, "aim line visible during planning")
 
@@ -85,6 +87,18 @@ func _run() -> void:
 	await process_frame
 	_require(main.active_balls.size() == before + 3, "splitter creates two additional balls")
 	_require(not split_ball.can_split, "split source cannot split again")
+
+	main._prepare_level(3)
+	await process_frame
+	var charger: Area2D = level4.get_node("Chargers").get_child(0)
+	main._spawn_ball(Vector2(640, 500), Vector2.ZERO, false)
+	var charge_ball: RigidBody2D = main.active_balls[main.active_balls.size() - 1]
+	var shots_before_charge: int = main.shots_left
+	var max_before_charge: int = main.shots_max
+	charger._on_body_entered(charge_ball)
+	await process_frame
+	_require(main.shots_left == shots_before_charge + 1, "charger adds one shot")
+	_require(main.shots_max == max_before_charge + 1, "charger expands shot maximum")
 
 	main._finish_round(true)
 	_require(hud.result_overlay.visible, "win result overlay is visible")
