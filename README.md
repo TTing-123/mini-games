@@ -39,7 +39,7 @@ $godot = if ($env:GODOT_BIN) { $env:GODOT_BIN } else { "D:\Godot_v4.7.2-stable_w
 
 - 红核：目标
 - 蓝块：高弹力反弹
-- 紫块：产生中心引力
+- 紫块：产生明显中心引力，并在吸附弹球时显示牵引线
 - 黄块：分裂一次
 - 白球：玩家弹球
 

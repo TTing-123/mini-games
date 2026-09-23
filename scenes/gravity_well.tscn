@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/gravity_well.gd" id="1_gravity"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_gravity"]
-radius = 190.0
+radius = 240.0
 
 [node name="GravityWell" type="Area2D"]
 collision_layer = 8
@@ -16,8 +16,14 @@ shape = SubResource("CircleShape2D_gravity")
 
 [node name="Glow" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(-190, 0, -184, 46, -165, 91, -134, 134, -91, 165, -46, 184, 0, 190, 46, 184, 91, 165, 134, 134, 165, 91, 184, 46, 190, 0, 184, -46, 165, -91, 134, -134, 91, -165, 46, -184, 0, -190, -46, -184, -91, -165, -134, -134, -165, -91, -184, -46)
-color = Color(0.55, 0.25, 0.95, 0.06)
+color = Color(0.55, 0.25, 0.95, 0.12)
 
 [node name="Core" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-24, 0, -22, 9, -17, 17, -9, 22, 0, 24, 9, 22, 17, 17, 22, 9, 24, 0, 22, -9, 17, -17, 9, -22, 0, -24, -9, -22, -17, -17, -22, -9)
-color = Color(0.7, 0.35, 1, 0.85)
+polygon = PackedVector2Array(-30, 0, -28, 11, -22, 22, -11, 28, 0, 30, 11, 28, 22, 22, 28, 11, 30, 0, 28, -11, 22, -22, 11, -28, 0, -30, -11, -28, -22, -22, -28, -11)
+color = Color(0.7, 0.35, 1, 0.9)
+
+[node name="Tether" type="Line2D" parent="."]
+top_level = true
+visible = false
+width = 2.5
+default_color = Color(0.72, 0.38, 1, 0.62)
