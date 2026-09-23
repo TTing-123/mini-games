@@ -1,4 +1,6 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/bumper.gd" id="1_bumper"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_bumper"]
 friction = 0.0
@@ -7,13 +9,24 @@ bounce = 1.0
 [sub_resource type="CircleShape2D" id="CircleShape2D_bumper"]
 radius = 26.0
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_hit"]
+radius = 31.0
+
 [node name="Bumper" type="StaticBody2D"]
 physics_material_override = SubResource("PhysicsMaterial_bumper")
 collision_layer = 2
 collision_mask = 0
+script = ExtResource("1_bumper")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_bumper")
+
+[node name="HitArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="HitShape" type="CollisionShape2D" parent="HitArea"]
+shape = SubResource("CircleShape2D_hit")
 
 [node name="Glow" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(-34, 0, -31, 13, -24, 24, -13, 31, 0, 34, 13, 31, 24, 24, 31, 13, 34, 0, 31, -13, 24, -24, 13, -31, 0, -34, -13, -31, -24, -24, -31, -13)

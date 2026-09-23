@@ -1,11 +1,12 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/ball.tscn" id="2_ball"]
 [ext_resource type="PackedScene" path="res://scenes/target.tscn" id="3_target"]
 [ext_resource type="PackedScene" path="res://scenes/bumper.tscn" id="4_bumper"]
 [ext_resource type="PackedScene" path="res://scenes/gravity_well.tscn" id="5_gravity"]
-[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="6_hud"]
+[ext_resource type="PackedScene" path="res://scenes/splitter.tscn" id="6_splitter"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="7_hud"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_walls"]
 friction = 0.0
@@ -53,33 +54,92 @@ points = PackedVector2Array(20, 20, 1260, 20, 1260, 700, 20, 700, 20, 20)
 width = 4.0
 default_color = Color(0.22, 0.42, 0.65, 0.7)
 
-[node name="Targets" type="Node2D" parent="."]
+[node name="Levels" type="Node2D" parent="."]
 
-[node name="TargetA" parent="Targets" instance=ExtResource("3_target")]
-position = Vector2(640, 160)
+[node name="Level1" type="Node2D" parent="Levels"]
 
-[node name="TargetB" parent="Targets" instance=ExtResource("3_target")]
-position = Vector2(270, 420)
+[node name="Targets" type="Node2D" parent="Levels/Level1"]
 
-[node name="TargetC" parent="Targets" instance=ExtResource("3_target")]
-position = Vector2(1010, 420)
+[node name="TargetA" parent="Levels/Level1/Targets" instance=ExtResource("3_target")]
+position = Vector2(420, 180)
 
-[node name="Bumpers" type="Node2D" parent="."]
+[node name="TargetB" parent="Levels/Level1/Targets" instance=ExtResource("3_target")]
+position = Vector2(860, 180)
 
-[node name="BumperA" parent="Bumpers" instance=ExtResource("4_bumper")]
-position = Vector2(430, 270)
+[node name="Bumpers" type="Node2D" parent="Levels/Level1"]
 
-[node name="BumperB" parent="Bumpers" instance=ExtResource("4_bumper")]
-position = Vector2(850, 270)
+[node name="BumperA" parent="Levels/Level1/Bumpers" instance=ExtResource("4_bumper")]
+position = Vector2(640, 300)
 
-[node name="BumperC" parent="Bumpers" instance=ExtResource("4_bumper")]
-position = Vector2(430, 520)
+[node name="BumperB" parent="Levels/Level1/Bumpers" instance=ExtResource("4_bumper")]
+position = Vector2(360, 500)
 
-[node name="BumperD" parent="Bumpers" instance=ExtResource("4_bumper")]
-position = Vector2(850, 520)
+[node name="BumperC" parent="Levels/Level1/Bumpers" instance=ExtResource("4_bumper")]
+position = Vector2(920, 500)
 
-[node name="GravityWell" parent="." instance=ExtResource("5_gravity")]
-position = Vector2(640, 350)
+[node name="Level2" type="Node2D" parent="Levels"]
+visible = false
+
+[node name="Targets" type="Node2D" parent="Levels/Level2"]
+
+[node name="TargetA" parent="Levels/Level2/Targets" instance=ExtResource("3_target")]
+position = Vector2(260, 180)
+
+[node name="TargetB" parent="Levels/Level2/Targets" instance=ExtResource("3_target")]
+position = Vector2(1020, 180)
+
+[node name="TargetC" parent="Levels/Level2/Targets" instance=ExtResource("3_target")]
+position = Vector2(640, 430)
+
+[node name="Bumpers" type="Node2D" parent="Levels/Level2"]
+
+[node name="BumperA" parent="Levels/Level2/Bumpers" instance=ExtResource("4_bumper")]
+position = Vector2(460, 300)
+
+[node name="BumperB" parent="Levels/Level2/Bumpers" instance=ExtResource("4_bumper")]
+position = Vector2(820, 300)
+
+[node name="BumperC" parent="Levels/Level2/Bumpers" instance=ExtResource("4_bumper")]
+position = Vector2(640, 560)
+
+[node name="GravityWell" parent="Levels/Level2" instance=ExtResource("5_gravity")]
+position = Vector2(640, 320)
+
+[node name="Level3" type="Node2D" parent="Levels"]
+visible = false
+
+[node name="Targets" type="Node2D" parent="Levels/Level3"]
+
+[node name="TargetA" parent="Levels/Level3/Targets" instance=ExtResource("3_target")]
+position = Vector2(260, 160)
+
+[node name="TargetB" parent="Levels/Level3/Targets" instance=ExtResource("3_target")]
+position = Vector2(1020, 160)
+
+[node name="TargetC" parent="Levels/Level3/Targets" instance=ExtResource("3_target")]
+position = Vector2(640, 150)
+
+[node name="Bumpers" type="Node2D" parent="Levels/Level3"]
+
+[node name="BumperA" parent="Levels/Level3/Bumpers" instance=ExtResource("4_bumper")]
+position = Vector2(400, 300)
+
+[node name="BumperB" parent="Levels/Level3/Bumpers" instance=ExtResource("4_bumper")]
+position = Vector2(880, 300)
+
+[node name="BumperC" parent="Levels/Level3/Bumpers" instance=ExtResource("4_bumper")]
+position = Vector2(640, 520)
+
+[node name="GravityWell" parent="Levels/Level3" instance=ExtResource("5_gravity")]
+position = Vector2(640, 370)
+
+[node name="Splitters" type="Node2D" parent="Levels/Level3"]
+
+[node name="SplitterA" parent="Levels/Level3/Splitters" instance=ExtResource("6_splitter")]
+position = Vector2(330, 520)
+
+[node name="SplitterB" parent="Levels/Level3/Splitters" instance=ExtResource("6_splitter")]
+position = Vector2(950, 520)
 
 [node name="BallLayer" type="Node2D" parent="."]
 
@@ -91,4 +151,7 @@ points = PackedVector2Array(640, 620, 640, 400)
 width = 3.0
 default_color = Color(0.45, 0.9, 1, 0.75)
 
-[node name="HUD" parent="." instance=ExtResource("6_hud")]
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="HUD" parent="." instance=ExtResource("7_hud")]

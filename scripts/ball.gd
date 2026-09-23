@@ -11,6 +11,7 @@ signal finished(ball: RigidBody2D)
 var elapsed := 0.0
 var settled_for := 0.0
 var finished_emitted := false
+var can_split := true
 
 
 func launch(initial_velocity: Vector2) -> void:
@@ -21,17 +22,14 @@ func launch(initial_velocity: Vector2) -> void:
 func _physics_process(delta: float) -> void:
 	if finished_emitted:
 		return
-
 	elapsed += delta
 	trail.add_point(global_position)
-	if trail.get_point_count() > 100:
+	if trail.get_point_count() > 110:
 		trail.remove_point(0)
-
 	if linear_velocity.length() < min_speed:
 		settled_for += delta
 	else:
 		settled_for = 0.0
-
 	if elapsed >= max_lifetime or settled_for >= settle_time:
 		finished_emitted = true
 		emit_signal("finished", self)

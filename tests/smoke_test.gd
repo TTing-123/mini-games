@@ -39,41 +39,51 @@ func _run() -> void:
 		_finish_test()
 		return
 
-	var targets: Node2D = main.get_node("Targets")
-	var bumpers: Node2D = main.get_node("Bumpers")
-	var walls: StaticBody2D = main.get_node("Walls")
-	var gravity: Area2D = main.get_node("GravityWell")
-	var spawn: Marker2D = main.get_node("SpawnPoint")
-	var aim: Line2D = main.get_node("AimLine")
+	var levels: Node2D = main.get_node("Levels")
 	var hud: CanvasLayer = main.get_node("HUD")
+	var aim: Line2D = main.get_node("AimLine")
+	var level1: Node2D = levels.get_node("Level1")
+	var level2: Node2D = levels.get_node("Level2")
+	var level3: Node2D = levels.get_node("Level3")
 
-	_require(targets.get_child_count() == 3, "three static targets exist")
-	_require(bumpers.get_child_count() == 4, "four static bumpers exist")
-	_require(walls.get_child_count() >= 5, "static walls and border exist")
-	_require(gravity != null and spawn != null and aim != null and hud != null, "static board entities exist")
-	_require(main.shots_left == 3 and main.targets_remaining == 3, "initial counters are correct")
+	_require(levels.get_child_count() == 3, "three static levels exist")
+	_require(level1.visible and not level2.visible and not level3.visible, "level one starts visible")
+	_require(level1.get_node("Targets").get_child_count() == 2, "level one target layout")
+	_require(level1.get_node("Bumpers").get_child_count() == 3, "level one bumper layout")
+	_require(level2.has_node("GravityWell"), "level two introduces gravity")
+	_require(level3.has_node("Splitters") and level3.get_node("Splitters").get_child_count() == 2, "level three introduces splitters")
+	_require(main.shots_left == 3 and main.targets_remaining == 2, "initial counters are correct")
+	_require(aim.visible, "aim line visible during planning")
 
 	main._launch_ball()
-	_require(main.active_ball != null, "launch creates active ball")
+	_require(main.active_balls.size() == 1, "launch creates active ball")
 	_require(main.shots_left == 2, "launch consumes one shot")
-
-	var ball: Node = main.active_ball
+	var ball: Node = main.active_balls[0]
 	ball.force_finish()
 	await process_frame
-	_require(main.active_ball == null, "finished ball is released")
-	_require(main.state == main.State.AIMING, "next aim state restored")
+	_require(main.active_balls.is_empty(), "finished ball is released")
 
-	var target_list: Array = []
-	for child in targets.get_children():
-		target_list.append(child)
-	target_list[0].destroy_target()
+	var level1_targets: Node2D = level1.get_node("Targets")
+	for target in level1_targets.get_children():
+		target.destroy_target()
 	await process_frame
-	_require(main.targets_remaining == 2, "target destruction updates remaining count")
+	await process_frame
+	_require(main.level_index == 1, "clearing level one advances to level two")
+	_require(level2.visible and not level1.visible, "level two becomes visible")
+	_require(main.shots_left == 4 and main.targets_remaining == 3, "level two counters reset")
 
-	target_list[1].destroy_target()
-	target_list[2].destroy_target()
+	main._prepare_level(2)
 	await process_frame
-	_require(main.targets_remaining == 0, "all targets can be destroyed")
+	var splitter: Area2D = level3.get_node("Splitters").get_child(0)
+	var before: int = main.active_balls.size()
+	main._spawn_ball(Vector2(400, 500), Vector2(400, -200), true)
+	var split_ball: RigidBody2D = main.active_balls[main.active_balls.size() - 1]
+	splitter._on_body_entered(split_ball)
+	await process_frame
+	_require(main.active_balls.size() == before + 3, "splitter creates two additional balls")
+	_require(not split_ball.can_split, "split source cannot split again")
+
+	main._finish_round(true)
 	_require(hud.result_overlay.visible, "win result overlay is visible")
 
 	main.queue_free()

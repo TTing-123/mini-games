@@ -13,6 +13,10 @@ script = ExtResource("1_target")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_target")
 
+[node name="Burst" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-46, 0, -42, 18, -32, 32, -18, 42, 0, 46, 18, 42, 32, 32, 42, 18, 46, 0, 42, -18, 32, -32, 18, -42, 0, -46, -18, -42, -32, -32, -42, -18)
+color = Color(1, 0.45, 0.2, 0.32)
+
 [node name="Glow" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(-36, 0, -33, 14, -25, 25, -14, 33, 0, 36, 14, 33, 25, 25, 33, 14, 36, 0, 33, -14, 25, -25, 14, -33, 0, -36, -14, -33, -25, -25, -33, -14)
 color = Color(1, 0.2, 0.18, 0.18)
