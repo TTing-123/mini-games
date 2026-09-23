@@ -1,0 +1,23 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/gravity_well.gd" id="1_gravity"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_gravity"]
+radius = 190.0
+
+[node name="GravityWell" type="Area2D"]
+collision_layer = 8
+collision_mask = 1
+monitoring = true
+script = ExtResource("1_gravity")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_gravity")
+
+[node name="Glow" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-190, 0, -184, 46, -165, 91, -134, 134, -91, 165, -46, 184, 0, 190, 46, 184, 91, 165, 134, 134, 165, 91, 184, 46, 190, 0, 184, -46, 165, -91, 134, -134, 91, -165, 46, -184, 0, -190, -46, -184, -91, -165, -134, -134, -165, -91, -184, -46)
+color = Color(0.55, 0.25, 0.95, 0.06)
+
+[node name="Core" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-24, 0, -22, 9, -17, 17, -9, 22, 0, 24, 9, 22, 17, 17, 22, 9, 24, 0, 22, -9, 17, -17, 9, -22, 0, -24, -9, -22, -17, -17, -22, -9)
+color = Color(0.7, 0.35, 1, 0.85)
