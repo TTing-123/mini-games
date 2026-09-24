@@ -1,12 +1,38 @@
 extends CanvasLayer
 
+signal level_selected(level_id: int)
+
 @onready var target_fill: ColorRect = $Root/TargetBack/TargetFill
 @onready var shot_fill: ColorRect = $Root/ShotBack/ShotFill
 @onready var result_overlay: ColorRect = $Root/ResultOverlay
 @onready var transition_overlay: ColorRect = $Root/TransitionOverlay
+@onready var level_toggle: Button = $Root/LevelSelectToggle
+@onready var level_panel: HBoxContainer = $Root/LevelSelectPanel
 
 const TARGET_WIDTH := 240.0
 const SHOT_WIDTH := 240.0
+
+
+func _ready() -> void:
+	if not OS.is_debug_build():
+		level_toggle.visible = false
+		level_panel.visible = false
+		return
+	level_toggle.pressed.connect(_on_level_toggle_pressed)
+	$Root/LevelSelectPanel/Level1Button.pressed.connect(_select_level.bind(0))
+	$Root/LevelSelectPanel/Level2Button.pressed.connect(_select_level.bind(1))
+	$Root/LevelSelectPanel/Level3Button.pressed.connect(_select_level.bind(2))
+	$Root/LevelSelectPanel/Level4Button.pressed.connect(_select_level.bind(3))
+	$Root/LevelSelectPanel/EndlessButton.pressed.connect(_select_level.bind(4))
+
+
+func _on_level_toggle_pressed() -> void:
+	level_panel.visible = not level_panel.visible
+
+
+func _select_level(level_id: int) -> void:
+	level_panel.visible = false
+	emit_signal("level_selected", level_id)
 
 
 func set_targets(current: int, maximum: int) -> void:

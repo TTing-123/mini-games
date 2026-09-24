@@ -115,6 +115,18 @@ func _run() -> void:
 	_require(main.endless_level_number == 2, "endless level number advances")
 	_require(main.targets_remaining >= first_endless_targets, "endless target count does not regress")
 
+	var toggle: Button = hud.get_node("Root/LevelSelectToggle")
+	var panel: HBoxContainer = hud.get_node("Root/LevelSelectPanel")
+	_require(toggle.visible, "debug level select is visible in editor build")
+	toggle.pressed.emit()
+	_require(panel.visible, "level select panel toggles")
+	main._on_level_selected(2)
+	await process_frame
+	_require(main.level_index == 2 and level3.visible, "level select jumps to third handmade level")
+	main._jump_to_endless(3)
+	await process_frame
+	_require(main.endless_mode and main.endless_level_number == 3, "level select jumps to endless level three")
+
 	main._finish_round(true)
 	_require(hud.result_overlay.visible, "win result overlay is visible")
 

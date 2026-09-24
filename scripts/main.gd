@@ -30,6 +30,7 @@ var endless_level_number := 0
 
 func _ready() -> void:
 	camera.make_current()
+	hud.level_selected.connect(_on_level_selected)
 	_prepare_level(0)
 
 
@@ -48,8 +49,23 @@ func _process(_delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		_launch_ball()
-	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_R and state == State.GAME_OVER:
-		get_tree().reload_current_scene()
+		return
+	if not (event is InputEventKey) or not event.pressed or event.echo:
+		return
+	match event.keycode:
+		KEY_R:
+			if state == State.GAME_OVER:
+				get_tree().reload_current_scene()
+		KEY_1:
+			_on_level_selected(0)
+		KEY_2:
+			_on_level_selected(1)
+		KEY_3:
+			_on_level_selected(2)
+		KEY_4:
+			_on_level_selected(3)
+		KEY_0:
+			_jump_to_endless(1)
 
 
 func _prepare_level(index: int) -> void:
@@ -74,17 +90,20 @@ func _prepare_level(index: int) -> void:
 	targets_total = target_container.get_child_count()
 	targets_remaining = targets_total
 	for target in target_container.get_children():
-		target.destroyed.connect(_on_target_destroyed)
+		if not target.destroyed.is_connected(_on_target_destroyed):
+			target.destroyed.connect(_on_target_destroyed)
 
 	if current_level.has_node("Splitters"):
 		for splitter in current_level.get_node("Splitters").get_children():
 			splitter.reset_state()
-			splitter.split_requested.connect(_on_split_requested)
+			if not splitter.split_requested.is_connected(_on_split_requested):
+				splitter.split_requested.connect(_on_split_requested)
 
 	if current_level.has_node("Chargers"):
 		for charger in current_level.get_node("Chargers").get_children():
 			charger.reset_state()
-			charger.charge_granted.connect(_on_charge_granted)
+			if not charger.charge_granted.is_connected(_on_charge_granted):
+				charger.charge_granted.connect(_on_charge_granted)
 
 	shots_left = SHOTS_PER_LEVEL[index]
 	shots_max = shots_left
@@ -172,6 +191,18 @@ func _advance_level() -> void:
 		_prepare_level(level_index + 1)
 
 
+func _on_level_selected(level_id: int) -> void:
+	if level_id < levels.get_child_count():
+		_prepare_level(level_id)
+	else:
+		_jump_to_endless(1)
+
+
+func _jump_to_endless(level_number: int) -> void:
+	endless_level_number = maxi(level_number - 1, 0)
+	_start_endless_level()
+
+
 func _start_endless_level() -> void:
 	endless_mode = true
 	endless_level_number += 1
@@ -192,11 +223,14 @@ func _start_endless_level() -> void:
 	targets_total = generated_targets.size()
 	targets_remaining = targets_total
 	for target in generated_targets:
-		target.destroyed.connect(_on_target_destroyed)
+		if not target.destroyed.is_connected(_on_target_destroyed):
+			target.destroyed.connect(_on_target_destroyed)
 	for splitter in data["splitters"]:
-		splitter.split_requested.connect(_on_split_requested)
+		if not splitter.split_requested.is_connected(_on_split_requested):
+			splitter.split_requested.connect(_on_split_requested)
 	for charger in data["chargers"]:
-		charger.charge_granted.connect(_on_charge_granted)
+		if not charger.charge_granted.is_connected(_on_charge_granted):
+			charger.charge_granted.connect(_on_charge_granted)
 
 	shots_max = 4 + mini(2, int((endless_level_number - 1) / 3.0))
 	shots_left = shots_max
