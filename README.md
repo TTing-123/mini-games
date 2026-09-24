@@ -44,6 +44,16 @@ mini-games/
 
 ## 加一个新游戏
 
+**第 0 步是先确认市面上没有重复的**（完整规则见 `AGENTS.md`）：
+
+```powershell
+node tools/market-check.mjs "机制关键词"
+```
+
+一次查 Steam 商店、itch.io、GitHub 三处，再点开头部作品看它做到什么程度、自己能不能做出明显差异。确认有差异化再动手。
+
+然后：
+
 1. 新建 `<game>/`，里面放自己的 `index.html`，资源一律用相对路径
 2. 根 `index.html` 加一张卡片（照 Pulse 那张改）
 3. 根 `package.json` 的 `test` 脚本里加上它的测试
