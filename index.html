@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#05070c" />
+  <meta name="theme-color" content="#eee9de" />
   <title>PULSE — 物理连锁弹球</title>
   <link rel="stylesheet" href="./src/style.css" />
 </head>
@@ -25,10 +25,10 @@
           <div id="shot-count" class="hud-number">0</div>
         </div>
       </header>
+      <div id="level-mission" class="level-mission"></div>
       <div id="combo-toast" class="combo-toast">CHAIN +1</div>
       <nav class="toolbar" aria-label="游戏控制">
         <button id="level-select-toggle" class="tool-button" type="button">LEVELS</button>
-        <button class="tool-button" type="button" onclick="document.querySelector('#help-modal').classList.remove('is-hidden')">?</button>
         <button id="restart-button" class="tool-button" type="button">RESTART</button>
       </nav>
       <section id="level-select-panel" class="overlay-card level-select-panel is-hidden" aria-label="关卡选择">
@@ -39,29 +39,6 @@
           <button class="level-button" data-level="3" type="button"><span>03</span><small>SPLIT</small></button>
           <button class="level-button" data-level="4" type="button"><span>04</span><small>OVERDRIVE</small></button>
           <button class="level-button level-endless" data-level="5" type="button"><span>∞</span><small>ENDLESS</small></button>
-        </div>
-      </section>
-      <section id="help-modal" class="modal-layer is-hidden" aria-label="玩法说明">
-        <div class="overlay-card help-card">
-          <div class="card-kicker">MISSION BRIEF</div>
-          <h1>PULSE</h1>
-          <p class="lead">瞄准并发射弹球，利用不同颜色机关制造连锁反应。摧毁全部红核即可过关。</p>
-          <div class="help-grid">
-            <div class="help-step"><span>01</span><strong>瞄准</strong><p>移动鼠标调整发射方向。</p></div>
-            <div class="help-step"><span>02</span><strong>发射</strong><p>点击棋盘发射弹球，观察反弹与连锁。</p></div>
-            <div class="help-step"><span>03</span><strong>调整</strong><p>根据结果改变角度，或优先处理关键机关。</p></div>
-          </div>
-          <div class="legend">
-            <div class="legend-title">COLOR SYSTEM</div>
-            <div class="legend-item"><i class="legend-dot red"></i><div><strong>红核</strong><span>必须摧毁的全部目标</span></div></div>
-            <div class="legend-item"><i class="legend-dot blue"></i><div><strong>蓝块</strong><span>高弹力反弹，改变弹球路径</span></div></div>
-            <div class="legend-item"><i class="legend-dot purple"></i><div><strong>紫块</strong><span>引力场，明显弯曲弹球轨迹</span></div></div>
-            <div class="legend-item"><i class="legend-dot yellow"></i><div><strong>黄块</strong><span>弹球首次命中后分裂成两颗</span></div></div>
-            <div class="legend-item"><i class="legend-dot green"></i><div><strong>绿块</strong><span>首次命中后补充一次发射机会</span></div></div>
-          </div>
-          <p class="tip">同一发弹球摧毁两个红核，会额外奖励一次发射机会。</p>
-          <button id="help-start" class="primary-button" type="button">开始游戏</button>
-          <button id="help-close" class="ghost-button" type="button">关闭说明</button>
         </div>
       </section>
       <section id="game-over" class="modal-layer is-hidden" aria-label="结算">

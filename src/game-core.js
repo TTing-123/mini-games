@@ -205,17 +205,17 @@ export class GameCore {
   resolveWalls(ball) {
     if (ball.x - ball.radius < BORDER) {
       ball.x = BORDER + ball.radius; ball.vx = Math.abs(ball.vx) * 0.99;
-      this.queue('bounce', { x: ball.x, y: ball.y, type: 'wall' });
+      this.queue('bounce', { x: ball.x, y: ball.y, source: 'wall' });
     } else if (ball.x + ball.radius > WIDTH - BORDER) {
       ball.x = WIDTH - BORDER - ball.radius; ball.vx = -Math.abs(ball.vx) * 0.99;
-      this.queue('bounce', { x: ball.x, y: ball.y, type: 'wall' });
+      this.queue('bounce', { x: ball.x, y: ball.y, source: 'wall' });
     }
     if (ball.y - ball.radius < BORDER) {
       ball.y = BORDER + ball.radius; ball.vy = Math.abs(ball.vy) * 0.99;
-      this.queue('bounce', { x: ball.x, y: ball.y, type: 'wall' });
+      this.queue('bounce', { x: ball.x, y: ball.y, source: 'wall' });
     } else if (ball.y + ball.radius > HEIGHT - BORDER) {
       ball.y = HEIGHT - BORDER - ball.radius; ball.vy = -Math.abs(ball.vy) * 0.99;
-      this.queue('bounce', { x: ball.x, y: ball.y, type: 'wall' });
+      this.queue('bounce', { x: ball.x, y: ball.y, source: 'wall' });
     }
   }
 
@@ -232,7 +232,7 @@ export class GameCore {
       ball.y = bumper.y + ny * minimum;
       const dot = ball.vx * nx + ball.vy * ny;
       if (dot < 0) { ball.vx -= 2 * dot * nx; ball.vy -= 2 * dot * ny; }
-      this.queue('bounce', { x: ball.x, y: ball.y, type: 'bumper' });
+      this.queue('bounce', { x: ball.x, y: ball.y, source: 'bumper' });
     }
   }
 
