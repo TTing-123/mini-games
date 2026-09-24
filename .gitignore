@@ -10,6 +10,6 @@ _bmad/**/*.import
 _bmad/**/*.translation
 .pw-tmp/
 package-lock.json
-pulse/tools/audit-report.txt
-pulse/tools/.browser-check/
+**/tools/audit-report.txt
+**/tools/.browser-check/
 tools/market-report.txt
