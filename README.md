@@ -9,6 +9,7 @@
 | 游戏 | 类型 | 在线玩 |
 | --- | --- | --- |
 | Pulse | 物理连锁弹球 | <https://tting-123.github.io/mini-games/pulse/> |
+| Polarity | 极性配对解谜 | <https://tting-123.github.io/mini-games/polarity/> |
 
 每个游戏都有自己的 README、测试和开发工具，放在各自的目录里。
 
@@ -20,7 +21,7 @@
 py -m http.server 8080
 ```
 
-`http://localhost:8080` 是合集首页，`http://localhost:8080/pulse/` 直接进 Pulse。
+`http://localhost:8080` 是合集首页，`http://localhost:8080/pulse/` 和 `http://localhost:8080/polarity/` 分别直接进两个游戏。
 
 ## 测试
 
@@ -37,8 +38,10 @@ mini-games/
 ├── favicon.svg
 ├── pulse/                Pulse 游戏本体
 │   ├── index.html  src/  tests/  tools/  favicon.svg
-│   ├── README.md         玩法与操作说明
-│   └── AGENTS.md         这个游戏的开发约束
+│   └── README.md  AGENTS.md
+├── polarity/             Polarity 游戏本体
+│   ├── index.html  src/  tests/  tools/  favicon.svg
+│   └── README.md  NOTES.md（含市场调研结论）
 └── .github/workflows/pages.yml
 ```
 

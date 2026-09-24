@@ -6,7 +6,7 @@
   "description": "A collection of small browser games.",
   "scripts": {
     "dev": "py -m http.server 8080",
-    "test": "node --test pulse/tests/*.test.mjs",
+    "test": "node --test pulse/tests/*.test.mjs polarity/tests/*.test.mjs",
     "audit": "node pulse/tools/fairness-audit.mjs",
     "market": "node tools/market-check.mjs"
   }

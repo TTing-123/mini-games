@@ -23,13 +23,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run game tests
-        run: node --test pulse/tests/*.test.mjs
+        run: node --test pulse/tests/*.test.mjs polarity/tests/*.test.mjs
       - name: Stage static site
         run: |
           mkdir -p _site/pulse
           cp index.html favicon.svg _site/
           cp pulse/index.html pulse/favicon.svg _site/pulse/
           cp -R pulse/src _site/pulse/src
+          mkdir -p _site/polarity
+          cp polarity/index.html polarity/favicon.svg _site/polarity/
+          cp -R polarity/src _site/polarity/src
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

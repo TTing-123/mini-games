@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#031016" />
+  <meta name="description" content="Polarity：点一下粒子翻转极性，让所有粒子两两吸成对。" />
+  <title>POLARITY — 极性配对</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="POLARITY — 极性配对" />
+  <meta property="og:description" content="点一下粒子翻转极性，异极相吸，让所有粒子两两锁成一对。" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="game-frame" aria-label="Polarity game">
+      <canvas id="game-canvas" width="1280" height="720"></canvas>
+      <header class="hud">
+        <div class="hud-panel">
+          <div class="hud-label">FLIPS</div>
+          <div id="move-pips" class="pip-row"></div>
+          <div id="move-count" class="hud-number">0</div>
+        </div>
+        <div id="level-badge" class="level-badge">LEVEL 1</div>
+        <div class="hud-panel pairs-panel">
+          <div class="hud-label">PAIRS</div>
+          <div id="pair-count" class="hud-number">0/2</div>
+        </div>
+      </header>
+      <div id="level-hint" class="level-hint"></div>
+      <nav class="toolbar" aria-label="游戏控制">
+        <button id="level-select-toggle" class="tool-button" type="button">LEVELS</button>
+        <button id="restart-button" class="tool-button" type="button">RESTART</button>
+      </nav>
+      <section id="level-select-panel" class="overlay-card level-select-panel is-hidden" aria-label="关卡选择">
+        <div class="card-kicker">SELECT LEVEL</div>
+        <div class="level-grid">
+          <button class="level-button" data-level="0" type="button"><span>01</span><small>PAIR UP</small></button>
+          <button class="level-button" data-level="1" type="button"><span>02</span><small>REPEL</small></button>
+          <button class="level-button" data-level="2" type="button"><span>03</span><small>SIX</small></button>
+          <button class="level-button" data-level="3" type="button"><span>04</span><small>TIGHT</small></button>
+        </div>
+      </section>
+      <section id="game-over" class="modal-layer is-hidden" aria-label="结算">
+        <div class="overlay-card result-card">
+          <div class="card-kicker">RUN COMPLETE</div>
+          <h2 id="game-over-title">ALL PAIRS LOCKED</h2>
+          <p id="game-over-copy">全部粒子都配对锁定了。</p>
+          <div class="result-actions">
+            <button id="retry-button" class="primary-button" type="button">RETRY</button>
+            <button id="game-over-levels" class="ghost-button" type="button">LEVELS</button>
+          </div>
+        </div>
+      </section>
+    </section>
+    <footer class="page-footer">
+      <span>点击粒子翻转极性</span><span>异极相吸</span><span>1-4 跳关</span><span>R 重开</span>
+    </footer>
+  </main>
+  <script type="module" src="./src/game.js"></script>
+</body>
+</html>
