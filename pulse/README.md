@@ -2,29 +2,32 @@
 
 浏览器即时游玩的回合制物理连锁弹球游戏。
 
-在线游玩：<https://tting-123.github.io/pulse/>（手机建议横屏，体验更完整）
+在线游玩：<https://tting-123.github.io/mini-games/pulse/>（手机建议横屏，体验更完整）
 
 玩家瞄准并发射弹球。弹球在封闭棋盘内反弹、分裂，并受到引力影响。目标是在有限发射次数内摧毁所有红核。
 
 ## 运行
 
-无需构建工具。
+无需构建工具。在合集仓库根目录启动静态服务器：
 
 ```powershell
-cd D:\project\pulse
 py -m http.server 8080
 ```
 
-然后打开：`http://localhost:8080`
+然后打开：`http://localhost:8080/pulse/`
 
-也可以使用：`npm run dev`
+也可以进 `pulse/` 目录执行 `npm run dev`，直接打开 `http://localhost:8080/`。
 
 ## 测试
 
+在合集仓库根目录：
+
 ```powershell
-npm test
-npm run audit
+npm test          # 所有游戏的逻辑测试
+npm run audit     # 本游戏的随机关卡公平性审计
 ```
+
+也可以进 `pulse/` 目录单独跑这两个脚本。
 
 `npm test` 覆盖核心逻辑与随机关卡布局约束（不重叠、不出界、不压住发射点）。`npm run audit` 抽样检查若干层，并用贪心自动玩家给出可解性下界：能通关即证明该布局可解，失败只说明自动玩家不够好。
 
@@ -36,10 +39,10 @@ npm run audit
 py -m http.server 8080
 npm i -D playwright
 npx playwright install chromium
-node tools/browser-check.cjs
+node pulse/tools/browser-check.cjs
 ```
 
-脚本会检查桌面鼠标操作、触屏瞄准发射、HUD 布局与横竖屏适配，截图写到 `tools/.browser-check/`。
+脚本会检查桌面鼠标操作、触屏瞄准发射、HUD 布局与横竖屏适配，截图写到 `pulse/tools/.browser-check/`。
 若只装了完整 chromium（没有 headless shell），用 `PULSE_CHROME` 指向 `chrome.exe`；检查线上版本用 `PULSE_URL`。
 
 ## 操作

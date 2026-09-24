@@ -1,13 +1,13 @@
 // 浏览器实测：桌面鼠标 + 手机触屏的端到端检查。
 // 依赖：npm i -D playwright && npx playwright install chromium
-// 用法：node tools/browser-check.cjs            （默认检查本地 http://127.0.0.1:8080）
+// 用法：node pulse/tools/browser-check.cjs      （默认检查本地 http://127.0.0.1:8080/pulse/index.html）
 //       PULSE_URL=https://... node tools/browser-check.cjs
 //       PULSE_CHROME=/path/to/chrome node tools/browser-check.cjs   （用完整 chromium 取代 headless shell）
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
 
-const BASE = process.env.PULSE_URL || 'http://127.0.0.1:8080/index.html';
+const BASE = process.env.PULSE_URL || 'http://127.0.0.1:8080/pulse/index.html';
 const OUT = path.join(__dirname, '.browser-check');
 fs.mkdirSync(OUT, { recursive: true });
 
