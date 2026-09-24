@@ -1,19 +1,10 @@
-# Godot 4
 .godot/
-export.cfg
-export_presets.cfg
-*.translation
-
-# BMad personal configuration
-_bmad/config.user.toml
-_bmad/custom/config.user.toml
-_bmad/**/*.import
-
-# Local smoke test result
-tests/.smoke_test_result
-
-# OS / editor
+node_modules/
+dist/
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+tests/.smoke_test_result
+_bmad/**/*.import
+_bmad/**/*.translation
