@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { GameCore, generateEndlessLevel } from '../src/game-core.js';
+import { layoutIssues } from '../tools/fairness-audit.mjs';
 
 function ballAt(x, y) {
   return { x, y, vx: 0, vy: 0, radius: 12, ttl: 6, canSplit: true, trail: [] };
@@ -70,4 +71,30 @@ test('endless mode can start at a selected deep level', () => {
   assert.equal(game.state.levelIndex, 20);
   assert.ok(game.state.targetsTotal >= 3);
   assert.ok(game.state.shotsMax >= 4);
+});
+test('endless layouts never overlap or leave the board', () => {
+  for (let level = 1; level <= 99; level += 1) {
+    for (const seed of [11, 4242, 987654]) {
+      const layout = generateEndlessLevel(level, seed);
+      assert.deepEqual(layoutIssues(layout), [], `level ${level} seed ${seed}`);
+    }
+  }
+});
+
+test('endless entity counts stay capped', () => {
+  const deep = generateEndlessLevel(99, 5);
+  assert.ok(deep.targets.length <= 7);
+  assert.ok(deep.bumpers.length <= 7);
+  assert.ok(deep.gravity.length <= 2);
+  assert.ok(deep.splitters.length <= 2);
+  assert.ok(deep.chargers.length <= 1);
+});
+
+test('endless gravity grows with depth then plateaus', () => {
+  const early = generateEndlessLevel(5, 5).gravity[0].strength;
+  const mid = generateEndlessLevel(30, 5).gravity[0].strength;
+  const deep = generateEndlessLevel(99, 5).gravity[0].strength;
+  assert.equal(early, 2600);
+  assert.ok(mid > early);
+  assert.equal(deep, mid);
 });

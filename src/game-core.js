@@ -46,19 +46,32 @@ export function createRng(seed = Date.now()) {
   };
 }
 
-function pickPosition(random, minX, maxX, minY, maxY, placed, minDistance) {
-  for (let attempt = 0; attempt < 180; attempt += 1) {
+// ?????????????????????????????????????????????
+const SPACING = { targets: 118, bumpers: 92, gravity: 300, splitters: 132, chargers: 132 };
+const CROSS_SPACING = 74;
+const LAUNCH_CLEARANCE = 200;
+
+function spacingBetween(kind, otherKind) {
+  if (kind === otherKind) return SPACING[kind] ?? CROSS_SPACING;
+  if (kind === 'gravity' || otherKind === 'gravity') return 96;
+  return CROSS_SPACING;
+}
+
+function pickPosition(random, kind, minX, maxX, minY, maxY, placed) {
+  let best = null;
+  let bestGap = -Infinity;
+  for (let attempt = 0; attempt < 240; attempt += 1) {
     const x = minX + random() * (maxX - minX);
     const y = minY + random() * (maxY - minY);
-    if (Math.hypot(x - 640, y - 620) < 180) continue;
-    if (placed.every((point) => Math.hypot(x - point.x, y - point.y) >= minDistance)) {
-      placed.push({ x, y });
-      return { x, y };
+    let gap = Math.hypot(x - 640, y - 620) - LAUNCH_CLEARANCE;
+    for (const point of placed) {
+      gap = Math.min(gap, Math.hypot(x - point.x, y - point.y) - spacingBetween(kind, point.kind));
     }
+    if (gap >= 0) { placed.push({ x, y, kind }); return { x, y }; }
+    if (gap > bestGap) { bestGap = gap; best = { x, y }; }
   }
-  const fallback = { x: minX + random() * (maxX - minX), y: minY + random() * (maxY - minY) };
-  placed.push(fallback);
-  return fallback;
+  placed.push({ ...best, kind });
+  return best;
 }
 
 export function generateEndlessLevel(levelNumber, seed = Date.now()) {
@@ -69,15 +82,17 @@ export function generateEndlessLevel(levelNumber, seed = Date.now()) {
   const gravityCount = levelNumber >= 2 ? Math.min(1 + Math.floor((levelNumber - 2) / 4), 2) : 0;
   const splitterCount = levelNumber >= 3 ? Math.min(1 + Math.floor((levelNumber - 3) / 4), 2) : 0;
   const chargerCount = levelNumber >= 4 ? 1 : 0;
-  const targets = Array.from({ length: targetCount }, () => pickPosition(random, 100, 1180, 110, 420, placed, 125));
-  const bumpers = Array.from({ length: bumperCount }, () => pickPosition(random, 100, 1180, 180, 600, placed, 100));
+  const gravityStrength = 2600 + Math.min(1200, Math.max(0, levelNumber - 8) * 90);
+  // ?????????????????????????
   const gravity = Array.from({ length: gravityCount }, () => ({
-    ...pickPosition(random, 220, 1060, 250, 520, placed, 210),
+    ...pickPosition(random, 'gravity', 220, 1060, 300, 540, placed),
     radius: 240,
-    strength: 2600
+    strength: gravityStrength
   }));
-  const splitters = Array.from({ length: splitterCount }, () => pickPosition(random, 120, 1160, 360, 610, placed, 145));
-  const chargers = Array.from({ length: chargerCount }, () => pickPosition(random, 160, 1120, 360, 600, placed, 145));
+  const targets = Array.from({ length: targetCount }, () => pickPosition(random, 'targets', 90, 1190, 100, 340, placed));
+  const bumpers = Array.from({ length: bumperCount }, () => pickPosition(random, 'bumpers', 100, 1180, 200, 600, placed));
+  const splitters = Array.from({ length: splitterCount }, () => pickPosition(random, 'splitters', 120, 1160, 400, 610, placed));
+  const chargers = Array.from({ length: chargerCount }, () => pickPosition(random, 'chargers', 160, 1120, 400, 600, placed));
   return { name: `ENDLESS ${levelNumber}`, targets, bumpers, gravity, splitters, chargers };
 }
 export class GameCore {
@@ -95,7 +110,9 @@ export class GameCore {
 
   loadEndlessLevel(levelNumber, seed = Date.now()) {
     const level = generateEndlessLevel(levelNumber, seed);
-    this.loadLevel(level, 'endless', levelNumber, 4 + Math.min(2, Math.floor((levelNumber - 1) / 3)));
+    // ?????????????????????????
+    const shots = 4 + Math.min(2, Math.floor((levelNumber - 1) / 3)) - (levelNumber >= 15 ? 1 : 0);
+    this.loadLevel(level, 'endless', levelNumber, shots);
     this.queue('levelLoaded', { label: level.name });
   }
 
