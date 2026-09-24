@@ -37,8 +37,26 @@ function setLevel(levelId) { if (levelId === 5) { startEndless(endlessDepthValue
 function clampDepth(value) { return Math.max(1, Math.min(99, Number(value) || 1)); }
 function setEndlessDepth(value) { endlessDepthValue = clampDepth(value); endlessDepth.value = endlessDepthValue; endlessDepthOutput.textContent = String(endlessDepthValue); try { localStorage.setItem('pulse-endless-depth', String(endlessDepthValue)); } catch (_) {} }
 function startEndless(depth) { setEndlessDepth(depth); core.loadEndlessLevel(endlessDepthValue); gameOver.classList.add('is-hidden'); levelSelectPanel.classList.add('is-hidden'); endlessSelector.classList.add('is-hidden'); updateHud(core.state); }
+// 鼠标：移动即瞄准、按下即发射。触摸：按住拖动瞄准，抬手才发射，避免手指挡住瞄准线。
+let touchAiming = false;
 canvas.addEventListener('pointermove', (event) => { const point = canvasPoint(event); pointer.x = point.x; pointer.y = point.y; });
-canvas.addEventListener('pointerdown', (event) => { if (event.button !== 0) return; const point = canvasPoint(event); pointer.x = point.x; pointer.y = point.y; launchAtPointer(); });
+canvas.addEventListener('pointerdown', (event) => {
+  if (event.button !== 0) return;
+  const point = canvasPoint(event);
+  pointer.x = point.x;
+  pointer.y = point.y;
+  if (event.pointerType === 'touch') { touchAiming = true; try { canvas.setPointerCapture(event.pointerId); } catch (_) {} return; }
+  launchAtPointer();
+});
+canvas.addEventListener('pointerup', (event) => {
+  if (!touchAiming) return;
+  touchAiming = false;
+  const point = canvasPoint(event);
+  pointer.x = point.x;
+  pointer.y = point.y;
+  launchAtPointer();
+});
+canvas.addEventListener('pointercancel', () => { touchAiming = false; });
 window.addEventListener('keydown', (event) => { if (event.key >= '1' && event.key <= '4') setLevel(Number(event.key)); if (event.key === '0') setLevel(5); if (event.key.toLowerCase() === 'r') { gameOver.classList.add('is-hidden'); core.loadStaticLevel(0); } if (event.key === 'Escape') levelSelectPanel.classList.add('is-hidden'); });
 levelSelectToggle.addEventListener('click', () => levelSelectPanel.classList.toggle('is-hidden'));
 document.querySelectorAll('[data-level]').forEach((button) => button.addEventListener('click', () => setLevel(Number(button.dataset.level))));

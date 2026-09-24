@@ -2,9 +2,15 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#031016" />
+  <meta name="description" content="Pulse：浏览器即时游玩的回合制物理连锁弹球。瞄准、反弹、分裂，用有限的发射次数摧毁所有红核。" />
   <title>PULSE — 物理连锁弹球</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="PULSE — 物理连锁弹球" />
+  <meta property="og:description" content="瞄准、反弹、分裂，用有限的发射次数摧毁所有红核。" />
+  <meta name="twitter:card" content="summary" />
   <link rel="stylesheet" href="./src/style.css" />
 </head>
 <body>
@@ -60,8 +66,11 @@
         </div>
       </section>
     </section>
+    <p class="rotate-hint">建议横屏游玩 · 手感更好</p>
     <footer class="page-footer">
-      <span>移动鼠标瞄准</span><span>左键发射</span><span>1-4 跳关</span><span>0 无尽模式</span>
+      <span class="hint-mouse">移动鼠标瞄准</span><span class="hint-mouse">左键发射</span>
+      <span class="hint-touch">拖动瞄准</span><span class="hint-touch">抬手发射</span>
+      <span>1-4 跳关</span><span>0 无尽模式</span>
     </footer>
   </main>
   <script type="module" src="./src/game.js"></script>

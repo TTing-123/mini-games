@@ -8,3 +8,6 @@ Thumbs.db
 tests/.smoke_test_result
 _bmad/**/*.import
 _bmad/**/*.translation
+.pw-tmp/
+package-lock.json
+tools/audit-report.txt
