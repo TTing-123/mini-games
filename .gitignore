@@ -11,3 +11,4 @@ _bmad/**/*.translation
 .pw-tmp/
 package-lock.json
 tools/audit-report.txt
+tools/.browser-check/

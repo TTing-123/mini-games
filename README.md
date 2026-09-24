@@ -28,6 +28,20 @@ npm run audit
 
 `npm test` 覆盖核心逻辑与随机关卡布局约束（不重叠、不出界、不压住发射点）。`npm run audit` 抽样检查若干层，并用贪心自动玩家给出可解性下界：能通关即证明该布局可解，失败只说明自动玩家不够好。
 
+### 浏览器实测（可选）
+
+需要一个运行中的本地服务器，并临时安装 Playwright：
+
+```powershell
+py -m http.server 8080
+npm i -D playwright
+npx playwright install chromium
+node tools/browser-check.cjs
+```
+
+脚本会检查桌面鼠标操作、触屏瞄准发射、HUD 布局与横竖屏适配，截图写到 `tools/.browser-check/`。
+若只装了完整 chromium（没有 headless shell），用 `PULSE_CHROME` 指向 `chrome.exe`；检查线上版本用 `PULSE_URL`。
+
 ## 操作
 
 - 移动鼠标：调整发射方向
