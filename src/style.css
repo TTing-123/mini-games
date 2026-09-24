@@ -50,3 +50,11 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opa
 .primary-button { color: #04151b; background: var(--cyan); }
 .page-footer { display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; padding-top: 12px; color: #6f99a2; font: 700 11px/1 var(--mono); letter-spacing: .06em; }
 @media (max-width: 820px) { .app-shell { width: 100vw; padding: 0; } .game-frame { border-left: 0; border-right: 0; border-radius: 0; } .hud { padding: 12px; } .hud-panel { min-width: 132px; padding: 8px 10px; } .hud-label { font-size: 9px; } .pip { width: 10px; height: 10px; } .hud-number { font-size: 17px; } .level-badge { padding: 8px 10px; font-size: 11px; } .level-mission { top: 72px; font-size: 11px; } .toolbar { right: 12px; bottom: 12px; } .tool-button { padding: 9px 10px; font-size: 10px; } .level-grid { grid-template-columns: repeat(3, 1fr); } }
+.endless-selector { margin-top: 14px; padding: 14px; border: 1px solid rgba(89,217,229,.3); border-radius: 16px; background: rgba(4,25,34,.72); }
+.endless-selector label { display: flex; justify-content: space-between; color: var(--muted); font: 800 12px/1 var(--mono); letter-spacing: .1em; }
+.endless-selector output { color: var(--cyan); font-size: 20px; text-shadow: 0 0 14px rgba(89,217,229,.45); }
+#endless-depth { width: 100%; margin: 14px 0 12px; accent-color: var(--cyan); }
+.endless-presets { display: flex; gap: 8px; flex-wrap: wrap; }
+.endless-presets button { min-width: 44px; padding: 8px 10px; color: var(--text); background: rgba(8,42,53,.9); border: 1px solid rgba(89,217,229,.36); border-radius: 999px; font: 800 12px/1 var(--mono); cursor: pointer; }
+.endless-presets button:hover { border-color: var(--cyan); background: rgba(15,59,71,.96); }
+#endless-start { margin-top: 14px; }

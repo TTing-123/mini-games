@@ -63,3 +63,11 @@ test('endless difficulty increases target count', () => {
   assert.ok(high.targets.length > low.targets.length);
   assert.ok(high.bumpers.length >= low.bumpers.length);
 });
+test('endless mode can start at a selected deep level', () => {
+  const game = new GameCore();
+  game.loadEndlessLevel(20, 77);
+  assert.equal(game.state.mode, 'endless');
+  assert.equal(game.state.levelIndex, 20);
+  assert.ok(game.state.targetsTotal >= 3);
+  assert.ok(game.state.shotsMax >= 4);
+});

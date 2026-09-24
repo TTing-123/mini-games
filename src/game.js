@@ -17,6 +17,11 @@ const gameOverCopy = document.querySelector('#game-over-copy');
 const retryButton = document.querySelector('#retry-button');
 const gameOverLevels = document.querySelector('#game-over-levels');
 const restartButton = document.querySelector('#restart-button');
+const endlessButton = document.querySelector('#endless-button');
+const endlessSelector = document.querySelector('#endless-selector');
+const endlessDepth = document.querySelector('#endless-depth');
+const endlessDepthOutput = document.querySelector('#endless-depth-output');
+const endlessStart = document.querySelector('#endless-start');
 
 const core = new GameCore();
 const pointer = { x: 640, y: 420 };
@@ -24,15 +29,23 @@ const effects = [];
 const annotations = [];
 let lastTime = performance.now();
 let hudSnapshot = '';
+let endlessDepthValue = 1;
 const MISSION_TEXT = ['目标：摧毁红核 · 蓝块会反弹', '新机关：紫块会弯曲弹球轨迹', '新机关：黄块首次命中会分裂', '新机关：绿块首次命中补充发射'];
 function canvasPoint(event) { const rect = canvas.getBoundingClientRect(); return { x: (event.clientX - rect.left) * (WIDTH / rect.width), y: (event.clientY - rect.top) * (HEIGHT / rect.height) }; }
 function launchAtPointer() { core.launch({ x: pointer.x - 640, y: pointer.y - 620 }); }
-function setLevel(levelId) { if (levelId === 5) core.loadEndlessLevel(1); else core.loadStaticLevel(levelId - 1); gameOver.classList.add('is-hidden'); levelSelectPanel.classList.add('is-hidden'); updateHud(core.state); }
+function setLevel(levelId) { if (levelId === 5) { startEndless(endlessDepthValue); return; } core.loadStaticLevel(levelId - 1); gameOver.classList.add('is-hidden'); levelSelectPanel.classList.add('is-hidden'); updateHud(core.state); }
+function clampDepth(value) { return Math.max(1, Math.min(99, Number(value) || 1)); }
+function setEndlessDepth(value) { endlessDepthValue = clampDepth(value); endlessDepth.value = endlessDepthValue; endlessDepthOutput.textContent = String(endlessDepthValue); try { localStorage.setItem('pulse-endless-depth', String(endlessDepthValue)); } catch (_) {} }
+function startEndless(depth) { setEndlessDepth(depth); core.loadEndlessLevel(endlessDepthValue); gameOver.classList.add('is-hidden'); levelSelectPanel.classList.add('is-hidden'); endlessSelector.classList.add('is-hidden'); updateHud(core.state); }
 canvas.addEventListener('pointermove', (event) => { const point = canvasPoint(event); pointer.x = point.x; pointer.y = point.y; });
 canvas.addEventListener('pointerdown', (event) => { if (event.button !== 0) return; const point = canvasPoint(event); pointer.x = point.x; pointer.y = point.y; launchAtPointer(); });
 window.addEventListener('keydown', (event) => { if (event.key >= '1' && event.key <= '4') setLevel(Number(event.key)); if (event.key === '0') setLevel(5); if (event.key.toLowerCase() === 'r') { gameOver.classList.add('is-hidden'); core.loadStaticLevel(0); } if (event.key === 'Escape') levelSelectPanel.classList.add('is-hidden'); });
 levelSelectToggle.addEventListener('click', () => levelSelectPanel.classList.toggle('is-hidden'));
 document.querySelectorAll('[data-level]').forEach((button) => button.addEventListener('click', () => setLevel(Number(button.dataset.level))));
+endlessButton.addEventListener('click', () => endlessSelector.classList.toggle('is-hidden'));
+endlessDepth.addEventListener('input', () => setEndlessDepth(endlessDepth.value));
+document.querySelectorAll('[data-depth]').forEach((button) => button.addEventListener('click', () => setEndlessDepth(Number(button.dataset.depth))));
+endlessStart.addEventListener('click', () => startEndless(endlessDepthValue));
 restartButton.addEventListener('click', () => { gameOver.classList.add('is-hidden'); core.loadStaticLevel(0); });
 retryButton.addEventListener('click', () => { gameOver.classList.add('is-hidden'); core.loadStaticLevel(0); });
 gameOverLevels.addEventListener('click', () => { gameOver.classList.add('is-hidden'); levelSelectPanel.classList.remove('is-hidden'); });
@@ -64,5 +77,11 @@ function drawBalls() { for (const ball of core.state.balls) { if (ball.trail.len
 function drawEffects() { for (const effect of effects) { const progress = 1 - effect.ttl / effect.max; const size = effect.type === 'burst' ? 16 + progress * 48 : 8 + progress * 18; ctx.save(); ctx.globalAlpha = 1 - progress; ctx.shadowColor = effect.color; ctx.shadowBlur = 15; ctx.strokeStyle = effect.color; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(effect.x, effect.y, size, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); } }
 function drawAnnotations() { for (const note of annotations) { const alpha = Math.min(1, note.ttl / 1.5); const toRight = note.x < WIDTH * .66; const anchorX = note.x + (toRight ? 30 : -30); const boxX = note.x + (toRight ? 36 : -190); const boxY = note.y - 50; ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = note.color; ctx.shadowColor = note.color; ctx.shadowBlur = 10; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(note.x, note.y); ctx.lineTo(anchorX, boxY + 24); ctx.stroke(); ctx.fillStyle = 'rgba(5,28,37,.94)'; ctx.strokeStyle = note.color; ctx.beginPath(); ctx.roundRect(boxX, boxY, 154, 34, 12); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#eaffff'; ctx.font = '800 14px "Trebuchet MS", sans-serif'; ctx.fillText(note.text, boxX + 12, boxY + 22); ctx.restore(); } }
 function render() { ctx.clearRect(0, 0, WIDTH, HEIGHT); drawBoard(); drawGravityWells(); drawBumpers(); drawTargets(); drawSplitters(); drawChargers(); drawAim(); drawBalls(); drawEffects(); drawAnnotations(); }
-function loop(now) { const dt = Math.min((now - lastTime) / 1000, .033); lastTime = now; core.update(dt); for (let i = effects.length - 1; i >= 0; i -= 1) { effects[i].ttl -= dt; if (effects[i].ttl <= 0) effects.splice(i, 1); } for (let i = annotations.length - 1; i >= 0; i -= 1) { annotations[i].ttl -= dt; if (annotations[i].ttl <= 0) annotations.splice(i, 1); } handleEvents(core.consumeEvents()); render(); requestAnimationFrame(loop); }
-updateHud(core.state); showLevelMission(); addLevelAnnotations(); requestAnimationFrame(loop);
+function loop(now) { const dt = Math.min((now - lastTime) / 1000, .033); lastTime = now; core.update(dt); for (let i = effects.length - 1; i >= 0; i -= 1) { effects[i].ttl -= dt; if (effects[i].ttl <= 0) effects.splice(i, 1); } for (let i = annotations.length - 1; i >= 0; i -= 1) { annotations[i].ttl -= dt; if (annotations[i].ttl <= 0) annotations.splice(i, 1); } handleEvents(core.consumeEvents()); render(); const params = new URLSearchParams(location.search);
+if (params.has('levels')) { levelSelectPanel.classList.remove('is-hidden'); if (params.has('endless')) endlessSelector.classList.remove('is-hidden'); }
+try { const savedDepth = localStorage.getItem('pulse-endless-depth'); if (savedDepth) setEndlessDepth(savedDepth); } catch (_) {}
+requestAnimationFrame(loop); }
+updateHud(core.state); showLevelMission(); addLevelAnnotations(); const params = new URLSearchParams(location.search);
+if (params.has('levels')) { levelSelectPanel.classList.remove('is-hidden'); if (params.has('endless')) endlessSelector.classList.remove('is-hidden'); }
+try { const savedDepth = localStorage.getItem('pulse-endless-depth'); if (savedDepth) setEndlessDepth(savedDepth); } catch (_) {}
+requestAnimationFrame(loop);

@@ -38,9 +38,16 @@
           <button class="level-button" data-level="2" type="button"><span>02</span><small>GRAVITY</small></button>
           <button class="level-button" data-level="3" type="button"><span>03</span><small>SPLIT</small></button>
           <button class="level-button" data-level="4" type="button"><span>04</span><small>OVERDRIVE</small></button>
-          <button class="level-button level-endless" data-level="5" type="button"><span>∞</span><small>ENDLESS</small></button>
+          <button id="endless-button" class="level-button level-endless" type="button"><span>∞</span><small>ENDLESS</small></button>
         </div>
-      </section>
+              <div id="endless-selector" class="endless-selector is-hidden">
+          <label for="endless-depth">起始层数 <output id="endless-depth-output">1</output></label>
+          <input id="endless-depth" type="range" min="1" max="99" value="1" />
+          <div class="endless-presets">
+            <button type="button" data-depth="1">1</button><button type="button" data-depth="5">5</button><button type="button" data-depth="10">10</button><button type="button" data-depth="20">20</button><button type="button" data-depth="50">50</button>
+          </div>
+          <button id="endless-start" class="primary-button" type="button">开始无尽</button>
+        </div></section>
       <section id="game-over" class="modal-layer is-hidden" aria-label="结算">
         <div class="overlay-card result-card">
           <div class="card-kicker">RUN COMPLETE</div>
