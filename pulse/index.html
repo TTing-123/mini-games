@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#031016" />
+  <meta name="description" content="Pulse：浏览器即时游玩的回合制物理连锁弹球。瞄准、反弹、分裂，用有限的发射次数摧毁所有红核。" />
+  <title>PULSE — 物理连锁弹球</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="PULSE — 物理连锁弹球" />
+  <meta property="og:description" content="瞄准、反弹、分裂，用有限的发射次数摧毁所有红核。" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="game-frame" aria-label="Pulse game">
+      <canvas id="game-canvas" width="1280" height="720"></canvas>
+      <div class="screen-grid" aria-hidden="true"></div>
+      <header class="hud">
+        <div class="hud-panel target-panel">
+          <div class="hud-label">TARGETS</div>
+          <div id="target-pips" class="pip-row target-row"></div>
+          <div id="target-count" class="hud-number">0</div>
+        </div>
+        <div id="level-badge" class="level-badge">LEVEL 1</div>
+        <div class="hud-panel shot-panel">
+          <div class="hud-label">SHOTS</div>
+          <div id="shot-pips" class="pip-row shot-row"></div>
+          <div id="shot-count" class="hud-number">0</div>
+        </div>
+      </header>
+      <div id="level-mission" class="level-mission"></div>
+      <div id="combo-toast" class="combo-toast">CHAIN +1</div>
+      <nav class="toolbar" aria-label="游戏控制">
+        <button id="level-select-toggle" class="tool-button" type="button">LEVELS</button>
+        <button id="restart-button" class="tool-button" type="button">RESTART</button>
+      </nav>
+      <section id="level-select-panel" class="overlay-card level-select-panel is-hidden" aria-label="关卡选择">
+        <div class="card-kicker">SELECT SECTOR</div>
+        <div class="level-grid">
+          <button class="level-button" data-level="1" type="button"><span>01</span><small>FOUNDATION</small></button>
+          <button class="level-button" data-level="2" type="button"><span>02</span><small>GRAVITY</small></button>
+          <button class="level-button" data-level="3" type="button"><span>03</span><small>SPLIT</small></button>
+          <button class="level-button" data-level="4" type="button"><span>04</span><small>OVERDRIVE</small></button>
+          <button id="endless-button" class="level-button level-endless" type="button"><span>∞</span><small>ENDLESS</small></button>
+        </div>
+              <div id="endless-selector" class="endless-selector is-hidden">
+          <label for="endless-depth">起始层数 <output id="endless-depth-output">1</output></label>
+          <input id="endless-depth" type="range" min="1" max="99" value="1" />
+          <div class="endless-presets">
+            <button type="button" data-depth="1">1</button><button type="button" data-depth="5">5</button><button type="button" data-depth="10">10</button><button type="button" data-depth="20">20</button><button type="button" data-depth="50">50</button>
+          </div>
+          <button id="endless-start" class="primary-button" type="button">开始无尽</button>
+        </div></section>
+      <section id="game-over" class="modal-layer is-hidden" aria-label="结算">
+        <div class="overlay-card result-card">
+          <div class="card-kicker">RUN COMPLETE</div>
+          <h2 id="game-over-title">CHAIN BROKEN</h2>
+          <p id="game-over-copy">发射次数耗尽。调整角度再试一次。</p>
+          <div class="result-actions">
+            <button id="retry-button" class="primary-button" type="button">再试一次</button>
+            <button id="game-over-levels" class="ghost-button" type="button">选择关卡</button>
+          </div>
+        </div>
+      </section>
+    </section>
+    <p class="rotate-hint">建议横屏游玩 · 手感更好</p>
+    <footer class="page-footer">
+      <span class="hint-mouse">移动鼠标瞄准</span><span class="hint-mouse">左键发射</span>
+      <span class="hint-touch">拖动瞄准</span><span class="hint-touch">抬手发射</span>
+      <span>1-4 跳关</span><span>0 无尽模式</span>
+    </footer>
+  </main>
+  <script type="module" src="./src/game.js"></script>
+</body>
+</html>

@@ -2,77 +2,139 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#031016" />
-  <meta name="description" content="Pulse：浏览器即时游玩的回合制物理连锁弹球。瞄准、反弹、分裂，用有限的发射次数摧毁所有红核。" />
-  <title>PULSE — 物理连锁弹球</title>
+  <meta name="description" content="Mini Games：浏览器即时游玩的小游戏合集。挑一个，点开就玩。" />
+  <title>MINI GAMES — 浏览器小游戏合集</title>
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="PULSE — 物理连锁弹球" />
-  <meta property="og:description" content="瞄准、反弹、分裂，用有限的发射次数摧毁所有红核。" />
+  <meta property="og:title" content="MINI GAMES — 浏览器小游戏合集" />
+  <meta property="og:description" content="挑一个，点开就玩。不需要下载，不需要登录。" />
   <meta name="twitter:card" content="summary" />
-  <link rel="stylesheet" href="./src/style.css" />
+  <style>
+    :root {
+      --bg: #031016; --cyan: #59d9e5; --blue: #4aa8ea; --text: #d9fbff;
+      --muted: #79aeb9; --red: #f15a4c; --purple: #9a62e8; --yellow: #f0bd36; --green: #4ed579;
+      --mono: "Consolas", "Lucida Console", monospace;
+      --display: "Trebuchet MS", "Gill Sans", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      background: radial-gradient(circle at 50% 8%, #0b3440, #031016 62%);
+      color: var(--text); font-family: var(--display); min-height: 100vh;
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .42;
+      background-image: radial-gradient(rgba(100,231,255,.22) 1px, transparent 1px),
+                        radial-gradient(rgba(80,210,180,.13) 1px, transparent 1px);
+      background-size: 28px 28px, 53px 53px; background-position: 0 0, 12px 17px;
+    }
+    .shell { position: relative; width: min(94vw, 1080px); margin: 0 auto; padding: 64px 0 48px; }
+    .kicker { margin: 0 0 10px; color: var(--cyan); font: 700 11px/1 var(--mono); letter-spacing: .34em; text-transform: uppercase; }
+    h1 {
+      margin: 0; font-size: clamp(34px, 6vw, 58px); letter-spacing: .04em; line-height: 1;
+      background: linear-gradient(120deg, #f2fdff, var(--cyan) 60%, var(--blue));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      filter: drop-shadow(0 0 22px rgba(89,217,229,.28));
+    }
+    .lede { margin: 16px 0 0; max-width: 46ch; color: var(--muted); font-size: 15px; line-height: 1.7; }
+    .rule { height: 1px; margin: 34px 0 30px; background: linear-gradient(90deg, rgba(89,217,229,.6), rgba(89,217,229,0)); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 20px; }
+    .card {
+      position: relative; display: flex; flex-direction: column; overflow: hidden;
+      border: 1px solid rgba(89,217,229,.32); border-radius: 20px;
+      background: rgba(8, 35, 45, .82); color: inherit; text-decoration: none;
+      box-shadow: 0 18px 44px rgba(0,0,0,.42);
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    a.card:hover, a.card:focus-visible {
+      transform: translateY(-4px); border-color: rgba(89,217,229,.8); outline: none;
+      box-shadow: 0 24px 60px rgba(0,0,0,.5), 0 0 42px rgba(89,217,229,.22);
+    }
+    .art { display: block; width: 100%; aspect-ratio: 16 / 9; }
+    .meta { padding: 16px 18px 18px; }
+    .meta h2 { margin: 0 0 8px; font-size: 19px; letter-spacing: .12em; }
+    .meta p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .tag {
+      padding: 5px 10px; border: 1px solid rgba(89,217,229,.38); border-radius: 999px;
+      color: var(--cyan); font: 700 10px/1 var(--mono); letter-spacing: .16em;
+    }
+    .card.is-soon { border-style: dashed; border-color: rgba(89,217,229,.18); background: rgba(6, 24, 32, .5); box-shadow: none; }
+    .card.is-soon .art { display: grid; place-items: center; background: rgba(4, 20, 27, .55); }
+    .card.is-soon h2 { color: #5d8894; letter-spacing: .22em; }
+    .card.is-soon .meta p { color: #4e7480; }
+    .card.is-soon .tag { border-color: rgba(89,217,229,.16); color: #4e7480; }
+    .soon-mark { color: rgba(89,217,229,.22); font: 700 13px/1 var(--mono); letter-spacing: .4em; }
+    footer {
+      margin-top: 40px; padding-top: 18px; border-top: 1px solid rgba(89,217,229,.14);
+      color: #567f8a; font: 700 11px/1.6 var(--mono); letter-spacing: .08em;
+    }
+    @media (max-width: 640px) {
+      .shell { width: 100%; padding: 36px 20px 32px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-  <main class="app-shell">
-    <section class="game-frame" aria-label="Pulse game">
-      <canvas id="game-canvas" width="1280" height="720"></canvas>
-      <div class="screen-grid" aria-hidden="true"></div>
-      <header class="hud">
-        <div class="hud-panel target-panel">
-          <div class="hud-label">TARGETS</div>
-          <div id="target-pips" class="pip-row target-row"></div>
-          <div id="target-count" class="hud-number">0</div>
+  <main class="shell">
+    <header>
+      <p class="kicker">Browser Arcade</p>
+      <h1>MINI GAMES</h1>
+      <p class="lede">挑一个，点开就玩。不需要下载，不需要登录，手机横屏体验更好。</p>
+    </header>
+
+    <div class="rule"></div>
+
+    <section class="grid">
+      <a class="card" href="./pulse/">
+        <svg class="art" viewBox="0 0 320 180" role="img" aria-label="Pulse">
+          <defs>
+            <radialGradient id="pulse-bg" cx="50%" cy="35%" r="75%">
+              <stop offset="0%" stop-color="#0d3b49" />
+              <stop offset="100%" stop-color="#041017" />
+            </radialGradient>
+          </defs>
+          <rect width="320" height="180" fill="url(#pulse-bg)" />
+          <g stroke="rgba(89,217,229,.10)" stroke-width="1">
+            <path d="M40 0V180M80 0V180M120 0V180M160 0V180M200 0V180M240 0V180M280 0V180" />
+            <path d="M0 36H320M0 72H320M0 108H320M0 144H320" />
+          </g>
+          <circle cx="214" cy="92" r="30" fill="rgba(154,98,232,.16)" stroke="#9a62e8" stroke-width="2" stroke-dasharray="4 7" />
+          <polyline points="58,138 96,104 140,124 190,74" fill="none" stroke="#59d9e5" stroke-opacity=".55" stroke-width="2" stroke-dasharray="7 7" />
+          <circle cx="62" cy="52" r="13" fill="rgba(241,90,76,.26)" stroke="#f15a4c" stroke-width="3" />
+          <circle cx="258" cy="46" r="11" fill="rgba(241,90,76,.26)" stroke="#f15a4c" stroke-width="3" />
+          <circle cx="190" cy="74" r="7" fill="#f2fdff" stroke="#59d9e5" stroke-width="2" />
+          <circle cx="58" cy="138" r="7" fill="#f2fdff" stroke="#59d9e5" stroke-width="2" opacity=".5" />
+        </svg>
+        <div class="meta">
+          <h2>PULSE</h2>
+          <p>瞄准发射，让弹球在封闭舱内反弹、分裂、被引力弯曲，用有限次数摧毁所有红核。</p>
+          <div class="tags"><span class="tag">物理连锁</span><span class="tag">回合制</span></div>
         </div>
-        <div id="level-badge" class="level-badge">LEVEL 1</div>
-        <div class="hud-panel shot-panel">
-          <div class="hud-label">SHOTS</div>
-          <div id="shot-pips" class="pip-row shot-row"></div>
-          <div id="shot-count" class="hud-number">0</div>
+      </a>
+
+      <div class="card is-soon">
+        <div class="art"><span class="soon-mark">SOON</span></div>
+        <div class="meta">
+          <h2>下一个</h2>
+          <p>正在做原型，好玩才放上来。</p>
+          <div class="tags"><span class="tag">建造中</span></div>
         </div>
-      </header>
-      <div id="level-mission" class="level-mission"></div>
-      <div id="combo-toast" class="combo-toast">CHAIN +1</div>
-      <nav class="toolbar" aria-label="游戏控制">
-        <button id="level-select-toggle" class="tool-button" type="button">LEVELS</button>
-        <button id="restart-button" class="tool-button" type="button">RESTART</button>
-      </nav>
-      <section id="level-select-panel" class="overlay-card level-select-panel is-hidden" aria-label="关卡选择">
-        <div class="card-kicker">SELECT SECTOR</div>
-        <div class="level-grid">
-          <button class="level-button" data-level="1" type="button"><span>01</span><small>FOUNDATION</small></button>
-          <button class="level-button" data-level="2" type="button"><span>02</span><small>GRAVITY</small></button>
-          <button class="level-button" data-level="3" type="button"><span>03</span><small>SPLIT</small></button>
-          <button class="level-button" data-level="4" type="button"><span>04</span><small>OVERDRIVE</small></button>
-          <button id="endless-button" class="level-button level-endless" type="button"><span>∞</span><small>ENDLESS</small></button>
+      </div>
+
+      <div class="card is-soon">
+        <div class="art"><span class="soon-mark">SOON</span></div>
+        <div class="meta">
+          <h2>待定</h2>
+          <p>临时放一个看起来有创意的规矩，试完就删。</p>
+          <div class="tags"><span class="tag">建造中</span></div>
         </div>
-              <div id="endless-selector" class="endless-selector is-hidden">
-          <label for="endless-depth">起始层数 <output id="endless-depth-output">1</output></label>
-          <input id="endless-depth" type="range" min="1" max="99" value="1" />
-          <div class="endless-presets">
-            <button type="button" data-depth="1">1</button><button type="button" data-depth="5">5</button><button type="button" data-depth="10">10</button><button type="button" data-depth="20">20</button><button type="button" data-depth="50">50</button>
-          </div>
-          <button id="endless-start" class="primary-button" type="button">开始无尽</button>
-        </div></section>
-      <section id="game-over" class="modal-layer is-hidden" aria-label="结算">
-        <div class="overlay-card result-card">
-          <div class="card-kicker">RUN COMPLETE</div>
-          <h2 id="game-over-title">CHAIN BROKEN</h2>
-          <p id="game-over-copy">发射次数耗尽。调整角度再试一次。</p>
-          <div class="result-actions">
-            <button id="retry-button" class="primary-button" type="button">再试一次</button>
-            <button id="game-over-levels" class="ghost-button" type="button">选择关卡</button>
-          </div>
-        </div>
-      </section>
+      </div>
     </section>
-    <p class="rotate-hint">建议横屏游玩 · 手感更好</p>
-    <footer class="page-footer">
-      <span class="hint-mouse">移动鼠标瞄准</span><span class="hint-mouse">左键发射</span>
-      <span class="hint-touch">拖动瞄准</span><span class="hint-touch">抬手发射</span>
-      <span>1-4 跳关</span><span>0 无尽模式</span>
-    </footer>
+
+    <footer>全部游戏都是纯静态页面，直接跑在浏览器里。</footer>
   </main>
-  <script type="module" src="./src/game.js"></script>
 </body>
 </html>

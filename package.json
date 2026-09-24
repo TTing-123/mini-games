@@ -1,12 +1,12 @@
-﻿{
-  "name": "pulse",
-  "version": "1.0.0",
+{
+  "name": "mini-games",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A browser-based turn-based physics chain reaction game.",
+  "description": "A collection of small browser games.",
   "scripts": {
     "dev": "py -m http.server 8080",
-    "test": "node --test tests/*.test.mjs",
-    "audit": "node tools/fairness-audit.mjs"
+    "test": "node --test pulse/tests/*.test.mjs",
+    "audit": "node pulse/tools/fairness-audit.mjs"
   }
 }

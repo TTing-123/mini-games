@@ -1,0 +1,92 @@
+# Pulse
+
+浏览器即时游玩的回合制物理连锁弹球游戏。
+
+在线游玩：<https://tting-123.github.io/pulse/>（手机建议横屏，体验更完整）
+
+玩家瞄准并发射弹球。弹球在封闭棋盘内反弹、分裂，并受到引力影响。目标是在有限发射次数内摧毁所有红核。
+
+## 运行
+
+无需构建工具。
+
+```powershell
+cd D:\project\pulse
+py -m http.server 8080
+```
+
+然后打开：`http://localhost:8080`
+
+也可以使用：`npm run dev`
+
+## 测试
+
+```powershell
+npm test
+npm run audit
+```
+
+`npm test` 覆盖核心逻辑与随机关卡布局约束（不重叠、不出界、不压住发射点）。`npm run audit` 抽样检查若干层，并用贪心自动玩家给出可解性下界：能通关即证明该布局可解，失败只说明自动玩家不够好。
+
+### 浏览器实测（可选）
+
+需要一个运行中的本地服务器，并临时安装 Playwright：
+
+```powershell
+py -m http.server 8080
+npm i -D playwright
+npx playwright install chromium
+node tools/browser-check.cjs
+```
+
+脚本会检查桌面鼠标操作、触屏瞄准发射、HUD 布局与横竖屏适配，截图写到 `tools/.browser-check/`。
+若只装了完整 chromium（没有 headless shell），用 `PULSE_CHROME` 指向 `chrome.exe`；检查线上版本用 `PULSE_URL`。
+
+## 操作
+
+- 移动鼠标：调整发射方向
+- 鼠标左键：发射弹球
+- `R`：重新开始
+- `LEVELS`：快速切换关卡
+- `1`～`4`：直接进入手工关卡
+- `0`：直接进入当前选择的无尽层数
+- 触屏：按住拖动瞄准，抬手发射
+
+## 界面说明
+
+顶部左侧的红色圆形图标表示剩余红核数量，右侧的白色弹球图标表示剩余发射次数。
+
+颜色机关：
+
+- 红核：必须摧毁的目标
+- 蓝块：高弹力反弹
+- 紫块：引力场，明显弯曲轨迹
+- 黄块：首次命中后分裂成两颗弹球
+- 绿块：首次命中后补充一次发射机会
+
+同一发弹球摧毁两个红核，会额外奖励一次发射机会。
+
+无尽模式入口可以选择 1～99 层，也可以直接点击 1、5、10、20、50 档位；选择会被记住。
+
+## 关卡内教学
+
+没有独立的全屏教程。每关会在场内直接标注新机关：
+
+- 第一关：红核目标 + 蓝块反弹
+- 第二关：紫块引力
+- 第三关：黄块分裂
+- 第四关：绿块充能 + 连锁奖励
+
+## 视觉方向
+
+深海实验室风格：深青色生物发光背景、玻璃舱 HUD、机关旁的发光标签。
+
+## Web 架构
+
+- index.html：应用入口和 DOM HUD
+- src/game-core.js：纯 JavaScript 游戏状态、物理、关卡和无尽生成
+- src/game.js：Canvas 渲染、输入、HUD 和场内教学
+- src/style.css：实验场蓝图视觉系统和响应式布局
+- tests/game-core.test.mjs：Node 内置测试
+
+没有 Godot 依赖，也没有运行时框架依赖。

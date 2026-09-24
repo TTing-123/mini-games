@@ -1,4 +1,4 @@
-﻿name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -22,12 +22,14 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Run core tests
-        run: node --test tests/*.test.mjs
+      - name: Run game tests
+        run: node --test pulse/tests/*.test.mjs
       - name: Stage static site
         run: |
-          mkdir -p _site
-          cp -R index.html src favicon.svg _site/
+          mkdir -p _site/pulse
+          cp index.html favicon.svg _site/
+          cp pulse/index.html pulse/favicon.svg _site/pulse/
+          cp -R pulse/src _site/pulse/src
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -1,92 +1,53 @@
-# Pulse
+# Mini Games
 
-浏览器即时游玩的回合制物理连锁弹球游戏。
+浏览器即时游玩的小游戏合集。挑一个，点开就玩，不需要下载或登录。
 
-在线游玩：<https://tting-123.github.io/pulse/>（手机建议横屏，体验更完整）
+线上地址：<https://tting-123.github.io/mini-games/>
 
-玩家瞄准并发射弹球。弹球在封闭棋盘内反弹、分裂，并受到引力影响。目标是在有限发射次数内摧毁所有红核。
+## 游戏
 
-## 运行
+| 游戏 | 类型 | 在线玩 |
+| --- | --- | --- |
+| Pulse | 物理连锁弹球 | <https://tting-123.github.io/mini-games/pulse/> |
 
-无需构建工具。
+每个游戏都有自己的 README、测试和开发工具，放在各自的目录里。
+
+## 本地运行
+
+在仓库根目录执行：
 
 ```powershell
-cd D:\project\pulse
 py -m http.server 8080
 ```
 
-然后打开：`http://localhost:8080`
-
-也可以使用：`npm run dev`
+`http://localhost:8080` 是合集首页，`http://localhost:8080/pulse/` 直接进 Pulse。
 
 ## 测试
 
 ```powershell
-npm test
-npm run audit
+npm test          # 所有游戏的逻辑测试
+npm run audit     # Pulse 随机关卡公平性审计
 ```
 
-`npm test` 覆盖核心逻辑与随机关卡布局约束（不重叠、不出界、不压住发射点）。`npm run audit` 抽样检查若干层，并用贪心自动玩家给出可解性下界：能通关即证明该布局可解，失败只说明自动玩家不够好。
+## 目录结构
 
-### 浏览器实测（可选）
-
-需要一个运行中的本地服务器，并临时安装 Playwright：
-
-```powershell
-py -m http.server 8080
-npm i -D playwright
-npx playwright install chromium
-node tools/browser-check.cjs
+```
+mini-games/
+├── index.html            合集首页（卡片列表）
+├── favicon.svg
+├── pulse/                Pulse 游戏本体
+│   ├── index.html  src/  tests/  tools/  favicon.svg
+│   ├── README.md         玩法与操作说明
+│   └── AGENTS.md         这个游戏的开发约束
+└── .github/workflows/pages.yml
 ```
 
-脚本会检查桌面鼠标操作、触屏瞄准发射、HUD 布局与横竖屏适配，截图写到 `tools/.browser-check/`。
-若只装了完整 chromium（没有 headless shell），用 `PULSE_CHROME` 指向 `chrome.exe`；检查线上版本用 `PULSE_URL`。
+## 加一个新游戏
 
-## 操作
+1. 新建 `<game>/`，里面放自己的 `index.html`，资源一律用相对路径
+2. 根 `index.html` 加一张卡片（照 Pulse 那张改）
+3. 根 `package.json` 的 `test` 脚本里加上它的测试
+4. `.github/workflows/pages.yml` 的 Stage 步骤里加上它的运行时文件
+5. 存档写 localStorage 时带游戏前缀，避免和其他游戏撞名
 
-- 移动鼠标：调整发射方向
-- 鼠标左键：发射弹球
-- `R`：重新开始
-- `LEVELS`：快速切换关卡
-- `1`～`4`：直接进入手工关卡
-- `0`：直接进入当前选择的无尽层数
-- 触屏：按住拖动瞄准，抬手发射
-
-## 界面说明
-
-顶部左侧的红色圆形图标表示剩余红核数量，右侧的白色弹球图标表示剩余发射次数。
-
-颜色机关：
-
-- 红核：必须摧毁的目标
-- 蓝块：高弹力反弹
-- 紫块：引力场，明显弯曲轨迹
-- 黄块：首次命中后分裂成两颗弹球
-- 绿块：首次命中后补充一次发射机会
-
-同一发弹球摧毁两个红核，会额外奖励一次发射机会。
-
-无尽模式入口可以选择 1～99 层，也可以直接点击 1、5、10、20、50 档位；选择会被记住。
-
-## 关卡内教学
-
-没有独立的全屏教程。每关会在场内直接标注新机关：
-
-- 第一关：红核目标 + 蓝块反弹
-- 第二关：紫块引力
-- 第三关：黄块分裂
-- 第四关：绿块充能 + 连锁奖励
-
-## 视觉方向
-
-深海实验室风格：深青色生物发光背景、玻璃舱 HUD、机关旁的发光标签。
-
-## Web 架构
-
-- index.html：应用入口和 DOM HUD
-- src/game-core.js：纯 JavaScript 游戏状态、物理、关卡和无尽生成
-- src/game.js：Canvas 渲染、输入、HUD 和场内教学
-- src/style.css：实验场蓝图视觉系统和响应式布局
-- tests/game-core.test.mjs：Node 内置测试
-
-没有 Godot 依赖，也没有运行时框架依赖。
+共享代码先别急着抽：等第三个游戏出现、确认哪些是真的重复，再考虑 `shared/`。
