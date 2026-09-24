@@ -54,6 +54,10 @@ func play_charge() -> void:
 	_flash_overlay(Color(0.3, 1.0, 0.5, 0.38))
 
 
+func play_combo() -> void:
+	_flash_overlay(Color(1.0, 0.75, 0.2, 0.42))
+
+
 func _flash_overlay(color: Color) -> void:
 	transition_overlay.visible = true
 	transition_overlay.color = color

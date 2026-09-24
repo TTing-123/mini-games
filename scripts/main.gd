@@ -26,6 +26,8 @@ var current_level: Node2D
 var level_cleared := false
 var endless_mode := false
 var endless_level_number := 0
+var current_shot_hits := 0
+var shot_bonus_awarded := false
 
 
 func _ready() -> void:
@@ -119,6 +121,8 @@ func _launch_ball() -> void:
 	var direction := get_global_mouse_position() - spawn_point.global_position
 	if direction.length() <= 12.0:
 		return
+	current_shot_hits = 0
+	shot_bonus_awarded = false
 	_spawn_ball(spawn_point.global_position, direction.normalized() * LAUNCH_SPEED, true)
 	shots_left -= 1
 	state = State.RESOLVING
@@ -176,6 +180,13 @@ func _on_target_destroyed(_target: Area2D) -> void:
 	targets_remaining = maxi(targets_remaining - 1, 0)
 	hud.set_targets(targets_remaining, targets_total)
 	_shake_camera(7.0)
+	current_shot_hits += 1
+	if current_shot_hits >= 2 and not shot_bonus_awarded:
+		shot_bonus_awarded = true
+		shots_left += 1
+		shots_max += 1
+		hud.set_shots(shots_left, shots_max)
+		hud.play_combo()
 	if targets_remaining <= 0:
 		level_cleared = true
 		if active_balls.is_empty():

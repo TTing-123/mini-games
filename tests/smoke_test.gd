@@ -127,6 +127,17 @@ func _run() -> void:
 	await process_frame
 	_require(main.endless_mode and main.endless_level_number == 3, "level select jumps to endless level three")
 
+	main.targets_remaining = 10
+	main.shots_left = 2
+	main.shots_max = 3
+	main.current_shot_hits = 0
+	main.shot_bonus_awarded = false
+	main._on_target_destroyed(null)
+	main._on_target_destroyed(null)
+	_require(main.shots_left == 3 and main.shots_max == 4, "two targets in one shot grant combo shot")
+	main._on_target_destroyed(null)
+	_require(main.shots_left == 3, "combo shot only triggers once per shot")
+
 	main._finish_round(true)
 	_require(hud.result_overlay.visible, "win result overlay is visible")
 
