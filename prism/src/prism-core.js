@@ -341,6 +341,74 @@ export const LEVELS = [
       { x: 1150, y: 520, color: RED, radius: 36 },
       { x: 1150, y: 640, color: BLUE, radius: 36 }
     ]
+  },
+  {
+    name: 'LEVEL 19',
+    tag: 'CROSSFIRE',
+    hint: '半透镜已经把红光劈成两路，飞出去那路和一直没人管的蓝光都得接住',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' }
+    ],
+    splitters: [
+      { x: 900, y: 307, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 900, y: 150, color: RED, radius: 34 },
+      { x: 1050, y: 550, color: RED, radius: 36 },
+      { x: 1220, y: 360, color: GREEN, radius: 30 },
+      { x: 1008, y: 500, color: BLUE, radius: 34 }
+    ]
+  },
+  {
+    name: 'LEVEL 20',
+    tag: 'SIEGE',
+    hint: '四束光各奔各的目标，镜子一面都不能摆错',
+    sources: [
+      { x: 150, y: 360, angle: 0 },
+      { x: 150, y: 620, angle: 0, color: RED }
+    ],
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' },
+      { x: 700, y: 620, slant: '\\' }
+    ],
+    walls: [],
+    targets: [
+      { x: 900, y: 150, color: RED, radius: 32 },
+      { x: 1059, y: 520, color: BLUE, radius: 32 },
+      { x: 1150, y: 360, color: GREEN, radius: 30 },
+      { x: 1100, y: 500, color: RED, radius: 32 }
+    ]
+  },
+  {
+    name: 'LEVEL 21',
+    tag: 'REACTOR',
+    hint: '红光走半透镜，蓝激光自己上来——两条路别互相挡',
+    sources: [
+      { x: 150, y: 360, angle: 0 },
+      { x: 150, y: 620, angle: 0, color: BLUE }
+    ],
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' },
+      { x: 700, y: 620, slant: '\\' }
+    ],
+    splitters: [
+      { x: 860, y: 311, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 860, y: 150, color: RED, radius: 34 },
+      { x: 1100, y: 550, color: RED, radius: 36 },
+      { x: 1150, y: 620, color: BLUE, radius: 34 },
+      { x: 1100, y: 200, color: GREEN, radius: 34 }
+    ]
   }
 ];
 
