@@ -11,6 +11,8 @@ html, body { margin: 0; height: 100%; background: radial-gradient(circle at 50% 
 .level-badge { padding: 10px 16px; border: 1px solid rgba(89,217,229,.34); border-radius: 999px; background: rgba(8,35,45,.86); color: var(--cyan); font: 700 11px/1 var(--mono); letter-spacing: .22em; }
 .next-button { position: absolute; left: 50%; top: 52%; transform: translateX(-50%); padding: 13px 24px; border: 1px solid rgba(255,224,150,.75); border-radius: 999px; background: rgba(255,214,120,.14); color: #ffeec4; font: 700 12px/1 var(--mono); letter-spacing: .2em; cursor: pointer; box-shadow: 0 0 30px rgba(255,200,110,.28); }
 .next-button:hover { background: rgba(255,214,120,.24); }
+@keyframes nextPulse { 0%, 100% { box-shadow: 0 0 26px rgba(255,200,110,.25); } 50% { box-shadow: 0 0 44px rgba(255,214,140,.6); } }
+.next-button { animation: nextPulse 1.6s ease-in-out infinite; }
 .next-button.is-hidden { display: none; }
 .banner { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%) scale(.94); opacity: 0; color: #fff4cf; font: 700 46px/1 var(--mono); letter-spacing: .12em; text-shadow: 0 0 34px rgba(255,220,140,.85); pointer-events: none; transition: opacity .35s ease, transform .35s ease; }
 .banner.is-visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }

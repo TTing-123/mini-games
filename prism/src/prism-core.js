@@ -28,7 +28,7 @@ const EPS = 1e-4;
 export const LEVELS = [
   {
     name: 'LEVEL 1',
-    hint: '拖动镜子 · 轻点翻面',
+    hint: '把红光和蓝光引到同色目标上 · 轻点镜子翻面',
     source: { x: 150, y: 360, angle: 0 },
     prism: { x: 430, y: 360, radius: 36 },
     mirrors: [

@@ -31,7 +31,11 @@ canvas.addEventListener('pointerdown', (event) => {
   if (event.button !== 0) return;
   const point = canvasPoint(event);
   const index = core.mirrorAt(point.x, point.y);
-  if (index === null) return;
+  if (index === null) {
+    // 通关之后点画面任何地方都能继续，省得找不到按钮
+    if (core.solved() && !core.isLastLevel()) goNextLevel();
+    return;
+  }
   dragging = {
     index,
     offsetX: core.state.mirrors[index].x - point.x,
