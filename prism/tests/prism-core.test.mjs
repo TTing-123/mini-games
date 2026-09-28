@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  PrismCore, SCENE, RED, GREEN, BLUE, WHITE,
+  PrismCore, SCENE, RED, GREEN, BLUE, WHITE, RAW,
   colorKey, raySegmentT, rayCircleT, reflect, mirrorEndpoints,
   LEVELS, solveLevel
 } from '../src/prism-core.js';
@@ -35,10 +35,11 @@ test('geometry: reflection off a 45 degree mirror turns right into up', () => {
   assert.ok(bounced.y < -0.9, `expected the beam to head up, got ${JSON.stringify(bounced)}`);
 });
 
-test('prism splits white light into exactly red, green and blue', () => {
+test('prism splits the raw beam into exactly red, green and blue', () => {
   const core = new PrismCore();
   const masks = new Set(core.state.beams.map((beam) => beam.color));
-  assert.ok(masks.has(WHITE), 'source beam is white');
+  assert.ok(masks.has(RAW), 'source beam is still raw before the prism');
+  assert.equal(masks.has(WHITE), false, 'un-split light must not count as white');
   assert.ok(masks.has(RED));
   assert.ok(masks.has(GREEN));
   assert.ok(masks.has(BLUE));
@@ -122,10 +123,11 @@ test('walls stop the beam', () => {
   const blocked = {
     name: 'WALL',
     source: { x: 100, y: 360, angle: 0 },
-    prism: { x: -900, y: -900, radius: 1 },
+    // 先分光再谈颜色：未分光的原始光本来就不该点亮任何目标
+    prism: { x: 250, y: 360, radius: 36 },
     mirrors: [],
     walls: [{ x1: 400, y1: 200, x2: 400, y2: 520 }],
-    targets: [{ x: 900, y: 360, color: WHITE, radius: 30 }]
+    targets: [{ x: 900, y: 360, color: GREEN, radius: 30 }]
   };
   const core = new PrismCore(blocked);
   assert.equal(core.isLit(0), false, 'a wall in the way should block the light');
@@ -146,4 +148,45 @@ test('level flow advances and stops at the last level', () => {
   assert.equal(core.nextLevel(), false, 'cannot advance past the last level');
   core.restart();
   assert.equal(core.levelIndex, LEVELS.length - 1, 'restart stays on the current level');
+});
+
+test('raw light from the source cannot light anything', () => {
+  const scene = {
+    name: 'RAW',
+    source: { x: 100, y: 360, angle: 0 },
+    prism: { x: -900, y: -900, radius: 1 },
+    mirrors: [],
+    walls: [],
+    targets: [{ x: 900, y: 360, color: WHITE, radius: 40 }]
+  };
+  const core = new PrismCore(scene);
+  assert.equal(core.isLit(0), false, 'un-split light must not count as white');
+});
+
+test('fixed mirrors cannot be dragged or flipped', () => {
+  const scene = {
+    name: 'FIXED',
+    source: { x: 100, y: 360, angle: 0 },
+    prism: { x: -900, y: -900, radius: 1 },
+    mirrors: [{ x: 500, y: 300, slant: '/', fixed: true }],
+    walls: [],
+    targets: []
+  };
+  const core = new PrismCore(scene);
+  assert.equal(core.mirrorAt(500, 300), null, 'fixed mirrors are not grabbable');
+  assert.equal(core.moveMirror(0, 700, 500), false);
+  assert.equal(core.toggleMirror(0), false);
+  assert.equal(core.state.mirrors[0].x, 500);
+  assert.equal(core.state.mirrors[0].slant, '/');
+});
+
+test('the collection ships eight levels covering every mechanic', () => {
+  assert.equal(LEVELS.length, 8);
+  const tags = LEVELS.map((level) => level.tag);
+  for (const tag of ['THREE COLORS', 'THROUGH', 'MIX', 'AROUND', 'CYAN', 'MAGENTA', 'FIXED', 'WHITE']) {
+    assert.ok(tags.includes(tag), `missing level tag ${tag}`);
+  }
+  assert.ok(LEVELS.some((level) => level.mirrors.some((mirror) => mirror.fixed)), 'a fixed mirror level exists');
+  assert.ok(LEVELS.some((level) => level.walls.length > 0), 'a wall level exists');
+  assert.ok(LEVELS.some((level) => level.targets.some((t) => t.color === WHITE)), 'a white target level exists');
 });

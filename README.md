@@ -9,7 +9,7 @@
 | 游戏 | 类型 | 在线玩 |
 | --- | --- | --- |
 | Pulse | 物理连锁弹球 | <https://tting-123.github.io/mini-games/pulse/> |
-| Prism | 光路与颜色（核心玩法原型） | <https://tting-123.github.io/mini-games/prism/> |
+| Prism | 光路与颜色解谜（8 关） | <https://tting-123.github.io/mini-games/prism/> |
 
 每个游戏都有自己的 README、测试和开发工具，放在各自的目录里。
 
@@ -39,7 +39,7 @@ mini-games/
 ├── pulse/                Pulse 游戏本体
 │   ├── index.html  src/  tests/  tools/  favicon.svg
 │   └── README.md  AGENTS.md
-├── prism/                Prism 游戏本体（光路解谜，核心玩法阶段）
+├── prism/                Prism 游戏本体（光路解谜，八关完成）
 ├── blast/                Blast 游戏本体（已下架，仅作存档）
 ├── polarity/             Polarity 游戏本体（已下架，仅作存档）
 │   ├── index.html  src/  tests/  tools/  favicon.svg

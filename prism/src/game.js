@@ -41,6 +41,56 @@ let hoverIndex = null;
 let lastTime = performance.now();
 let solvedAt = 0;
 
+/* ---------------- 音效：全部现场合成，不带音频文件 ---------------- */
+
+let audioCtx = null;
+let muted = false;
+
+function ensureAudio() {
+  if (audioCtx) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return;
+  }
+  const Ctor = window.AudioContext || window.webkitAudioContext;
+  if (Ctor) audioCtx = new Ctor();
+}
+
+function tone({ freq, to, type = 'sine', gain = 0.14, duration = 0.22, delay = 0 }) {
+  if (muted || !audioCtx) return;
+  const now = audioCtx.currentTime + delay;
+  const osc = audioCtx.createOscillator();
+  const amp = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  if (to) osc.frequency.exponentialRampToValueAtTime(Math.max(40, to), now + duration);
+  amp.gain.setValueAtTime(0.0001, now);
+  amp.gain.exponentialRampToValueAtTime(gain, now + 0.012);
+  amp.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  osc.connect(amp).connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + duration + 0.02);
+}
+
+// 目标点亮：一声清亮的叮，音符按点亮数量往上走
+function playLit(step) {
+  const scale = [523.25, 659.25, 783.99, 1046.5];
+  tone({ freq: scale[Math.min(step, scale.length - 1)], type: 'sine', gain: 0.12, duration: 0.3 });
+}
+// 目标熄灭：短促下沉
+function playUnlit() {
+  tone({ freq: 320, to: 150, type: 'triangle', gain: 0.09, duration: 0.18 });
+}
+// 整关点亮：往上爬的三音
+function playFanfare() {
+  [0, 0.09, 0.18].forEach((delay, i) => {
+    tone({ freq: [523.25, 783.99, 1046.5][i], type: 'sine', gain: 0.13, duration: 0.42, delay });
+  });
+}
+// 镜子翻面：一下木头似的咔
+function playFlip() {
+  tone({ freq: 880, to: 420, type: 'square', gain: 0.05, duration: 0.08 });
+}
+
 const rgbOf = (mask) => COLOR_RGB[colorKey(mask)];
 const rgba = (rgb, alpha) => `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
 
@@ -53,6 +103,7 @@ function canvasPoint(event) {
 
 canvas.addEventListener('pointerdown', (event) => {
   if (event.button !== 0) return;
+  ensureAudio();
   const point = canvasPoint(event);
   const index = core.mirrorAt(point.x, point.y);
   if (index === null) return;
@@ -81,7 +132,9 @@ canvas.addEventListener('pointermove', (event) => {
 canvas.addEventListener('pointerup', (event) => {
   if (!dragging) return;
   // 几乎没移动就是点了一下：把这面镜子翻个面
-  if (dragging.moved < 8) core.toggleMirror(dragging.index);
+  if (dragging.moved < 8) {
+    if (core.toggleMirror(dragging.index)) playFlip();
+  }
   dragging = null;
   if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
 });
@@ -149,11 +202,13 @@ window.addEventListener('keydown', (event) => {
     goNextLevel();
   }
   if (event.key === 'Escape') levelPanel.classList.add('is-hidden');
+  if (event.key.toLowerCase() === 'm') muted = !muted;
 });
 
 nextButton.addEventListener('click', goNextLevel);
 
 function refreshLevelText() {
+  litMaskBefore = 0;
   levelBadge.textContent = `${core.state.name} · ${core.levelIndex + 1}/${core.levelCount}`;
   hint.textContent = core.state.hint;
   hint.classList.remove('is-visible');
@@ -237,11 +292,12 @@ function drawPrism(now) {
 function drawMirrors(now) {
   core.state.mirrors.forEach((mirror, index) => {
     const [a, b] = mirrorEndpoints(mirror);
-    const active = index === hoverIndex || (dragging && dragging.index === index);
+    const fixed = !!mirror.fixed;
+    const active = !fixed && (index === hoverIndex || (dragging && dragging.index === index));
     ctx.save();
-    ctx.shadowColor = active ? '#ffe9a8' : '#9fe6ff';
-    ctx.shadowBlur = active ? 26 : 14;
-    ctx.strokeStyle = active ? '#fff1c4' : '#dcf6ff';
+    ctx.shadowColor = fixed ? 'rgba(150,175,190,.5)' : active ? '#ffe9a8' : '#9fe6ff';
+    ctx.shadowBlur = fixed ? 8 : active ? 26 : 14;
+    ctx.strokeStyle = fixed ? '#8fa6b4' : active ? '#fff1c4' : '#dcf6ff';
     ctx.lineWidth = active ? 7 : 5;
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
@@ -249,20 +305,24 @@ function drawMirrors(now) {
     ctx.stroke();
 
     // 镜面背后的反光
-    ctx.strokeStyle = 'rgba(120,200,230,.55)';
+    ctx.strokeStyle = fixed ? 'rgba(140,165,180,.4)' : 'rgba(120,200,230,.55)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(a.x, a.y + 3);
     ctx.lineTo(b.x, b.y + 3);
     ctx.stroke();
 
-    // 抓取点
-    const pulse = 1 + Math.sin(now * 0.004 + index) * 0.12;
+    // 抓取点：固定的画成方钉子，提示不可拖动
+    const pulse = fixed ? 1 : 1 + Math.sin(now * 0.004 + index) * 0.12;
     ctx.fillStyle = 'rgba(5,29,38,.9)';
-    ctx.strokeStyle = active ? '#ffe9a8' : 'rgba(160,225,250,.8)';
+    ctx.strokeStyle = fixed ? '#8fa6b4' : active ? '#ffe9a8' : 'rgba(160,225,250,.8)';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(mirror.x, mirror.y, 7 * pulse, 0, Math.PI * 2);
+    if (fixed) {
+      ctx.rect(mirror.x - 6, mirror.y - 6, 12, 12);
+    } else {
+      ctx.arc(mirror.x, mirror.y, 7 * pulse, 0, Math.PI * 2);
+    }
     ctx.fill();
     ctx.stroke();
     ctx.restore();
@@ -313,7 +373,24 @@ function render(now) {
   drawTargets(now);
 }
 
+let litMaskBefore = 0;
+
+function soundForLitChanges() {
+  let mask = 0;
+  core.state.targets.forEach((_, index) => {
+    if (core.isLit(index)) mask |= (1 << index);
+  });
+  if (mask === litMaskBefore) return;
+  const gained = mask & ~litMaskBefore;
+  const lost = litMaskBefore & ~mask;
+  if (gained) playLit(core.litCount() - 1);
+  if (lost) playUnlit();
+  if (mask === (1 << core.state.targets.length) - 1 && litMaskBefore !== mask) playFanfare();
+  litMaskBefore = mask;
+}
+
 function updateHud() {
+  soundForLitChanges();
   litCounter.textContent = `${core.litCount()}/${core.state.targets.length}`;
   const solved = core.solved();
   banner.textContent = core.isLastLevel() ? 'ALL CLEAR' : 'ALL LIT';

@@ -15,6 +15,9 @@ export const RED = 1;
 export const GREEN = 2;
 export const BLUE = 4;
 export const WHITE = RED | GREEN | BLUE;
+// 光源刚射出、还没过棱镜的光：看着是白的，但不算红绿蓝，点不亮任何目标。
+// 这样白目标就必须靠三束分光后的光重新汇合，不能拿未分光的白光蒙过去。
+export const RAW = 8;
 
 const CHANNELS = [
   { mask: RED, spread: -0.105 },
@@ -88,6 +91,66 @@ export const LEVELS = [
     targets: [
       { x: 1150, y: 150, color: GREEN, radius: 26 }
     ]
+  },
+  {
+    name: 'LEVEL 5',
+    tag: 'CYAN',
+    hint: '青色 = 绿 + 蓝，两束光要落在同一处',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 1000, y: 360, color: GREEN | BLUE, radius: 30 }
+    ]
+  },
+  {
+    name: 'LEVEL 6',
+    tag: 'MAGENTA',
+    hint: '品红 = 红 + 蓝，别让绿光掺进来',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 1100, y: 430, color: RED | BLUE, radius: 30 }
+    ]
+  },
+  {
+    name: 'LEVEL 7',
+    tag: 'FIXED',
+    hint: '灰色镜子钉死了，只能想办法借它一用',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 900, y: 200, slant: '/', fixed: true }
+    ],
+    walls: [],
+    targets: [
+      { x: 1150, y: 200, color: GREEN, radius: 26 }
+    ]
+  },
+  {
+    name: 'LEVEL 8',
+    tag: 'WHITE',
+    hint: '白 = 红绿蓝同时照到同一处',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' },
+      { x: 700, y: 120, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 1000, y: 360, color: WHITE, radius: 34 }
+    ]
   }
 ];
 
@@ -160,6 +223,7 @@ export function mirrorNormal(mirror) {
 /* ---------------- 颜色 ---------------- */
 
 export function colorKey(mask) {
+  if (mask === RAW) return 'raw';
   if (mask === WHITE) return 'white';
   if (mask === RED) return 'red';
   if (mask === GREEN) return 'green';
@@ -171,6 +235,7 @@ export function colorKey(mask) {
 }
 
 export const COLOR_RGB = {
+  raw: [255, 255, 255],
   white: [255, 255, 255],
   red: [255, 90, 82],
   green: [90, 235, 140],
@@ -249,6 +314,7 @@ export class PrismCore {
     let best = null;
     for (let i = 0; i < this.state.mirrors.length; i += 1) {
       const mirror = this.state.mirrors[i];
+      if (mirror.fixed) continue;
       const distance = Math.hypot(mirror.x - x, mirror.y - y);
       if (distance <= MIRROR_HALF + slack && (!best || distance < best.distance)) best = { index: i, distance };
     }
@@ -257,7 +323,7 @@ export class PrismCore {
 
   moveMirror(index, x, y) {
     const mirror = this.state.mirrors[index];
-    if (!mirror) return false;
+    if (!mirror || mirror.fixed) return false;
     mirror.x = Math.max(60, Math.min(WIDTH - 60, x));
     mirror.y = Math.max(60, Math.min(HEIGHT - 60, y));
     this.retrace();
@@ -267,7 +333,7 @@ export class PrismCore {
 
   toggleMirror(index) {
     const mirror = this.state.mirrors[index];
-    if (!mirror) return false;
+    if (!mirror || mirror.fixed) return false;
     mirror.slant = mirror.slant === '/' ? '\\' : '/';
     this.retrace();
     this.queue('toggled', { index, slant: mirror.slant });
@@ -300,7 +366,7 @@ export class PrismCore {
       y: state.source.y + Math.sin(state.source.angle) * 18
     };
     const dir = { x: Math.cos(state.source.angle), y: Math.sin(state.source.angle) };
-    this.trace(start, dir, WHITE, 0, beams, -1);
+    this.trace(start, dir, RAW, 0, beams, -1);
     state.beams = beams;
     if (this.solved()) this.queue('solved', {});
   }
@@ -322,13 +388,12 @@ export class PrismCore {
     }
 
     if (hit.type === 'prism') {
-      // 复合光进棱镜会被拆成三束；单色光只是穿过去
-      if (color === RED || color === GREEN || color === BLUE) {
+      // 只有光源那束原始光会被拆开；已经分过的光只是穿过去
+      if (color !== RAW) {
         this.trace(point, dir, color, depth + 1, beams, -1);
         return;
       }
       for (const channel of CHANNELS) {
-        if (!(color & channel.mask)) continue;
         this.trace(point, rotate(dir, channel.spread), channel.mask, depth + 1, beams, -1);
       }
       return;
@@ -338,7 +403,7 @@ export class PrismCore {
 
     if (hit.type === 'target') {
       const target = this.state.targets[hit.index];
-      target.hit |= color;
+      if (color !== RAW) target.hit |= color;   // 未分光的光不算数
       this.trace(point, dir, color, depth + 1, beams, -1);
       return;
     }
@@ -411,7 +476,7 @@ function cloneCore(core) {
 }
 
 // 镜子只有放在光束经过的地方才可能改变光路，所以候选点就取光束上的采样。
-export function candidateSpots(core, step = 55) {
+export function candidateSpots(core, step = 32) {
   const spots = [];
   const seen = new Set();
   for (const beam of core.state.beams) {
@@ -422,6 +487,9 @@ export function candidateSpots(core, step = 55) {
       const x = beam.x1 + (beam.x2 - beam.x1) * t;
       const y = beam.y1 + (beam.y2 - beam.y1) * t;
       if (x < 70 || x > WIDTH - 70 || y < 70 || y > HEIGHT - 70) continue;
+      // 摆在光源出口或棱镜身上会产生数值上的假解，直接排除
+      if (Math.hypot(x - core.state.source.x, y - core.state.source.y) < 90) continue;
+      if (Math.hypot(x - core.state.prism.x, y - core.state.prism.y) < core.state.prism.radius + 60) continue;
       const key = `${Math.round(x / 25)}:${Math.round(y / 25)}`;
       if (seen.has(key)) continue;
       seen.add(key);
@@ -433,7 +501,7 @@ export function candidateSpots(core, step = 55) {
 
 // 逐面镜子做深度优先搜索：找到一组摆放能让全部目标亮起就返回。
 export function solveLevel(level, options = {}) {
-  const step = options.step ?? 55;
+  const step = options.step ?? 32;
   const start = new PrismCore(level);
   const total = start.state.mirrors.length;
 
@@ -441,6 +509,7 @@ export function solveLevel(level, options = {}) {
     if (core.solved()) return [];
     if (index >= total) return null;
 
+    if (core.state.mirrors[index]?.fixed) return search(core, index + 1);
     const base = core.litCount();
     for (const spot of candidateSpots(core, step)) {
       for (const slant of ['/', '\\']) {
@@ -461,5 +530,19 @@ export function solveLevel(level, options = {}) {
     return null;
   };
 
+  // 先找一步就能解的，避免返回那种「摆两面镜子但其实一面就够」的答案
+  for (let index = 0; index < total; index += 1) {
+    if (start.state.mirrors[index]?.fixed) continue;
+    for (const spot of candidateSpots(start, step)) {
+      for (const slant of ['/', '\\']) {
+        const branch = cloneCore(start);
+        branch.state.mirrors[index].slant = slant;
+        branch.moveMirror(index, spot.x, spot.y);
+        if (branch.solved()) {
+          return [{ mirror: index, x: Math.round(spot.x), y: Math.round(spot.y), slant }];
+        }
+      }
+    }
+  }
   return search(start, 0);
 }
