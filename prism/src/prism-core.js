@@ -263,6 +263,84 @@ export const LEVELS = [
       { x: 820, y: 150, color: RED, radius: 28 },
       { x: 1100, y: 360, color: RED | BLUE, radius: 30 }
     ]
+  },
+  {
+    name: 'LEVEL 15',
+    tag: 'PERIL',
+    hint: '红光只能竖着进黄目标——斜着过去会顺路污染后面的绿目标',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 800, y: 360, color: RED | GREEN, radius: 30 },
+      { x: 1100, y: 360, color: GREEN, radius: 26 }
+    ]
+  },
+  {
+    name: 'LEVEL 16',
+    tag: 'LADDER',
+    hint: '三个目标排成阶梯，一面镜子只管得住一个',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' },
+      { x: 700, y: 620, slant: '\\' }
+    ],
+    walls: [],
+    targets: [
+      { x: 950, y: 250, color: RED, radius: 36 },
+      { x: 1050, y: 450, color: BLUE, radius: 36 },
+      { x: 1150, y: 250, color: GREEN, radius: 36 }
+    ]
+  },
+  {
+    name: 'LEVEL 17',
+    tag: 'CHAIN',
+    hint: '两块半透镜接力，把一束红光喂给三个目标',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' }
+    ],
+    splitters: [
+      { x: 820, y: 315, slant: '/' },
+      { x: 1080, y: 288, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 820, y: 150, color: RED, radius: 30 },
+      { x: 1080, y: 130, color: RED, radius: 30 },
+      { x: 1200, y: 500, color: RED, radius: 30 }
+    ]
+  },
+  {
+    name: 'LEVEL 18',
+    tag: 'FINAL',
+    hint: '最后一题：半透镜分一路红光，另一路折下去，蓝激光走自己的',
+    sources: [
+      { x: 150, y: 360, angle: 0 },
+      { x: 150, y: 640, angle: 0, color: BLUE }
+    ],
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' },
+      { x: 700, y: 620, slant: '\\' },
+      { x: 950, y: 620, slant: '/' }
+    ],
+    splitters: [
+      { x: 860, y: 311, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 860, y: 150, color: RED, radius: 36 },
+      { x: 1150, y: 520, color: RED, radius: 36 },
+      { x: 1150, y: 640, color: BLUE, radius: 36 }
+    ]
   }
 ];
 
@@ -681,6 +759,39 @@ export function verifySolution(level, solution) {
   return core.solved();
 }
 
+// 光路采样点之外，再补一类关键位置：光束与「穿过目标中心的那条横线/竖线」的交点。
+// 把镜子放在这里，反射后的光会正好垂直或水平打进目标——这是最常见的解法形状，
+// 只靠等间距采样很容易从两个采样点中间漏过去。
+export function guidedSpots(core, step = 32) {
+  const spots = [...candidateSpots(core, step)];
+  const seen = new Set(spots.map((spot) => `${Math.round(spot.x)}:${Math.round(spot.y)}`));
+  const push = (x, y) => {
+    if (x < 70 || x > WIDTH - 70 || y < 70 || y > HEIGHT - 70) return;
+    if (Math.hypot(x - core.state.source.x, y - core.state.source.y) < 90) return;
+    if (Math.hypot(x - core.state.prism.x, y - core.state.prism.y) < core.state.prism.radius + 60) return;
+    const key = `${Math.round(x)}:${Math.round(y)}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    spots.push({ x, y });
+  };
+
+  for (const target of core.state.targets) {
+    for (const beam of core.state.beams) {
+      const dx = beam.x2 - beam.x1;
+      const dy = beam.y2 - beam.y1;
+      if (Math.abs(dx) > 1e-6) {
+        const t = (target.x - beam.x1) / dx;
+        if (t >= 0 && t <= 1) push(target.x, beam.y1 + dy * t);
+      }
+      if (Math.abs(dy) > 1e-6) {
+        const t = (target.y - beam.y1) / dy;
+        if (t >= 0 && t <= 1) push(beam.x1 + dx * t, target.y);
+      }
+    }
+  }
+  return spots;
+}
+
 // 逐面镜子做深度优先搜索：找到一组摆放能让全部目标亮起就返回。
 export function solveLevel(level, options = {}) {
   const step = options.step ?? 32;
@@ -693,7 +804,7 @@ export function solveLevel(level, options = {}) {
     if (index >= total) return null;
 
     if (core.state.mirrors[index]?.fixed) return search(core, index + 1, applied);
-    for (const spot of candidateSpots(core, step)) {
+    for (const spot of guidedSpots(core, step)) {
       for (const slant of ['/', '\\']) {
         const branch = cloneCore(core);
         branch.state.mirrors[index].slant = slant;
@@ -742,7 +853,7 @@ export function solveLevel(level, options = {}) {
   function solveOnPrism(start) {
   for (let index = 0; index < total; index += 1) {
     if (start.state.mirrors[index]?.fixed) continue;
-    for (const spot of candidateSpots(start, step)) {
+    for (const spot of guidedSpots(start, step)) {
       for (const slant of ['/', '\\']) {
         const branch = cloneCore(start);
         branch.state.mirrors[index].slant = slant;

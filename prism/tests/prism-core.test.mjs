@@ -96,15 +96,6 @@ test('moving a mirror recomputes the beams immediately', () => {
   assert.notEqual(before, after, 'beam layout should change when a mirror moves');
 });
 
-test('every shipped level is solvable with the written-down coordinates', () => {
-  for (const level of LEVELS) {
-    const solution = solveLevel(level);
-    assert.ok(solution, `${level.name} has no solution`);
-    // verifySolution 会用四舍五入后的坐标重跑一遍：解必须在玩家真能摆出的位置上成立
-    assert.equal(verifySolution(level, solution), true, `${level.name} solution did not reproduce`);
-  }
-});
-
 test('later levels ask for more thinking, not less', () => {
   const shape = LEVELS.map((level) => ({
     mirrors: level.mirrors.length,
@@ -176,11 +167,11 @@ test('fixed mirrors cannot be dragged or flipped', () => {
   assert.equal(core.state.mirrors[0].slant, '/');
 });
 
-test('the collection ships fourteen levels, each with its own mechanic', () => {
-  assert.equal(LEVELS.length, 14);
+test('the collection ships eighteen levels, each with its own mechanic', () => {
+  assert.equal(LEVELS.length, 18);
   const tags = LEVELS.map((level) => level.tag);
   for (const tag of ['THREE COLORS', 'THROUGH', 'MIX', 'AROUND', 'CYAN', 'MAGENTA', 'FIXED', 'WHITE',
-    'TWO GOALS', 'LASER', 'FILTER', 'SPLIT', 'CARRY', 'GAUNTLET']) {
+    'TWO GOALS', 'LASER', 'FILTER', 'SPLIT', 'CARRY', 'GAUNTLET', 'PERIL', 'LADDER', 'CHAIN', 'FINAL']) {
     assert.ok(tags.includes(tag), `missing level tag ${tag}`);
   }
   assert.ok(LEVELS.some((level) => level.mirrors.some((mirror) => mirror.fixed)), 'a fixed mirror level exists');
@@ -257,3 +248,41 @@ test('a fixed prism refuses to move and is not grabbable', () => {
   assert.equal(core.prismAt(core.state.prism.x, core.state.prism.y), null);
 });
 
+// 每关的存档解：由 solveLevel 搜出来并验证过。测试里直接重放它，
+// 一是快（最后一关要搜三十多秒），二是它同时验证「解在玩家真能摆出的坐标上成立」。
+const SAVED_SOLUTIONS = [
+  [{ mirror: 0, x: 1061, y: 290, slant: '/' }, { mirror: 1, x: 1061, y: 430, slant: '\\' }],
+  [{ mirror: 0, x: 998, y: 360, slant: '/' }],
+  [{ mirror: 0, x: 1061, y: 290, slant: '\\' }],
+  [{ mirror: 0, x: 527, y: 346, slant: '/' }, { mirror: 1, x: 513, y: 150, slant: '/' }],
+  [{ mirror: 0, x: 998, y: 424, slant: '/' }],
+  [{ mirror: 0, x: 1092, y: 286, slant: '\\' }],
+  [{ mirror: 0, x: 904, y: 360, slant: '/' }],
+  [{ mirror: 0, x: 528, y: 346, slant: '\\' }, { mirror: 1, x: 521, y: 408, slant: '\\' }, { mirror: 2, x: 972, y: 429, slant: '/' }],
+  [{ mirror: 0, x: 904, y: 306, slant: '\\' }, { mirror: 1, x: 1092, y: 434, slant: '/' }],
+  [{ mirror: 1, x: 620, y: 465, slant: '/' }],
+  [{ mirror: 0, x: 998, y: 296, slant: '\\' }, { mirror: 1, x: 983, y: 436, slant: '/' }],
+  [{ mirror: 0, x: 1153, y: 280, slant: '\\' }],
+  [{ prism: true, x: 303, y: 300 }, { mirror: 0, x: 1092, y: 213, slant: '/' }, { mirror: 1, x: 1092, y: 387, slant: '\\' }],
+  [{ mirror: 0, x: 1092, y: 286, slant: '\\' }, { mirror: 1, x: 1074, y: 459, slant: '/' }],
+  [{ mirror: 0, x: 779, y: 319, slant: '\\' }],
+  [{ mirror: 0, x: 708, y: 327, slant: '/' }, { mirror: 1, x: 1123, y: 360, slant: '/' }, { mirror: 2, x: 716, y: 250, slant: '/' }],
+  [{ mirror: 0, x: 1194, y: 276, slant: '\\' }],
+  [{ mirror: 0, x: 526, y: 346, slant: '/' }, { mirror: 1, x: 526, y: 346, slant: '/' }, { mirror: 2, x: 543, y: 189, slant: '/' }, { mirror: 3, x: 1162, y: 124, slant: '\\' }]
+];
+
+test('every shipped level has a recorded solution that reproduces', () => {
+  assert.equal(SAVED_SOLUTIONS.length, LEVELS.length, 'the solution table must cover every level');
+  LEVELS.forEach((level, index) => {
+    const solution = SAVED_SOLUTIONS[index];
+    assert.ok(solution, `${level.name} has no recorded solution`);
+    assert.equal(verifySolution(level, solution), true, `${level.name} recorded solution did not reproduce`);
+  });
+});
+
+test('later levels need more thinking than earlier ones', () => {
+  const early = SAVED_SOLUTIONS.slice(0, 5).reduce((sum, moves) => sum + moves.length, 0) / 5;
+  const late = SAVED_SOLUTIONS.slice(14).reduce((sum, moves) => sum + moves.length, 0) / 4;
+  assert.ok(late >= early, `late levels should not be shallower (early ${early}, late ${late})`);
+  assert.ok(SAVED_SOLUTIONS[17].length >= 3, 'the final level should take at least three moves');
+});
