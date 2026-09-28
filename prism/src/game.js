@@ -38,6 +38,7 @@ core.loadLevel(progress.level);
 let dragging = null;
 let clearedLevel = -1;
 let hoverIndex = null;
+let hoverPrism = false;
 let lastTime = performance.now();
 let solvedAt = 0;
 
@@ -105,9 +106,16 @@ canvas.addEventListener('pointerdown', (event) => {
   if (event.button !== 0) return;
   ensureAudio();
   const point = canvasPoint(event);
+  const prism = core.prismAt(point.x, point.y);
+  if (prism) {
+    dragging = { kind: 'prism', offsetX: prism.x - point.x, offsetY: prism.y - point.y, moved: 0 };
+    canvas.setPointerCapture(event.pointerId);
+    return;
+  }
   const index = core.mirrorAt(point.x, point.y);
   if (index === null) return;
   dragging = {
+    kind: 'mirror',
     index,
     offsetX: core.state.mirrors[index].x - point.x,
     offsetY: core.state.mirrors[index].y - point.y,
@@ -120,19 +128,27 @@ canvas.addEventListener('pointermove', (event) => {
   const point = canvasPoint(event);
   if (!dragging) {
     hoverIndex = core.mirrorAt(point.x, point.y);
+    hoverPrism = !!core.prismAt(point.x, point.y);
+    canvas.style.cursor = (hoverIndex !== null || hoverPrism) ? 'grab' : 'default';
+    return;
+  }
+  const targetX = point.x + dragging.offsetX;
+  const targetY = point.y + dragging.offsetY;
+  if (dragging.kind === 'prism') {
+    const prism = core.state.prism;
+    dragging.moved += Math.hypot(targetX - prism.x, targetY - prism.y);
+    core.movePrism(targetX, targetY);
     return;
   }
   const mirror = core.state.mirrors[dragging.index];
-  const targetX = point.x + dragging.offsetX;
-  const targetY = point.y + dragging.offsetY;
   dragging.moved += Math.hypot(targetX - mirror.x, targetY - mirror.y);
   core.moveMirror(dragging.index, targetX, targetY);
 });
 
 canvas.addEventListener('pointerup', (event) => {
   if (!dragging) return;
-  // 几乎没移动就是点了一下：把这面镜子翻个面
-  if (dragging.moved < 8) {
+  // 几乎没移动就是点了一下：把这面镜子翻个面（棱镜没有翻面这回事）
+  if (dragging.kind === 'mirror' && dragging.moved < 8) {
     if (core.toggleMirror(dragging.index)) playFlip();
   }
   dragging = null;
@@ -252,21 +268,32 @@ function drawBeams() {
   ctx.restore();
 }
 
-function drawSource() {
-  const source = core.state.source;
-  ctx.save();
-  ctx.shadowColor = '#ffffff';
-  ctx.shadowBlur = 30;
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(source.x, source.y, 13, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(180,240,255,.6)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(source.x, source.y, 22, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
+function drawSources() {
+  for (const source of core.state.sources) {
+    const rgb = rgbOf(source.color ?? 0);
+    const tint = source.color ? `rgb(${rgb[0]},${rgb[1]},${rgb[2]})` : '#ffffff';
+    ctx.save();
+    ctx.shadowColor = tint;
+    ctx.shadowBlur = 30;
+    ctx.fillStyle = tint;
+    ctx.beginPath();
+    ctx.arc(source.x, source.y, 13, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(200,245,255,.6)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(source.x, source.y, 22, 0, Math.PI * 2);
+    ctx.stroke();
+    // 有色激光加一圈同色外环，跟白色主光源区分开
+    if (source.color) {
+      ctx.strokeStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},.6)`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(source.x, source.y, 30, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
 }
 
 function drawPrism(now) {
@@ -286,6 +313,20 @@ function drawPrism(now) {
   ctx.strokeStyle = 'rgba(200,245,255,.8)';
   ctx.lineWidth = 2.4;
   ctx.stroke();
+  // 能拖的棱镜给个手柄提示
+  if (prism.movable) {
+    ctx.setLineDash([5, 6]);
+    ctx.strokeStyle = hoverPrism ? 'rgba(255,233,168,.95)' : 'rgba(160,225,250,.55)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, prism.radius + 12 + Math.sin(now * 0.004) * 3, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = hoverPrism ? 'rgba(255,233,168,.95)' : 'rgba(160,225,250,.7)';
+    ctx.beginPath();
+    ctx.arc(0, 0, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.restore();
 }
 
@@ -329,6 +370,62 @@ function drawMirrors(now) {
   });
 }
 
+function drawFilters(now) {
+  for (const filter of core.state.filters) {
+    const rgb = rgbOf(filter.color);
+    const pulse = 1 + Math.sin(now * 0.002) * 0.03;
+    ctx.save();
+    ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},.16)`;
+    ctx.strokeStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},.75)`;
+    ctx.shadowColor = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+    ctx.shadowBlur = 18;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(filter.x, filter.y, filter.radius * pulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    // 中间几道斜纹，一眼看出是滤片而不是目标
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 2;
+    for (let i = -1; i <= 1; i += 1) {
+      ctx.beginPath();
+      ctx.moveTo(filter.x - filter.radius * 0.6, filter.y + i * 12 - filter.radius * 0.35);
+      ctx.lineTo(filter.x + filter.radius * 0.6, filter.y + i * 12 + filter.radius * 0.35);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function drawSplitters() {
+  for (const splitter of core.state.splitters) {
+    const [a, b] = mirrorEndpoints(splitter);
+    ctx.save();
+    ctx.strokeStyle = '#bfe9ff';
+    ctx.shadowColor = '#8fdcff';
+    ctx.shadowBlur = 16;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    // 半透镜画成虚线覆层，跟实心镜子区分
+    ctx.strokeStyle = 'rgba(5,29,38,.9)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(190,235,255,.9)';
+    ctx.beginPath();
+    ctx.arc(splitter.x, splitter.y, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
 function drawTargets(now) {
   core.state.targets.forEach((target, index) => {
     const lit = core.isLit(index);
@@ -367,8 +464,10 @@ function render(now) {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
   drawBackground();
   drawBeams();
-  drawSource();
+  drawSources();
+  drawFilters(now);
   drawPrism(now);
+  drawSplitters();
   drawMirrors(now);
   drawTargets(now);
 }

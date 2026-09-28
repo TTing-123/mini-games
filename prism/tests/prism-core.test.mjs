@@ -176,8 +176,8 @@ test('fixed mirrors cannot be dragged or flipped', () => {
   assert.equal(core.state.mirrors[0].slant, '/');
 });
 
-test('the collection ships sixteen levels covering every mechanic', () => {
-  assert.equal(LEVELS.length, 16);
+test('the collection ships twenty levels covering every mechanic', () => {
+  assert.equal(LEVELS.length, 20);
   const tags = LEVELS.map((level) => level.tag);
   for (const tag of ['THREE COLORS', 'THROUGH', 'MIX', 'AROUND', 'CYAN', 'MAGENTA', 'FIXED', 'WHITE',
     'ABOVE', 'TWO GOALS', 'OVER', 'RELAY', 'TRIPLE', 'BLOCKED', 'LOWER', 'GAUNTLET']) {
@@ -186,4 +186,85 @@ test('the collection ships sixteen levels covering every mechanic', () => {
   assert.ok(LEVELS.some((level) => level.mirrors.some((mirror) => mirror.fixed)), 'a fixed mirror level exists');
   assert.ok(LEVELS.some((level) => level.walls.length > 0), 'a wall level exists');
   assert.ok(LEVELS.some((level) => level.targets.some((t) => t.color === WHITE)), 'a white target level exists');
+});
+
+test('a colour laser lights a matching target without the prism', () => {
+  const scene = {
+    name: 'LASER',
+    sources: [{ x: 100, y: 360, angle: 0, color: RED }],
+    prism: { x: -900, y: -900, radius: 1 },
+    mirrors: [],
+    walls: [],
+    targets: [{ x: 900, y: 360, color: RED, radius: 30 }]
+  };
+  const core = new PrismCore(scene);
+  assert.equal(core.state.sources.length, 1);
+  assert.equal(core.isLit(0), true, 'a red laser lights a red target on its own');
+});
+
+test('a filter eats the colours it does not pass', () => {
+  const base = {
+    name: 'FILTER',
+    sources: [{ x: 100, y: 360, angle: 0 }],
+    prism: { x: 250, y: 360, radius: 36 },
+    mirrors: [],
+    walls: [],
+    targets: [{ x: 900, y: 360, color: GREEN, radius: 30 }]
+  };
+  const blocked = new PrismCore({ ...base, filters: [{ x: 600, y: 360, radius: 50, color: RED }] });
+  assert.equal(blocked.isLit(0), false, 'a red-only filter stops the green beam');
+  const passed = new PrismCore({ ...base, filters: [{ x: 600, y: 360, radius: 50, color: GREEN }] });
+  assert.equal(passed.isLit(0), true, 'a green filter lets it through');
+});
+
+test('a beam splitter sends light two ways at once', () => {
+  const scene = {
+    name: 'SPLIT',
+    sources: [{ x: 100, y: 360, angle: 0, color: RED }],
+    prism: { x: -900, y: -900, radius: 1 },
+    mirrors: [],
+    splitters: [{ x: 500, y: 360, slant: '/' }],
+    walls: [],
+    targets: [
+      { x: 500, y: 150, color: RED, radius: 30 },
+      { x: 900, y: 360, color: RED, radius: 30 }
+    ]
+  };
+  const core = new PrismCore(scene);
+  assert.equal(core.litCount(), 2, 'the reflected and the through beam each light a target');
+});
+
+test('a movable prism can be dragged onto the beam', () => {
+  const scene = {
+    name: 'CARRY',
+    sources: [{ x: 100, y: 300, angle: 0 }],
+    prism: { x: 500, y: 600, radius: 36, movable: true },
+    mirrors: [],
+    walls: [],
+    targets: [{ x: 900, y: 300, color: GREEN, radius: 30 }]
+  };
+  const core = new PrismCore(scene);
+  assert.equal(core.isLit(0), false, 'off the beam the prism splits nothing');
+  assert.ok(core.prismAt(500, 600), 'the prism is grabbable');
+  assert.equal(core.movePrism(400, 300), true);
+  assert.equal(core.isLit(0), true, 'once on the beam the green ray reaches the target');
+});
+
+test('a fixed prism refuses to move and is not grabbable', () => {
+  const core = new PrismCore();
+  assert.equal(core.state.prism.movable, false);
+  assert.equal(core.movePrism(600, 300), false);
+  assert.equal(core.prismAt(core.state.prism.x, core.state.prism.y), null);
+});
+
+test('the collection ships twenty levels covering every mechanic', () => {
+  assert.equal(LEVELS.length, 20);
+  const tags = LEVELS.map((level) => level.tag);
+  for (const tag of ['LASER', 'FILTER', 'SPLIT', 'CARRY']) {
+    assert.ok(tags.includes(tag), `missing level tag ${tag}`);
+  }
+  assert.ok(LEVELS.some((level) => (level.sources ?? []).length > 1), 'a multi-source level exists');
+  assert.ok(LEVELS.some((level) => (level.filters ?? []).length > 0), 'a filter level exists');
+  assert.ok(LEVELS.some((level) => (level.splitters ?? []).length > 0), 'a splitter level exists');
+  assert.ok(LEVELS.some((level) => level.prism?.movable), 'a movable prism level exists');
 });

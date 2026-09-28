@@ -281,6 +281,80 @@ export const LEVELS = [
       { x: 1140, y: 360, color: GREEN, radius: 32 },
       { x: 1140, y: 550, color: BLUE, radius: 32 }
     ]
+  },
+  {
+    name: 'LEVEL 17',
+    tag: 'LASER',
+    hint: '红色那束是独立激光，不用等棱镜分光',
+    sources: [
+      { x: 150, y: 360, angle: 0 },
+      { x: 150, y: 620, angle: 0, color: RED }
+    ],
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 1000, y: 360, color: GREEN, radius: 26 },
+      { x: 1000, y: 470, color: RED, radius: 26 }
+    ]
+  },
+  {
+    name: 'LEVEL 18',
+    tag: 'FILTER',
+    hint: '绿光会掺进品红——用滤片把它吃掉',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' }
+    ],
+    filters: [
+      { x: 1000, y: 360, radius: 46, color: RED | BLUE }
+    ],
+    walls: [],
+    targets: [
+      { x: 1000, y: 360, color: RED | BLUE, radius: 30 }
+    ]
+  },
+  {
+    name: 'LEVEL 19',
+    tag: 'SPLIT',
+    hint: '半透镜把一束光劈成两束，两个目标都靠它',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' }
+    ],
+    splitters: [
+      { x: 900, y: 306, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 900, y: 160, color: RED, radius: 26 },
+      { x: 1150, y: 470, color: RED, radius: 26 }
+    ]
+  },
+  {
+    name: 'LEVEL 20',
+    tag: 'CARRY',
+    hint: '棱镜拖得动——先把它搬进光路里',
+    sources: [
+      { x: 150, y: 300, angle: 0 }
+    ],
+    prism: { x: 520, y: 620, radius: 36, movable: true },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 1100, y: 300, color: GREEN, radius: 34 },
+      { x: 1100, y: 170, color: RED, radius: 34 },
+      { x: 1100, y: 430, color: BLUE, radius: 34 }
+    ]
   }
 ];
 
@@ -413,10 +487,15 @@ export class PrismCore {
   }
 
   load(scene = SCENE) {
+    // 老的关卡数据用单个 source，这里统一成数组
+    const sources = (scene.sources ?? [scene.source]).filter(Boolean).map((source) => ({ ...source }));
     this.state = {
       name: scene.name,
-      source: { ...scene.source },
-      prism: { ...scene.prism },
+      sources,
+      source: sources[0],
+      prism: { ...scene.prism, movable: !!scene.prism?.movable },
+      filters: (scene.filters ?? []).map((filter) => ({ ...filter })),
+      splitters: (scene.splitters ?? []).map((splitter) => ({ ...splitter })),
       mirrors: scene.mirrors.map((mirror) => ({ ...mirror })),
       walls: (scene.walls ?? []).map((wall) => ({ ...wall })),
       hint: scene.hint ?? '',
@@ -449,6 +528,20 @@ export class PrismCore {
       if (distance <= MIRROR_HALF + slack && (!best || distance < best.distance)) best = { index: i, distance };
     }
     return best ? best.index : null;
+  }
+
+  movePrism(x, y) {
+    if (!this.state.prism.movable) return false;
+    this.state.prism.x = Math.max(60, Math.min(WIDTH - 60, x));
+    this.state.prism.y = Math.max(60, Math.min(HEIGHT - 60, y));
+    this.retrace();
+    return true;
+  }
+
+  prismAt(x, y, slack = 26) {
+    if (!this.state.prism.movable) return null;
+    const distance = Math.hypot(this.state.prism.x - x, this.state.prism.y - y);
+    return distance <= this.state.prism.radius + slack ? this.state.prism : null;
   }
 
   moveMirror(index, x, y) {
@@ -491,12 +584,15 @@ export class PrismCore {
     const state = this.state;
     for (const target of state.targets) target.hit = 0;
     const beams = [];
-    const start = {
-      x: state.source.x + Math.cos(state.source.angle) * 18,
-      y: state.source.y + Math.sin(state.source.angle) * 18
-    };
-    const dir = { x: Math.cos(state.source.angle), y: Math.sin(state.source.angle) };
-    this.trace(start, dir, RAW, 0, beams, -1);
+    for (const source of state.sources) {
+      const angle = source.angle ?? 0;
+      const start = {
+        x: source.x + Math.cos(angle) * 18,
+        y: source.y + Math.sin(angle) * 18
+      };
+      const dir = { x: Math.cos(angle), y: Math.sin(angle) };
+      this.trace(start, dir, source.color ?? RAW, 0, beams, -1);
+    }
     state.beams = beams;
     if (this.solved()) this.queue('solved', {});
   }
@@ -529,6 +625,21 @@ export class PrismCore {
       return;
     }
 
+    if (hit.type === 'splitter') {
+      // 一半反射、一半穿透：一束光变两束
+      const bounced = reflect(dir, normal);
+      this.trace(point, bounced, color, depth + 1, beams, -1);
+      this.trace(point, dir, color, depth + 1, beams, hit.index + 1000);
+      return;
+    }
+
+    if (hit.type === 'filter') {
+      const filter = this.state.filters[hit.index];
+      const filtered = color & filter.color;
+      if (filtered) this.trace(point, dir, filtered, depth + 1, beams, -1);
+      return;
+    }
+
     if (hit.type === 'wall') return;   // 光被挡住，到此为止
 
     if (hit.type === 'target') {
@@ -556,6 +667,19 @@ export class PrismCore {
       if (!best || t < best.t) best = { t, type: 'wall', index };
     });
 
+    this.state.splitters.forEach((splitter, index) => {
+      const [a, b] = mirrorEndpoints(splitter);
+      const t = raySegmentT(origin, dir, a, b);
+      if (t === null) return;
+      if (!best || t < best.t) best = { t, type: 'splitter', index };
+    });
+
+    this.state.filters.forEach((filter, index) => {
+      const t = rayCircleT(origin, dir, filter.x, filter.y, filter.radius);
+      if (t === null) return;
+      if (!best || t < best.t) best = { t, type: 'filter', index };
+    });
+
     const prismT = rayCircleT(origin, dir, this.state.prism.x, this.state.prism.y, this.state.prism.radius);
     if (prismT !== null && (!best || prismT < best.t)) best = { t: prismT, type: 'prism', index: 0 };
 
@@ -570,6 +694,9 @@ export class PrismCore {
     const point = { x: origin.x + dir.x * best.t, y: origin.y + dir.y * best.t };
     if (best.type === 'mirror') {
       return { ...best, point, normal: mirrorNormal(this.state.mirrors[best.index]) };
+    }
+    if (best.type === 'splitter') {
+      return { ...best, point, normal: mirrorNormal(this.state.splitters[best.index]) };
     }
     if (best.type === 'target') {
       const target = this.state.targets[best.index];
@@ -634,6 +761,10 @@ export function candidateSpots(core, step = 32) {
 export function verifySolution(level, solution) {
   const core = new PrismCore(level);
   for (const move of solution) {
+    if (move.prism) {
+      if (!core.movePrism(move.x, move.y)) return false;
+      continue;
+    }
     const mirror = core.state.mirrors[move.mirror];
     if (!mirror || mirror.fixed) return false;
     mirror.slant = move.slant;
@@ -671,7 +802,36 @@ export function solveLevel(level, options = {}) {
     return null;
   };
 
+  // 棱镜能拖的关卡：它必须先落在那束白光上才谈得上分光，所以先枚举几个落点
+  const prismSpots = [null];
+  if (start.state.prism.movable) {
+    const beam = start.state.beams[0];
+    if (beam) {
+      for (let t = 0.15; t <= 0.85; t += 0.05) {
+        prismSpots.push({
+          x: beam.x1 + (beam.x2 - beam.x1) * t,
+          y: beam.y1 + (beam.y2 - beam.y1) * t
+        });
+      }
+    }
+  }
+
+  for (const prismSpot of prismSpots) {
+    const withPrism = cloneCore(start);
+    if (prismSpot) withPrism.movePrism(prismSpot.x, prismSpot.y);
+    const founded = solveOnPrism(withPrism);
+    if (!founded) continue;
+    // 棱镜也是玩家要动的一步，得写进解里，否则重放不出来
+    const prefix = prismSpot
+      ? [{ prism: true, x: Math.round(prismSpot.x), y: Math.round(prismSpot.y) }]
+      : [];
+    const candidate = [...prefix, ...founded];
+    if (verifySolution(level, candidate)) return candidate;
+  }
+  return null;
+
   // 先找一步就能解的，避免返回那种「摆两面镜子但其实一面就够」的答案
+  function solveOnPrism(start) {
   for (let index = 0; index < total; index += 1) {
     if (start.state.mirrors[index]?.fixed) continue;
     for (const spot of candidateSpots(start, step)) {
@@ -687,4 +847,5 @@ export function solveLevel(level, options = {}) {
     }
   }
   return search(start, 0, []);
+  }
 }
