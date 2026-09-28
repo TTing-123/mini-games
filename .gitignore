@@ -13,3 +13,5 @@ package-lock.json
 **/tools/audit-report.txt
 **/tools/.browser-check/
 tools/market-report.txt
+
+prism/_*.txt
