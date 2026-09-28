@@ -176,11 +176,11 @@ test('fixed mirrors cannot be dragged or flipped', () => {
   assert.equal(core.state.mirrors[0].slant, '/');
 });
 
-test('the collection ships twenty levels covering every mechanic', () => {
-  assert.equal(LEVELS.length, 20);
+test('the collection ships fourteen levels, each with its own mechanic', () => {
+  assert.equal(LEVELS.length, 14);
   const tags = LEVELS.map((level) => level.tag);
   for (const tag of ['THREE COLORS', 'THROUGH', 'MIX', 'AROUND', 'CYAN', 'MAGENTA', 'FIXED', 'WHITE',
-    'ABOVE', 'TWO GOALS', 'OVER', 'RELAY', 'TRIPLE', 'BLOCKED', 'LOWER', 'GAUNTLET']) {
+    'TWO GOALS', 'LASER', 'FILTER', 'SPLIT', 'CARRY', 'GAUNTLET']) {
     assert.ok(tags.includes(tag), `missing level tag ${tag}`);
   }
   assert.ok(LEVELS.some((level) => level.mirrors.some((mirror) => mirror.fixed)), 'a fixed mirror level exists');
@@ -257,14 +257,3 @@ test('a fixed prism refuses to move and is not grabbable', () => {
   assert.equal(core.prismAt(core.state.prism.x, core.state.prism.y), null);
 });
 
-test('the collection ships twenty levels covering every mechanic', () => {
-  assert.equal(LEVELS.length, 20);
-  const tags = LEVELS.map((level) => level.tag);
-  for (const tag of ['LASER', 'FILTER', 'SPLIT', 'CARRY']) {
-    assert.ok(tags.includes(tag), `missing level tag ${tag}`);
-  }
-  assert.ok(LEVELS.some((level) => (level.sources ?? []).length > 1), 'a multi-source level exists');
-  assert.ok(LEVELS.some((level) => (level.filters ?? []).length > 0), 'a filter level exists');
-  assert.ok(LEVELS.some((level) => (level.splitters ?? []).length > 0), 'a splitter level exists');
-  assert.ok(LEVELS.some((level) => level.prism?.movable), 'a movable prism level exists');
-});

@@ -109,7 +109,7 @@ export const LEVELS = [
   {
     name: 'LEVEL 6',
     tag: 'MAGENTA',
-    hint: '品红 = 红 + 蓝，别让绿光掺进来',
+    hint: '这关的难点是别让绿光掺进来',
     source: { x: 150, y: 360, angle: 0 },
     prism: { x: 430, y: 360, radius: 36 },
     mirrors: [
@@ -154,23 +154,8 @@ export const LEVELS = [
   },
   {
     name: 'LEVEL 9',
-    tag: 'ABOVE',
-    hint: '两面镜子夹住目标，光从上下同时到',
-    source: { x: 150, y: 360, angle: 0 },
-    prism: { x: 430, y: 360, radius: 36 },
-    mirrors: [
-      { x: 620, y: 620, slant: '/' },
-      { x: 400, y: 120, slant: '/' }
-    ],
-    walls: [],
-    targets: [
-      { x: 900, y: 334, color: RED | GREEN, radius: 26 }
-    ]
-  },
-  {
-    name: 'LEVEL 10',
     tag: 'TWO GOALS',
-    hint: '一束光当主线，另外两色分头汇进',
+    hint: '一束光当主线，另外两色分头汇进去',
     source: { x: 150, y: 360, angle: 0 },
     prism: { x: 430, y: 360, radius: 36 },
     mirrors: [
@@ -184,106 +169,7 @@ export const LEVELS = [
     ]
   },
   {
-    name: 'LEVEL 11',
-    tag: 'OVER',
-    hint: '墙过不去，先抬上去再折回来',
-    source: { x: 150, y: 360, angle: 0 },
-    prism: { x: 430, y: 360, radius: 36 },
-    mirrors: [
-      { x: 620, y: 620, slant: '/' },
-      { x: 400, y: 120, slant: '/' }
-    ],
-    walls: [
-      { x1: 950, y1: 240, x2: 950, y2: 460 }
-    ],
-    targets: [
-      { x: 1100, y: 200, color: GREEN, radius: 28 }
-    ]
-  },
-  {
-    name: 'LEVEL 12',
-    tag: 'RELAY',
-    hint: '灰色镜子已经在路上了，接住它的光',
-    source: { x: 150, y: 360, angle: 0 },
-    prism: { x: 430, y: 360, radius: 36 },
-    mirrors: [
-      { x: 620, y: 620, slant: '/' },
-      { x: 800, y: 360, slant: '/', fixed: true }
-    ],
-    walls: [],
-    targets: [
-      { x: 1100, y: 180, color: GREEN, radius: 28 }
-    ]
-  },
-  {
-    name: 'LEVEL 13',
-    tag: 'TRIPLE',
-    hint: '三个目标，各找各的颜色',
-    source: { x: 150, y: 360, angle: 0 },
-    prism: { x: 430, y: 360, radius: 36 },
-    mirrors: [
-      { x: 620, y: 620, slant: '/' },
-      { x: 400, y: 120, slant: '/' }
-    ],
-    walls: [],
-    targets: [
-      { x: 1100, y: 200, color: RED, radius: 26 },
-      { x: 1100, y: 360, color: GREEN, radius: 26 },
-      { x: 1100, y: 520, color: BLUE, radius: 26 }
-    ]
-  },
-  {
-    name: 'LEVEL 14',
-    tag: 'BLOCKED',
-    hint: '红光要先跳墙',
-    source: { x: 150, y: 360, angle: 0 },
-    prism: { x: 430, y: 360, radius: 36 },
-    mirrors: [
-      { x: 620, y: 620, slant: '/' },
-      { x: 400, y: 120, slant: '/' }
-    ],
-    walls: [
-      { x1: 950, y1: 220, x2: 950, y2: 500 }
-    ],
-    targets: [
-      { x: 1100, y: 180, color: RED, radius: 28 }
-    ]
-  },
-  {
-    name: 'LEVEL 15',
-    tag: 'LOWER',
-    hint: '这回要往下拐',
-    source: { x: 150, y: 360, angle: 0 },
-    prism: { x: 430, y: 360, radius: 36 },
-    mirrors: [
-      { x: 620, y: 620, slant: '/' },
-      { x: 400, y: 120, slant: '/' }
-    ],
-    walls: [],
-    targets: [
-      { x: 900, y: 430, color: GREEN | BLUE, radius: 30 }
-    ]
-  },
-  {
-    name: 'LEVEL 16',
-    tag: 'GAUNTLET',
-    hint: '三个目标，还多一面挡路的灰镜子',
-    source: { x: 150, y: 360, angle: 0 },
-    prism: { x: 430, y: 360, radius: 36 },
-    mirrors: [
-      { x: 620, y: 620, slant: '/' },
-      { x: 400, y: 120, slant: '/' },
-      { x: 700, y: 620, slant: '\\' }
-    ],
-    walls: [],
-    targets: [
-      { x: 1140, y: 170, color: RED, radius: 32 },
-      { x: 1140, y: 360, color: GREEN, radius: 32 },
-      { x: 1140, y: 550, color: BLUE, radius: 32 }
-    ]
-  },
-  {
-    name: 'LEVEL 17',
+    name: 'LEVEL 10',
     tag: 'LASER',
     hint: '红色那束是独立激光，不用等棱镜分光',
     sources: [
@@ -302,7 +188,7 @@ export const LEVELS = [
     ]
   },
   {
-    name: 'LEVEL 18',
+    name: 'LEVEL 11',
     tag: 'FILTER',
     hint: '绿光会掺进品红——用滤片把它吃掉',
     source: { x: 150, y: 360, angle: 0 },
@@ -320,7 +206,7 @@ export const LEVELS = [
     ]
   },
   {
-    name: 'LEVEL 19',
+    name: 'LEVEL 12',
     tag: 'SPLIT',
     hint: '半透镜把一束光劈成两束，两个目标都靠它',
     source: { x: 150, y: 360, angle: 0 },
@@ -338,7 +224,7 @@ export const LEVELS = [
     ]
   },
   {
-    name: 'LEVEL 20',
+    name: 'LEVEL 13',
     tag: 'CARRY',
     hint: '棱镜拖得动——先把它搬进光路里',
     sources: [
@@ -354,6 +240,28 @@ export const LEVELS = [
       { x: 1100, y: 300, color: GREEN, radius: 34 },
       { x: 1100, y: 170, color: RED, radius: 34 },
       { x: 1100, y: 430, color: BLUE, radius: 34 }
+    ]
+  },
+  {
+    name: 'LEVEL 14',
+    tag: 'GAUNTLET',
+    hint: '综合题：半透镜分一路，滤片帮品红挡掉绿光',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' }
+    ],
+    splitters: [
+      { x: 820, y: 306, slant: '/' }
+    ],
+    filters: [
+      { x: 1100, y: 360, radius: 46, color: RED | BLUE }
+    ],
+    walls: [],
+    targets: [
+      { x: 820, y: 150, color: RED, radius: 28 },
+      { x: 1100, y: 360, color: RED | BLUE, radius: 30 }
     ]
   }
 ];

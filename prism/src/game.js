@@ -426,19 +426,55 @@ function drawSplitters() {
   }
 }
 
+const CHANNEL_BADGES = [
+  { mask: RED, rgb: [255, 90, 82], label: '红' },
+  { mask: GREEN, rgb: [90, 235, 140], label: '绿' },
+  { mask: BLUE, rgb: [95, 170, 255], label: '蓝' }
+];
+
+// 目标内部画出它要的颜色：收到的那颗会亮起来，缺的那颗是暗的
+function drawChannelBadges(target) {
+  const needed = CHANNEL_BADGES.filter((channel) => target.color & channel.mask);
+  if (needed.length <= 1) return;   // 单色目标的颜色本身就说明了一切，不用再画
+  const spacing = 15;
+  const startX = target.x - ((needed.length - 1) * spacing) / 2;
+  needed.forEach((channel, index) => {
+    const got = (target.hit & channel.mask) !== 0;
+    const x = startX + index * spacing;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, target.y, 5.5, 0, Math.PI * 2);
+    ctx.fillStyle = got
+      ? `rgb(${channel.rgb[0]},${channel.rgb[1]},${channel.rgb[2]})`
+      : `rgba(${channel.rgb[0]},${channel.rgb[1]},${channel.rgb[2]},.22)`;
+    if (got) {
+      ctx.shadowColor = `rgb(${channel.rgb[0]},${channel.rgb[1]},${channel.rgb[2]})`;
+      ctx.shadowBlur = 12;
+    }
+    ctx.fill();
+    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = got ? 'rgba(255,255,255,.85)' : 'rgba(200,230,240,.28)';
+    ctx.stroke();
+    ctx.restore();
+  });
+}
+
 function drawTargets(now) {
   core.state.targets.forEach((target, index) => {
     const lit = core.isLit(index);
     const wanted = rgbOf(target.color);
     const received = target.hit ? rgbOf(target.hit) : null;
-    const pulse = lit ? 1 + Math.sin(now * 0.005 + index) * 0.06 : 1;
+    // 没点亮的目标也呼吸一下，把注意力拉过去
+    const pulse = lit
+      ? 1 + Math.sin(now * 0.005 + index) * 0.06
+      : 1 + Math.sin(now * 0.003 + index * 1.7) * 0.05;
 
     ctx.save();
     // 目标要什么颜色：外环画出来
-    ctx.shadowColor = rgba(wanted, lit ? 0.95 : 0.5);
-    ctx.shadowBlur = lit ? 36 : 16;
-    ctx.strokeStyle = rgba(wanted, lit ? 1 : 0.75);
-    ctx.lineWidth = lit ? 5 : 3;
+    ctx.shadowColor = rgba(wanted, lit ? 0.95 : 0.62);
+    ctx.shadowBlur = lit ? 36 : 24;
+    ctx.strokeStyle = rgba(wanted, lit ? 1 : 0.9);
+    ctx.lineWidth = lit ? 5 : 3.6;
     ctx.beginPath();
     ctx.arc(target.x, target.y, target.radius * pulse, 0, Math.PI * 2);
     ctx.stroke();
@@ -457,6 +493,8 @@ function drawTargets(now) {
       ctx.fill();
     }
     ctx.restore();
+
+    drawChannelBadges(target);
   });
 }
 
