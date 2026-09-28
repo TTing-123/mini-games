@@ -28,6 +28,7 @@ const EPS = 1e-4;
 export const LEVELS = [
   {
     name: 'LEVEL 1',
+    tag: 'THREE COLORS',
     hint: '把红光和蓝光引到同色目标上 · 轻点镜子翻面',
     source: { x: 150, y: 360, angle: 0 },
     prism: { x: 430, y: 360, radius: 36 },
@@ -44,6 +45,7 @@ export const LEVELS = [
   },
   {
     name: 'LEVEL 2',
+    tag: 'THROUGH',
     hint: '一束光能连续穿过两个目标',
     source: { x: 150, y: 360, angle: 0 },
     prism: { x: 430, y: 360, radius: 36 },
@@ -58,6 +60,7 @@ export const LEVELS = [
   },
   {
     name: 'LEVEL 3',
+    tag: 'MIX',
     hint: '两个颜色同时照到，才算对上',
     source: { x: 150, y: 360, angle: 0 },
     prism: { x: 430, y: 360, radius: 36 },
@@ -71,6 +74,7 @@ export const LEVELS = [
   },
   {
     name: 'LEVEL 4',
+    tag: 'AROUND',
     hint: '墙过不去，就绕过去',
     source: { x: 150, y: 360, angle: 0 },
     prism: { x: 430, y: 360, radius: 36 },
@@ -221,6 +225,7 @@ export class PrismCore {
       mirrors: scene.mirrors.map((mirror) => ({ ...mirror })),
       walls: (scene.walls ?? []).map((wall) => ({ ...wall })),
       hint: scene.hint ?? '',
+      tag: scene.tag ?? '',
       targets: scene.targets.map((target) => ({ ...target, hit: 0 })),
       beams: [],
       dragging: null

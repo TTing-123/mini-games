@@ -10,9 +10,33 @@ const banner = document.querySelector('#banner');
 const hint = document.querySelector('#hint');
 const levelBadge = document.querySelector('#level-badge');
 const nextButton = document.querySelector('#next-button');
+const levelsButton = document.querySelector('#levels-button');
+const levelPanel = document.querySelector('#level-panel');
+const levelGrid = document.querySelector('#level-grid');
+const levelClose = document.querySelector('#level-close');
+
+const PROGRESS_KEY = 'prism-progress';
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return { cleared: [], level: 0 };
+    const parsed = JSON.parse(raw);
+    return {
+      cleared: Array.isArray(parsed.cleared) ? parsed.cleared.filter((n) => Number.isInteger(n)) : [],
+      level: Number.isInteger(parsed.level) ? parsed.level : 0
+    };
+  } catch (_) {
+    return { cleared: [], level: 0 };
+  }
+}
+
+const progress = loadProgress();
 
 const core = new PrismCore();
+core.loadLevel(progress.level);
 let dragging = null;
+let clearedLevel = -1;
 let hoverIndex = null;
 let lastTime = performance.now();
 let solvedAt = 0;
@@ -31,11 +55,7 @@ canvas.addEventListener('pointerdown', (event) => {
   if (event.button !== 0) return;
   const point = canvasPoint(event);
   const index = core.mirrorAt(point.x, point.y);
-  if (index === null) {
-    // 通关之后点画面任何地方都能继续，省得找不到按钮
-    if (core.solved() && !core.isLastLevel()) goNextLevel();
-    return;
-  }
+  if (index === null) return;
   dragging = {
     index,
     offsetX: core.state.mirrors[index].x - point.x,
@@ -68,11 +88,59 @@ canvas.addEventListener('pointerup', (event) => {
 
 canvas.addEventListener('pointercancel', () => { dragging = null; });
 
+function saveProgress() {
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+  } catch (_) {
+    /* 隐私模式下写不了就算了 */
+  }
+}
+
 function goNextLevel() {
   if (core.isLastLevel()) return;
   core.nextLevel();
+  progress.level = core.levelIndex;
+  saveProgress();
+  clearedLevel = -1;
   refreshLevelText();
+  buildLevelGrid();
 }
+
+function goToLevel(index) {
+  core.loadLevel(index);
+  progress.level = core.levelIndex;
+  saveProgress();
+  clearedLevel = -1;
+  refreshLevelText();
+  buildLevelGrid();
+  levelPanel.classList.add('is-hidden');
+}
+
+function buildLevelGrid() {
+  levelGrid.innerHTML = '';
+  for (let i = 0; i < core.levelCount; i += 1) {
+    const level = core.levels[i];
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'level-tile';
+    tile.dataset.level = String(i);
+    if (progress.cleared.includes(i)) tile.classList.add('is-cleared');
+    if (i === core.levelIndex) tile.classList.add('is-current');
+    const number = document.createElement('span');
+    number.textContent = String(i + 1).padStart(2, '0');
+    const tag = document.createElement('small');
+    tag.textContent = level.tag ?? '';
+    tile.append(number, tag);
+    tile.addEventListener('click', () => goToLevel(i));
+    levelGrid.append(tile);
+  }
+}
+
+levelsButton.addEventListener('click', () => {
+  buildLevelGrid();
+  levelPanel.classList.toggle('is-hidden');
+});
+levelClose.addEventListener('click', () => levelPanel.classList.add('is-hidden'));
 
 window.addEventListener('keydown', (event) => {
   if (event.key.toLowerCase() === 'r') core.restart();
@@ -80,6 +148,7 @@ window.addEventListener('keydown', (event) => {
     event.preventDefault();
     goNextLevel();
   }
+  if (event.key === 'Escape') levelPanel.classList.add('is-hidden');
 });
 
 nextButton.addEventListener('click', goNextLevel);
@@ -250,6 +319,17 @@ function updateHud() {
   banner.textContent = core.isLastLevel() ? 'ALL CLEAR' : 'ALL LIT';
   banner.classList.toggle('is-visible', solved);
   nextButton.classList.toggle('is-hidden', !solved || core.isLastLevel());
+
+  // 第一次通关这一关时记下来，关卡面板里打勾
+  if (solved && clearedLevel !== core.levelIndex) {
+    clearedLevel = core.levelIndex;
+    if (!progress.cleared.includes(core.levelIndex)) {
+      progress.cleared.push(core.levelIndex);
+      saveProgress();
+      buildLevelGrid();
+    }
+  }
+  if (!solved) clearedLevel = -1;
 }
 
 function loop(now) {
@@ -261,8 +341,12 @@ function loop(now) {
 }
 
 refreshLevelText();
+buildLevelGrid();
 
 const params = new URLSearchParams(location.search);
-if (params.has('debug')) window.__prism = core;
+if (params.has('debug')) {
+  window.__prism = core;
+  window.__prismProgress = progress;
+}
 
 requestAnimationFrame(loop);
