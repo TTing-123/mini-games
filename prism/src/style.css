@@ -1,0 +1,20 @@
+:root { --cyan: #59d9e5; --text: #d9fbff; --muted: #79aeb9; --mono: "Consolas", "Lucida Console", monospace; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: radial-gradient(circle at 50% 40%, #08222c, #020c11 72%); color: var(--text); font-family: "Trebuchet MS", "Gill Sans", sans-serif; overflow: hidden; }
+.stage { position: relative; width: 100vw; height: 100vh; display: grid; place-items: center; }
+#game-canvas { width: min(100vw, calc(100vh * 16 / 9)); height: min(100vh, calc(100vw * 9 / 16)); display: block; cursor: grab; touch-action: none; }
+#game-canvas:active { cursor: grabbing; }
+.hud { position: absolute; left: 20px; top: 18px; pointer-events: none; }
+.hud-panel { min-width: 108px; padding: 10px 14px; border: 1px solid rgba(89,217,229,.32); border-radius: 16px; background: rgba(8,35,45,.86); }
+.hud-label { color: var(--muted); font: 700 10px/1 var(--mono); letter-spacing: .24em; }
+.hud-number { margin-top: 7px; font: 700 22px/1 var(--mono); }
+.banner { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%) scale(.94); opacity: 0; color: #fff4cf; font: 700 46px/1 var(--mono); letter-spacing: .12em; text-shadow: 0 0 34px rgba(255,220,140,.85); pointer-events: none; transition: opacity .35s ease, transform .35s ease; }
+.banner.is-visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.hint { position: absolute; left: 50%; bottom: 5%; transform: translateX(-50%); color: rgba(121,174,185,.8); font: 700 11px/1 var(--mono); letter-spacing: .22em; pointer-events: none; }
+@media (max-width: 900px) {
+  .hud { left: 10px; top: 8px; }
+  .hud-panel { min-width: 84px; padding: 7px 10px; }
+  .hud-number { font-size: 17px; }
+  .banner { font-size: 30px; }
+  .hint { font-size: 9px; letter-spacing: .14em; }
+}
