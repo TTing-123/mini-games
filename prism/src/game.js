@@ -8,6 +8,8 @@ const ctx = canvas.getContext('2d');
 const litCounter = document.querySelector('#lit-counter');
 const banner = document.querySelector('#banner');
 const hint = document.querySelector('#hint');
+const levelBadge = document.querySelector('#level-badge');
+const nextButton = document.querySelector('#next-button');
 
 const core = new PrismCore();
 let dragging = null;
@@ -62,12 +64,29 @@ canvas.addEventListener('pointerup', (event) => {
 
 canvas.addEventListener('pointercancel', () => { dragging = null; });
 
+function goNextLevel() {
+  if (core.isLastLevel()) return;
+  core.nextLevel();
+  refreshLevelText();
+}
+
 window.addEventListener('keydown', (event) => {
-  if (event.key.toLowerCase() === 'r') {
-    core.load();
-    solvedAt = 0;
+  if (event.key.toLowerCase() === 'r') core.restart();
+  if (event.key === ' ' || event.key === 'Enter') {
+    event.preventDefault();
+    goNextLevel();
   }
 });
+
+nextButton.addEventListener('click', goNextLevel);
+
+function refreshLevelText() {
+  levelBadge.textContent = `${core.state.name} · ${core.levelIndex + 1}/${core.levelCount}`;
+  hint.textContent = core.state.hint;
+  hint.classList.remove('is-visible');
+  void hint.offsetWidth;
+  hint.classList.add('is-visible');
+}
 
 /* ---------------- 渲染 ---------------- */
 
@@ -223,11 +242,10 @@ function render(now) {
 
 function updateHud() {
   litCounter.textContent = `${core.litCount()}/${core.state.targets.length}`;
-  if (core.solved()) {
-    banner.classList.add('is-visible');
-  } else {
-    banner.classList.remove('is-visible');
-  }
+  const solved = core.solved();
+  banner.textContent = core.isLastLevel() ? 'ALL CLEAR' : 'ALL LIT';
+  banner.classList.toggle('is-visible', solved);
+  nextButton.classList.toggle('is-hidden', !solved || core.isLastLevel());
 }
 
 function loop(now) {
@@ -237,6 +255,8 @@ function loop(now) {
   updateHud();
   requestAnimationFrame(loop);
 }
+
+refreshLevelText();
 
 const params = new URLSearchParams(location.search);
 if (params.has('debug')) window.__prism = core;

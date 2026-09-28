@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   PrismCore, SCENE, RED, GREEN, BLUE, WHITE,
-  colorKey, raySegmentT, rayCircleT, reflect, mirrorEndpoints
+  colorKey, raySegmentT, rayCircleT, reflect, mirrorEndpoints,
+  LEVELS, solveLevel
 } from '../src/prism-core.js';
 
 const clone = (scene) => ({
@@ -92,4 +93,57 @@ test('moving a mirror recomputes the beams immediately', () => {
   core.moveMirror(1, 700, 300);
   const after = core.state.beams.length;
   assert.notEqual(before, after, 'beam layout should change when a mirror moves');
+});
+
+test('every shipped level is solvable', () => {
+  for (const level of LEVELS) {
+    const solution = solveLevel(level);
+    assert.ok(solution, `${level.name} has no solution`);
+    const core = new PrismCore(level);
+    for (const move of solution) {
+      core.state.mirrors[move.mirror].slant = move.slant;
+      core.moveMirror(move.mirror, move.x, move.y);
+    }
+    assert.equal(core.solved(), true, `${level.name} was not solved by its own solution`);
+  }
+});
+
+test('later levels ask for more thinking, not less', () => {
+  const shape = LEVELS.map((level) => ({
+    mirrors: level.mirrors.length,
+    targets: level.targets.length,
+    colors: new Set(level.targets.map((t) => t.color)).size
+  }));
+  assert.ok(shape[3].colors >= 1);
+  assert.ok(LEVELS[0].targets.length >= LEVELS[3].targets.length, 'the last level trades target count for tighter constraints');
+});
+
+test('walls stop the beam', () => {
+  const blocked = {
+    name: 'WALL',
+    source: { x: 100, y: 360, angle: 0 },
+    prism: { x: -900, y: -900, radius: 1 },
+    mirrors: [],
+    walls: [{ x1: 400, y1: 200, x2: 400, y2: 520 }],
+    targets: [{ x: 900, y: 360, color: WHITE, radius: 30 }]
+  };
+  const core = new PrismCore(blocked);
+  assert.equal(core.isLit(0), false, 'a wall in the way should block the light');
+
+  const open = { ...blocked, walls: [] };
+  const clear = new PrismCore(open);
+  assert.equal(clear.isLit(0), true, 'without the wall the same beam reaches the target');
+});
+
+test('level flow advances and stops at the last level', () => {
+  const core = new PrismCore();
+  assert.equal(core.levelIndex, 0);
+  assert.equal(core.isLastLevel(), false);
+  let guard = 0;
+  while (core.nextLevel() && guard < 20) guard += 1;
+  assert.equal(core.levelIndex, LEVELS.length - 1);
+  assert.equal(core.isLastLevel(), true);
+  assert.equal(core.nextLevel(), false, 'cannot advance past the last level');
+  core.restart();
+  assert.equal(core.levelIndex, LEVELS.length - 1, 'restart stays on the current level');
 });

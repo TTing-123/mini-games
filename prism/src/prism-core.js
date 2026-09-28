@@ -25,20 +25,69 @@ const CHANNELS = [
 const MAX_BOUNCES = 16;
 const EPS = 1e-4;
 
-export const SCENE = {
-  name: 'PROTOTYPE',
-  source: { x: 150, y: 360, angle: 0 },
-  prism: { x: 430, y: 360, radius: 36 },
-  mirrors: [
-    { x: 620, y: 620, slant: '/' },
-    { x: 620, y: 130, slant: '/' }
-  ],
-  targets: [
-    { x: 1070, y: 360, color: GREEN, radius: 26 },
-    { x: 1070, y: 170, color: RED, radius: 26 },
-    { x: 1070, y: 550, color: BLUE, radius: 26 }
-  ]
-};
+export const LEVELS = [
+  {
+    name: 'LEVEL 1',
+    hint: '拖动镜子 · 轻点翻面',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 620, y: 130, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 1070, y: 360, color: GREEN, radius: 26 },
+      { x: 1070, y: 170, color: RED, radius: 26 },
+      { x: 1070, y: 550, color: BLUE, radius: 26 }
+    ]
+  },
+  {
+    name: 'LEVEL 2',
+    hint: '一束光能连续穿过两个目标',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 1000, y: 250, color: GREEN, radius: 24 },
+      { x: 1000, y: 120, color: GREEN, radius: 24 }
+    ]
+  },
+  {
+    name: 'LEVEL 3',
+    hint: '两个颜色同时照到，才算对上',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 1070, y: 360, color: RED | GREEN, radius: 30 }
+    ]
+  },
+  {
+    name: 'LEVEL 4',
+    hint: '墙过不去，就绕过去',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' }
+    ],
+    walls: [
+      { x1: 900, y1: 300, x2: 900, y2: 560 }
+    ],
+    targets: [
+      { x: 1150, y: 150, color: GREEN, radius: 26 }
+    ]
+  }
+];
+
+export const SCENE = LEVELS[0];
 
 export const MIRROR_HALF = 44;
 
@@ -134,7 +183,34 @@ export class PrismCore {
   constructor(scene = SCENE) {
     this.events = [];
     this.state = null;
+    this.levelIndex = 0;
+    this.levels = LEVELS;
     this.load(scene);
+  }
+
+  get levelCount() {
+    return this.levels.length;
+  }
+
+  loadLevel(index) {
+    const clamped = Math.max(0, Math.min(this.levels.length - 1, index));
+    this.levelIndex = clamped;
+    this.load(this.levels[clamped]);
+    this.queue('levelLoaded', { index: clamped, label: this.state.name });
+  }
+
+  nextLevel() {
+    if (this.levelIndex >= this.levels.length - 1) return false;
+    this.loadLevel(this.levelIndex + 1);
+    return true;
+  }
+
+  isLastLevel() {
+    return this.levelIndex >= this.levels.length - 1;
+  }
+
+  restart() {
+    this.loadLevel(this.levelIndex);
   }
 
   load(scene = SCENE) {
@@ -143,6 +219,8 @@ export class PrismCore {
       source: { ...scene.source },
       prism: { ...scene.prism },
       mirrors: scene.mirrors.map((mirror) => ({ ...mirror })),
+      walls: (scene.walls ?? []).map((wall) => ({ ...wall })),
+      hint: scene.hint ?? '',
       targets: scene.targets.map((target) => ({ ...target, hit: 0 })),
       beams: [],
       dragging: null
@@ -251,6 +329,8 @@ export class PrismCore {
       return;
     }
 
+    if (hit.type === 'wall') return;   // 光被挡住，到此为止
+
     if (hit.type === 'target') {
       const target = this.state.targets[hit.index];
       target.hit |= color;
@@ -268,6 +348,12 @@ export class PrismCore {
       const t = raySegmentT(origin, dir, a, b);
       if (t === null) return;
       if (!best || t < best.t) best = { t, type: 'mirror', index };
+    });
+
+    this.state.walls.forEach((wall, index) => {
+      const t = raySegmentT(origin, dir, { x: wall.x1, y: wall.y1 }, { x: wall.x2, y: wall.y2 });
+      if (t === null) return;
+      if (!best || t < best.t) best = { t, type: 'wall', index };
     });
 
     const prismT = rayCircleT(origin, dir, this.state.prism.x, this.state.prism.y, this.state.prism.radius);
@@ -305,4 +391,70 @@ export class PrismCore {
     const t = positive.length ? Math.min(...positive) : 0;
     return { x: origin.x + dir.x * t, y: origin.y + dir.y * t };
   }
+}
+
+
+/* ---------------- 关卡验证工具 ---------------- */
+
+function cloneCore(core) {
+  const clone = Object.create(PrismCore.prototype);
+  clone.state = structuredClone(core.state);
+  clone.events = [];
+  clone.levelIndex = core.levelIndex;
+  clone.levels = core.levels;
+  return clone;
+}
+
+// 镜子只有放在光束经过的地方才可能改变光路，所以候选点就取光束上的采样。
+export function candidateSpots(core, step = 55) {
+  const spots = [];
+  const seen = new Set();
+  for (const beam of core.state.beams) {
+    const length = Math.hypot(beam.x2 - beam.x1, beam.y2 - beam.y1);
+    const count = Math.max(1, Math.ceil(length / step));
+    for (let i = 0; i <= count; i += 1) {
+      const t = i / count;
+      const x = beam.x1 + (beam.x2 - beam.x1) * t;
+      const y = beam.y1 + (beam.y2 - beam.y1) * t;
+      if (x < 70 || x > WIDTH - 70 || y < 70 || y > HEIGHT - 70) continue;
+      const key = `${Math.round(x / 25)}:${Math.round(y / 25)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      spots.push({ x, y });
+    }
+  }
+  return spots;
+}
+
+// 逐面镜子做深度优先搜索：找到一组摆放能让全部目标亮起就返回。
+export function solveLevel(level, options = {}) {
+  const step = options.step ?? 55;
+  const start = new PrismCore(level);
+  const total = start.state.mirrors.length;
+
+  const search = (core, index) => {
+    if (core.solved()) return [];
+    if (index >= total) return null;
+
+    const base = core.litCount();
+    for (const spot of candidateSpots(core, step)) {
+      for (const slant of ['/', '\\']) {
+        const branch = cloneCore(core);
+        branch.state.mirrors[index].slant = slant;
+        branch.moveMirror(index, spot.x, spot.y);
+        // 剪枝：这一步没让任何新目标亮起，就别在这条死路上往下搜
+        if (branch.litCount() < base && !branch.solved()) continue;
+        if (branch.solved()) {
+          return [{ mirror: index, x: Math.round(spot.x), y: Math.round(spot.y), slant }];
+        }
+        const rest = search(branch, index + 1);
+        if (rest) {
+          return [{ mirror: index, x: Math.round(spot.x), y: Math.round(spot.y), slant }, ...rest];
+        }
+      }
+    }
+    return null;
+  };
+
+  return search(start, 0);
 }
