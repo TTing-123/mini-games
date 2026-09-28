@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   PrismCore, SCENE, RED, GREEN, BLUE, WHITE, RAW,
   colorKey, raySegmentT, rayCircleT, reflect, mirrorEndpoints,
-  LEVELS, solveLevel
+  LEVELS, solveLevel, verifySolution
 } from '../src/prism-core.js';
 
 const clone = (scene) => ({
@@ -96,16 +96,12 @@ test('moving a mirror recomputes the beams immediately', () => {
   assert.notEqual(before, after, 'beam layout should change when a mirror moves');
 });
 
-test('every shipped level is solvable', () => {
+test('every shipped level is solvable with the written-down coordinates', () => {
   for (const level of LEVELS) {
     const solution = solveLevel(level);
     assert.ok(solution, `${level.name} has no solution`);
-    const core = new PrismCore(level);
-    for (const move of solution) {
-      core.state.mirrors[move.mirror].slant = move.slant;
-      core.moveMirror(move.mirror, move.x, move.y);
-    }
-    assert.equal(core.solved(), true, `${level.name} was not solved by its own solution`);
+    // verifySolution 会用四舍五入后的坐标重跑一遍：解必须在玩家真能摆出的位置上成立
+    assert.equal(verifySolution(level, solution), true, `${level.name} solution did not reproduce`);
   }
 });
 
@@ -180,10 +176,11 @@ test('fixed mirrors cannot be dragged or flipped', () => {
   assert.equal(core.state.mirrors[0].slant, '/');
 });
 
-test('the collection ships eight levels covering every mechanic', () => {
-  assert.equal(LEVELS.length, 8);
+test('the collection ships sixteen levels covering every mechanic', () => {
+  assert.equal(LEVELS.length, 16);
   const tags = LEVELS.map((level) => level.tag);
-  for (const tag of ['THREE COLORS', 'THROUGH', 'MIX', 'AROUND', 'CYAN', 'MAGENTA', 'FIXED', 'WHITE']) {
+  for (const tag of ['THREE COLORS', 'THROUGH', 'MIX', 'AROUND', 'CYAN', 'MAGENTA', 'FIXED', 'WHITE',
+    'ABOVE', 'TWO GOALS', 'OVER', 'RELAY', 'TRIPLE', 'BLOCKED', 'LOWER', 'GAUNTLET']) {
     assert.ok(tags.includes(tag), `missing level tag ${tag}`);
   }
   assert.ok(LEVELS.some((level) => level.mirrors.some((mirror) => mirror.fixed)), 'a fixed mirror level exists');

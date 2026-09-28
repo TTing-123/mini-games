@@ -151,6 +151,136 @@ export const LEVELS = [
     targets: [
       { x: 1000, y: 360, color: WHITE, radius: 34 }
     ]
+  },
+  {
+    name: 'LEVEL 9',
+    tag: 'ABOVE',
+    hint: '两面镜子夹住目标，光从上下同时到',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 900, y: 334, color: RED | GREEN, radius: 26 }
+    ]
+  },
+  {
+    name: 'LEVEL 10',
+    tag: 'TWO GOALS',
+    hint: '一束光当主线，另外两色分头汇进',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 900, y: 360, color: RED | GREEN, radius: 28 },
+      { x: 1100, y: 360, color: GREEN | BLUE, radius: 28 }
+    ]
+  },
+  {
+    name: 'LEVEL 11',
+    tag: 'OVER',
+    hint: '墙过不去，先抬上去再折回来',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' }
+    ],
+    walls: [
+      { x1: 950, y1: 240, x2: 950, y2: 460 }
+    ],
+    targets: [
+      { x: 1100, y: 200, color: GREEN, radius: 28 }
+    ]
+  },
+  {
+    name: 'LEVEL 12',
+    tag: 'RELAY',
+    hint: '灰色镜子已经在路上了，接住它的光',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 800, y: 360, slant: '/', fixed: true }
+    ],
+    walls: [],
+    targets: [
+      { x: 1100, y: 180, color: GREEN, radius: 28 }
+    ]
+  },
+  {
+    name: 'LEVEL 13',
+    tag: 'TRIPLE',
+    hint: '三个目标，各找各的颜色',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 1100, y: 200, color: RED, radius: 26 },
+      { x: 1100, y: 360, color: GREEN, radius: 26 },
+      { x: 1100, y: 520, color: BLUE, radius: 26 }
+    ]
+  },
+  {
+    name: 'LEVEL 14',
+    tag: 'BLOCKED',
+    hint: '红光要先跳墙',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' }
+    ],
+    walls: [
+      { x1: 950, y1: 220, x2: 950, y2: 500 }
+    ],
+    targets: [
+      { x: 1100, y: 180, color: RED, radius: 28 }
+    ]
+  },
+  {
+    name: 'LEVEL 15',
+    tag: 'LOWER',
+    hint: '这回要往下拐',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' }
+    ],
+    walls: [],
+    targets: [
+      { x: 900, y: 430, color: GREEN | BLUE, radius: 30 }
+    ]
+  },
+  {
+    name: 'LEVEL 16',
+    tag: 'GAUNTLET',
+    hint: '三个目标，还多一面挡路的灰镜子',
+    source: { x: 150, y: 360, angle: 0 },
+    prism: { x: 430, y: 360, radius: 36 },
+    mirrors: [
+      { x: 620, y: 620, slant: '/' },
+      { x: 400, y: 120, slant: '/' },
+      { x: 700, y: 620, slant: '\\' }
+    ],
+    walls: [],
+    targets: [
+      { x: 1140, y: 170, color: RED, radius: 32 },
+      { x: 1140, y: 360, color: GREEN, radius: 32 },
+      { x: 1140, y: 550, color: BLUE, radius: 32 }
+    ]
   }
 ];
 
@@ -499,32 +629,43 @@ export function candidateSpots(core, step = 32) {
   return spots;
 }
 
+// 求解器里用的是浮点坐标，写出来的解会被四舍五入。取整后哪怕差 1px 都可能
+// 让镜子端点刚好挡住另一束光，所以每条候选解都要按最终坐标重新跑一遍才算数。
+export function verifySolution(level, solution) {
+  const core = new PrismCore(level);
+  for (const move of solution) {
+    const mirror = core.state.mirrors[move.mirror];
+    if (!mirror || mirror.fixed) return false;
+    mirror.slant = move.slant;
+    core.moveMirror(move.mirror, move.x, move.y);
+  }
+  return core.solved();
+}
+
 // 逐面镜子做深度优先搜索：找到一组摆放能让全部目标亮起就返回。
 export function solveLevel(level, options = {}) {
   const step = options.step ?? 32;
   const start = new PrismCore(level);
   const total = start.state.mirrors.length;
 
-  const search = (core, index) => {
-    if (core.solved()) return [];
+  // applied 一路带着「到目前为止摆过哪些镜子」，验证时才不会只验证最后一步
+  const search = (core, index, applied) => {
+    if (core.solved()) return applied;
     if (index >= total) return null;
 
-    if (core.state.mirrors[index]?.fixed) return search(core, index + 1);
-    const base = core.litCount();
+    if (core.state.mirrors[index]?.fixed) return search(core, index + 1, applied);
     for (const spot of candidateSpots(core, step)) {
       for (const slant of ['/', '\\']) {
         const branch = cloneCore(core);
         branch.state.mirrors[index].slant = slant;
         branch.moveMirror(index, spot.x, spot.y);
-        // 剪枝：这一步没让任何新目标亮起，就别在这条死路上往下搜
-        if (branch.litCount() < base && !branch.solved()) continue;
-        if (branch.solved()) {
-          return [{ mirror: index, x: Math.round(spot.x), y: Math.round(spot.y), slant }];
-        }
-        const rest = search(branch, index + 1);
-        if (rest) {
-          return [{ mirror: index, x: Math.round(spot.x), y: Math.round(spot.y), slant }, ...rest];
-        }
+
+        const move = { mirror: index, x: Math.round(spot.x), y: Math.round(spot.y), slant };
+        const nextApplied = [...applied, move];
+        if (branch.solved() && verifySolution(level, nextApplied)) return nextApplied;
+
+        const rest = search(branch, index + 1, nextApplied);
+        if (rest) return rest;
       }
     }
     return null;
@@ -539,10 +680,11 @@ export function solveLevel(level, options = {}) {
         branch.state.mirrors[index].slant = slant;
         branch.moveMirror(index, spot.x, spot.y);
         if (branch.solved()) {
-          return [{ mirror: index, x: Math.round(spot.x), y: Math.round(spot.y), slant }];
+          const candidate = [{ mirror: index, x: Math.round(spot.x), y: Math.round(spot.y), slant }];
+          if (verifySolution(level, candidate)) return candidate;
         }
       }
     }
   }
-  return search(start, 0);
+  return search(start, 0, []);
 }
