@@ -15,6 +15,8 @@
       <div class="case-tag"><span id="case-tag">第一案</span><h1 id="case-title">晚宴之后</h1></div>
       <div class="topbar-right">
         <div class="budget"><span class="budget-label">提问</span><span id="questions-left">6</span><span class="budget-max">/6</span></div>
+        <button id="cases-button" class="ghost" type="button">案卷</button>
+        <button id="restart-button" class="ghost" type="button">重来</button>
         <button id="accuse-button" class="primary" type="button">指认凶手</button>
       </div>
     </header>
@@ -63,6 +65,17 @@
       </div>
     </section>
 
+    <section id="cases-panel" class="overlay is-hidden">
+      <div class="panel">
+        <div class="panel-kicker">案卷</div>
+        <p class="panel-hint">挑一个案子。破过的会打勾。</p>
+        <div id="case-list" class="case-list"></div>
+        <div class="panel-actions">
+          <button id="close-cases" class="ghost" type="button">关掉</button>
+        </div>
+      </div>
+    </section>
+
     <section id="verdict" class="overlay is-hidden">
       <div class="panel verdict-panel">
         <div id="verdict-kicker" class="panel-kicker">结案</div>
@@ -72,6 +85,7 @@
         <div class="panel-actions">
           <button id="next-case" class="primary" type="button">下一案</button>
           <button id="retry-case" class="ghost" type="button">重来</button>
+          <button id="verdict-cases" class="ghost" type="button">查看案卷</button>
         </div>
       </div>
     </section>

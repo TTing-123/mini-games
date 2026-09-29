@@ -1,4 +1,4 @@
-import { CaseCore } from './case-core.js';
+import { CaseCore, caseCount, getCase } from './case-core.js';
 
 const els = {
   caseTag: document.querySelector('#case-tag'),
@@ -24,8 +24,38 @@ const els = {
   verdictText: document.querySelector('#verdict-text'),
   solutionBox: document.querySelector('#solution-box'),
   nextCase: document.querySelector('#next-case'),
-  retryCase: document.querySelector('#retry-case')
+  retryCase: document.querySelector('#retry-case'),
+  verdictCases: document.querySelector('#verdict-cases'),
+  casesButton: document.querySelector('#cases-button'),
+  restartButton: document.querySelector('#restart-button'),
+  casesPanel: document.querySelector('#cases-panel'),
+  caseList: document.querySelector('#case-list'),
+  closeCases: document.querySelector('#close-cases')
 };
+
+const PROGRESS_KEY = 'casebook-solved';
+
+function loadSolved() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(list) ? list : []);
+  } catch (_) {
+    return new Set();
+  }
+}
+
+const solvedCases = loadSolved();
+
+function markSolved(caseId) {
+  if (solvedCases.has(caseId)) return;
+  solvedCases.add(caseId);
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify([...solvedCases]));
+  } catch (_) {
+    /* 隐私模式写不了就算了 */
+  }
+}
 
 const core = new CaseCore(0);
 let pickedSuspect = null;
@@ -193,6 +223,7 @@ function confirmAccusation() {
 }
 
 function showVerdict(result) {
+  if (result.correct) markSolved(core.caseData.id);
   els.verdict.classList.toggle('verdict-ok', result.correct);
   els.verdict.classList.toggle('verdict-bad', !result.correct);
   els.verdictKicker.textContent = result.correct ? '结案' : '指认失败';
@@ -218,6 +249,57 @@ function closeVerdict() {
 
 /* ---------------- 流程 ---------------- */
 
+function renderCaseList() {
+  els.caseList.innerHTML = '';
+  for (let index = 0; index < caseCount(); index += 1) {
+    const data = getCase(index);
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'case-item';
+    if (index === core.caseIndex) item.classList.add('is-current');
+    if (solvedCases.has(data.id)) item.classList.add('is-solved');
+
+    const left = document.createElement('span');
+    const name = document.createElement('span');
+    name.className = 'case-name';
+    name.textContent = data.title;
+    const sub = document.createElement('span');
+    sub.className = 'case-sub';
+    sub.textContent = data.tag;
+    left.append(name, sub);
+
+    const status = document.createElement('span');
+    status.className = 'status';
+    status.textContent = solvedCases.has(data.id) ? '已破案' : index === core.caseIndex ? '正在办' : '未破';
+
+    item.append(left, status);
+    item.addEventListener('click', () => goToCase(index));
+    els.caseList.append(item);
+  }
+}
+
+function goToCase(index) {
+  core.loadLevel(index);
+  closeVerdict();
+  renderCase();
+  renderAll();
+  els.casesPanel.classList.add('is-hidden');
+}
+
+function restartCurrentCase() {
+  core.restart();
+  closeVerdict();
+  renderCase();
+  renderAll();
+}
+
+els.casesButton.addEventListener('click', () => {
+  renderCaseList();
+  els.casesPanel.classList.remove('is-hidden');
+});
+els.closeCases.addEventListener('click', () => els.casesPanel.classList.add('is-hidden'));
+els.restartButton.addEventListener('click', restartCurrentCase);
+
 els.accuseButton.addEventListener('click', openAccusation);
 els.cancelAccuse.addEventListener('click', () => {
   core.backToInterview();
@@ -231,11 +313,11 @@ els.nextCase.addEventListener('click', () => {
   renderCase();
   renderAll();
 });
-els.retryCase.addEventListener('click', () => {
-  core.restart();
+els.retryCase.addEventListener('click', restartCurrentCase);
+els.verdictCases.addEventListener('click', () => {
   closeVerdict();
-  renderCase();
-  renderAll();
+  renderCaseList();
+  els.casesPanel.classList.remove('is-hidden');
 });
 
 renderCase();

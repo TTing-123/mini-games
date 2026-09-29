@@ -105,13 +105,36 @@ test('every case is internally consistent', () => {
   }
 });
 
-test('later cases advance and stop at the end', () => {
+test('there are at least three cases to work through', () => {
+  assert.ok(caseCount() >= 3, `expected 3+ cases, got ${caseCount()}`);
+});
+
+test('cases advance to the last one and stop there', () => {
   const core = new CaseCore(0);
+  if (caseCount() === 1) {
+    assert.equal(core.isLastCase(), true);
+    assert.equal(core.nextCase(), false);
+    return;
+  }
   assert.equal(core.isLastCase(), false);
-  assert.equal(core.nextCase(), true);
-  assert.equal(core.caseIndex, 1);
+  let advanced = 0;
+  while (core.nextCase()) advanced += 1;
+  assert.equal(core.caseIndex, caseCount() - 1, 'ends on the last case');
   assert.equal(core.isLastCase(), true);
-  assert.equal(core.nextCase(), false);
+  assert.equal(core.nextCase(), false, 'cannot advance past the last case');
   core.restart();
-  assert.equal(core.caseIndex, 1, 'restart stays on the current case');
+  assert.equal(core.caseIndex, caseCount() - 1, 'restart stays on the current case');
+});
+
+test('a case can be jumped to directly, and restarting keeps you there', () => {
+  const core = new CaseCore(0);
+  core.loadLevel(2);
+  assert.equal(core.caseIndex, 2);
+  assert.equal(core.state.questionsLeft, getCase(2).questions);
+  core.ask('li', 'evening');
+  assert.equal(core.state.log.length, 1);
+  core.restart();
+  assert.equal(core.caseIndex, 2, 'restart does not lose your place in the book');
+  assert.equal(core.state.log.length, 0, 'restart clears the testimony you collected');
+  assert.equal(core.state.questionsLeft, getCase(2).questions);
 });
