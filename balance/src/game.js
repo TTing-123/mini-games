@@ -1,4 +1,4 @@
-﻿import {
+import {
   allStats,
   canPlace,
   createState,
@@ -15,6 +15,7 @@ const ctx = canvas.getContext('2d');
 const levelLabel = document.querySelector('#level-label');
 const levelTitle = document.querySelector('#level-title');
 const levelHint = document.querySelector('#level-hint');
+const levelGrid = document.querySelector('#level-grid');
 const resetButton = document.querySelector('#reset');
 const nextButton = document.querySelector('#next');
 const solvedPanel = document.querySelector('#solved');
@@ -33,6 +34,7 @@ const WEIGHT_GAP = 31;
 const TRAY_Y = 548;
 const HIT_RADIUS = 34;
 const DEBUG = new URLSearchParams(location.search).has('debug');
+const SOLVED_KEY = 'balance-solved';
 
 let state = createState(0);
 let drag = null;
@@ -41,6 +43,7 @@ let displayAngles = new Map();
 let hit = { weights: [], hooks: [] };
 let audioContext = null;
 let solvedShown = false;
+let solvedLevels = loadSolvedLevels();
 
 function setupCanvas() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -355,6 +358,37 @@ function findHook(point) {
   return best;
 }
 
+function loadSolvedLevels() {
+  try {
+    const raw = localStorage.getItem(SOLVED_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(list) ? list : []);
+  } catch (_) {
+    return new Set();
+  }
+}
+
+function saveSolvedLevels() {
+  try {
+    localStorage.setItem(SOLVED_KEY, JSON.stringify([...solvedLevels]));
+  } catch (_) {
+    /* 隐私模式写不了就算了 */
+  }
+}
+
+function renderLevelGrid() {
+  levelGrid.innerHTML = '';
+  for (let index = 0; index < getLevelCount(); index += 1) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'level-button';
+    button.textContent = String(index + 1);
+    if (index === state.levelIndex) button.classList.add('is-current');
+    if (solvedLevels.has(index)) button.classList.add('is-solved');
+    button.addEventListener('click', () => loadLevel(index));
+    levelGrid.append(button);
+  }
+}
 function updateUi() {
   const total = getLevelCount();
   levelLabel.textContent = `${state.levelIndex + 1} / ${total}`;
@@ -411,6 +445,7 @@ function loadLevel(index) {
   drag = null;
   hoverHook = null;
   solvedPanel.classList.add('is-hidden');
+  renderLevelGrid();
   updateUi();
 }
 
@@ -427,6 +462,9 @@ function nextLevel() {
 function showSolved() {
   if (solvedShown) return;
   solvedShown = true;
+  solvedLevels.add(state.levelIndex);
+  saveSolvedLevels();
+  renderLevelGrid();
   const last = state.levelIndex >= getLevelCount() - 1;
   solvedTitle.textContent = last ? '全部平衡' : '这一关平了';
   solvedText.textContent = last ? '八组悬挂结构全部保持水平。' : '所有横杆同时保持水平。';
@@ -553,5 +591,3 @@ function drawBarMulti(barId, center, parentAnchor) {
   drawPivot(center.x, center.y);
   drawHooksMulti(bar, center, angle);
 }
-
-
