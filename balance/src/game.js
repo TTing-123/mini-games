@@ -3,6 +3,7 @@
   canPlace,
   createState,
   detachWeight,
+  getBarHooks,
   getLevelCount,
   isSolved,
   moveWeight,
@@ -244,49 +245,6 @@ function drawWeight(weight, x, y, active = false) {
   ctx.restore();
 }
 
-function drawSide(bar, barId, side, end) {
-  const hookId = `${barId}.${side}`;
-  const childId = side === 'left' ? bar.leftChild : bar.rightChild;
-  const active = Boolean(drag && hoverHook && hoverHook.hookId === hookId);
-  const valid = active ? canPlace(state, drag.weightId, hookId) : false;
-  drawHook(end.x, end.y, active, valid);
-  hit.hooks.push({ hookId, x: end.x, y: end.y, hasChild: Boolean(childId), valid: canPlace(state, drag?.weightId ?? state.weights[0]?.id, hookId) });
-
-  if (childId) {
-    const childCenter = { x: end.x, y: end.y + CHILD_GAP };
-    drawBar(childId, childCenter, end);
-    return;
-  }
-
-  const weight = weightAt(state, hookId);
-  if (!weight || (drag && drag.weightId === weight.id)) return;
-  const weightPoint = { x: end.x, y: end.y + WEIGHT_GAP };
-  drawWeight(weight, weightPoint.x, weightPoint.y);
-  hit.weights.push({ id: weight.id, x: weightPoint.x, y: weightPoint.y, radius: weightRadius(weight.mass), at: hookId });
-}
-
-function drawBar(barId, center, parentAnchor) {
-  const bar = state.bars.find((item) => item.id === barId);
-  if (!bar) return;
-  const angle = displayAngles.get(barId) ?? 0;
-  const leftLength = bar.leftPos * SCALE;
-  const rightLength = bar.rightPos * SCALE;
-  const leftEnd = {
-    x: center.x - leftLength * Math.cos(angle),
-    y: center.y - leftLength * Math.sin(angle)
-  };
-  const rightEnd = {
-    x: center.x + rightLength * Math.cos(angle),
-    y: center.y + rightLength * Math.sin(angle)
-  };
-
-  drawString(parentAnchor.x, parentAnchor.y, center.x, center.y);
-  drawBarLine(leftEnd.x, leftEnd.y, rightEnd.x, rightEnd.y);
-  drawPivot(center.x, center.y);
-  drawSide(bar, barId, 'left', leftEnd);
-  drawSide(bar, barId, 'right', rightEnd);
-}
-
 function trayWeights() {
   return state.weights.filter((weight) => !weight.at);
 }
@@ -364,7 +322,7 @@ function render(now = performance.now()) {
   easeAngles();
   drawBackground();
   drawAnchor();
-  drawBar('b0', { x: ROOT_ANCHOR.x, y: ROOT_ANCHOR.y + ROOT_GAP }, ROOT_ANCHOR);
+  drawBarMulti('b0', { x: ROOT_ANCHOR.x, y: ROOT_ANCHOR.y + ROOT_GAP }, ROOT_ANCHOR);
   drawTray();
   drawGuide(now);
   drawDrag(now);
@@ -542,6 +500,7 @@ solvedRetry.addEventListener('click', () => {
 if (DEBUG) {
   window.__balance = {
     get state() { return state; },
+    get hit() { return hit; },
     loadLevel,
     moveWeight,
     isSolved,
@@ -552,3 +511,47 @@ if (DEBUG) {
 setupCanvas();
 loadLevel(0);
 requestAnimationFrame(render);
+
+function drawHooksMulti(bar, center, angle) {
+  const hooks = getBarHooks(bar);
+  for (const hook of hooks) {
+    const distance = hook.pos * SCALE * (hook.side === 'left' ? -1 : 1);
+    const point = {
+      x: center.x + distance * Math.cos(angle),
+      y: center.y + distance * Math.sin(angle)
+    };
+    const active = Boolean(drag && hoverHook && hoverHook.hookId === hook.id);
+    const valid = active && drag ? canPlace(state, drag.weightId, hook.id) : false;
+    drawHook(point.x, point.y, active, valid);
+    hit.hooks.push({ hookId: hook.id, x: point.x, y: point.y, hasChild: Boolean(hook.child), valid });
+
+    if (hook.child) {
+      const childCenter = { x: point.x, y: point.y + CHILD_GAP };
+      drawBarMulti(hook.child, childCenter, point);
+      continue;
+    }
+
+    const weight = weightAt(state, hook.id);
+    if (!weight || (drag && drag.weightId === weight.id)) continue;
+    const weightPoint = { x: point.x, y: point.y + WEIGHT_GAP };
+    drawWeight(weight, weightPoint.x, weightPoint.y);
+    hit.weights.push({ id: weight.id, x: weightPoint.x, y: weightPoint.y, radius: weightRadius(weight.mass), at: hook.id });
+  }
+}
+
+function drawBarMulti(barId, center, parentAnchor) {
+  const bar = state.bars.find((item) => item.id === barId);
+  if (!bar) return;
+  const hooks = getBarHooks(bar);
+  const leftLength = Math.max(1, ...hooks.filter((hook) => hook.side === 'left').map((hook) => hook.pos)) * SCALE;
+  const rightLength = Math.max(1, ...hooks.filter((hook) => hook.side === 'right').map((hook) => hook.pos)) * SCALE;
+  const angle = displayAngles.get(barId) ?? 0;
+  const leftEnd = { x: center.x - leftLength * Math.cos(angle), y: center.y - leftLength * Math.sin(angle) };
+  const rightEnd = { x: center.x + rightLength * Math.cos(angle), y: center.y + rightLength * Math.sin(angle) };
+  drawString(parentAnchor.x, parentAnchor.y, center.x, center.y);
+  drawBarLine(leftEnd.x, leftEnd.y, rightEnd.x, rightEnd.y);
+  drawPivot(center.x, center.y);
+  drawHooksMulti(bar, center, angle);
+}
+
+

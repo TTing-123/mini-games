@@ -132,7 +132,125 @@ const LEVELS = [
       { weightId: 'w4', hookId: 'b0.right' }
     ]
   }
-];
+,
+  {
+    id: 'L9',
+    title: '多个挂点',
+    hint: '同一边可以把重量分到不同距离',
+    bars: [{
+      id: 'b0',
+      leftHooks: [{ id: 'b0.l1', pos: 1 }, { id: 'b0.l2', pos: 3 }],
+      rightHooks: [{ id: 'b0.r1', pos: 2 }, { id: 'b0.r2', pos: 1 }]
+    }],
+    weights: [
+      { id: 'w1', mass: 1, at: 'b0.l1' },
+      { id: 'w2', mass: 3, at: null },
+      { id: 'w3', mass: 4, at: null },
+      { id: 'w4', mass: 2, at: null }
+    ],
+    solution: [
+      { weightId: 'w2', hookId: 'b0.l2' },
+      { weightId: 'w3', hookId: 'b0.r1' },
+      { weightId: 'w4', hookId: 'b0.r2' }
+    ]
+  },
+  {
+    id: 'L10',
+    title: '先挂下面，再补上面',
+    hint: '子横杆的重量会变成父横杆的负载',
+    bars: [
+      {
+        id: 'b0',
+        leftHooks: [{ id: 'b0.l1', pos: 1, child: 'b1' }, { id: 'b0.l2', pos: 3 }],
+        rightHooks: [{ id: 'b0.r1', pos: 2 }, { id: 'b0.r2', pos: 1 }]
+      },
+      {
+        id: 'b1',
+        leftHooks: [{ id: 'b1.l1', pos: 1 }],
+        rightHooks: [{ id: 'b1.r1', pos: 1 }]
+      }
+    ],
+    weights: [
+      { id: 'w1', mass: 2, at: 'b1.l1' },
+      { id: 'w2', mass: 2, at: null },
+      { id: 'w3', mass: 2, at: null },
+      { id: 'w4', mass: 4, at: null },
+      { id: 'w5', mass: 2, at: null }
+    ],
+    solution: [
+      { weightId: 'w2', hookId: 'b1.r1' },
+      { weightId: 'w3', hookId: 'b0.l2' },
+      { weightId: 'w4', hookId: 'b0.r1' },
+      { weightId: 'w5', hookId: 'b0.r2' }
+    ]
+  },
+  {
+    id: 'L11',
+    title: '两棵树',
+    hint: '两边的子横杆都先各自平衡',
+    bars: [
+      {
+        id: 'b0',
+        leftHooks: [{ id: 'b0.l1', pos: 3, child: 'b1' }],
+        rightHooks: [{ id: 'b0.r1', pos: 1, child: 'b2' }]
+      },
+      {
+        id: 'b1',
+        leftHooks: [{ id: 'b1.l1', pos: 1 }],
+        rightHooks: [{ id: 'b1.r1', pos: 1 }]
+      },
+      {
+        id: 'b2',
+        leftHooks: [{ id: 'b2.l1', pos: 2 }],
+        rightHooks: [{ id: 'b2.r1', pos: 1 }]
+      }
+    ],
+    weights: [
+      { id: 'w1', mass: 1, at: 'b1.l1' },
+      { id: 'w2', mass: 1, at: null },
+      { id: 'w3', mass: 2, at: 'b2.l1' },
+      { id: 'w4', mass: 4, at: null }
+    ],
+    solution: [
+      { weightId: 'w2', hookId: 'b1.r1' },
+      { weightId: 'w4', hookId: 'b2.r1' }
+    ]
+  },
+  {
+    id: 'L12',
+    title: '长链多挂点',
+    hint: '从最下面一层开始，把重量一层层送上去',
+    bars: [
+      {
+        id: 'b0',
+        leftHooks: [{ id: 'b0.l1', pos: 1, child: 'b1' }],
+        rightHooks: [{ id: 'b0.r1', pos: 2 }]
+      },
+      {
+        id: 'b1',
+        leftHooks: [{ id: 'b1.l1', pos: 1, child: 'b2' }],
+        rightHooks: [{ id: 'b1.r1', pos: 1 }]
+      },
+      {
+        id: 'b2',
+        leftHooks: [{ id: 'b2.l1', pos: 1 }, { id: 'b2.l2', pos: 2 }],
+        rightHooks: [{ id: 'b2.r1', pos: 1 }]
+      }
+    ],
+    weights: [
+      { id: 'w1', mass: 2, at: 'b2.l1' },
+      { id: 'w2', mass: 1, at: null },
+      { id: 'w3', mass: 4, at: null },
+      { id: 'w4', mass: 7, at: null },
+      { id: 'w5', mass: 7, at: null }
+    ],
+    solution: [
+      { weightId: 'w2', hookId: 'b2.l2' },
+      { weightId: 'w3', hookId: 'b2.r1' },
+      { weightId: 'w4', hookId: 'b1.r1' },
+      { weightId: 'w5', hookId: 'b0.r1' }
+    ]
+  }];
 
 export function getLevelCount() {
   return LEVELS.length;
@@ -150,7 +268,11 @@ export function createState(levelIndex = 0) {
     id: level.id,
     title: level.title,
     hint: level.hint,
-    bars: level.bars.map((bar) => ({ ...bar })),
+    bars: level.bars.map((bar) => ({
+      ...bar,
+      leftHooks: bar.leftHooks?.map((hook) => ({ ...hook })),
+      rightHooks: bar.rightHooks?.map((hook) => ({ ...hook }))
+    })),
     weights: level.weights.map((weight) => ({ ...weight })),
     solution: level.solution.map((move) => ({ ...move })),
     solved: false
@@ -160,7 +282,11 @@ export function createState(levelIndex = 0) {
 export function cloneState(state) {
   return {
     ...state,
-    bars: state.bars.map((bar) => ({ ...bar })),
+    bars: state.bars.map((bar) => ({
+      ...bar,
+      leftHooks: bar.leftHooks?.map((hook) => ({ ...hook })),
+      rightHooks: bar.rightHooks?.map((hook) => ({ ...hook }))
+    })),
     weights: state.weights.map((weight) => ({ ...weight })),
     solution: state.solution.map((move) => ({ ...move }))
   };
@@ -170,13 +296,26 @@ export function getBar(state, barId) {
   return state.bars.find((bar) => bar.id === barId) ?? null;
 }
 
+export function getBarHooks(bar) {
+  if (bar.leftHooks || bar.rightHooks) {
+    return [
+      ...(bar.leftHooks ?? []).map((hook) => ({ ...hook, side: 'left' })),
+      ...(bar.rightHooks ?? []).map((hook) => ({ ...hook, side: 'right' }))
+    ];
+  }
+  return [
+    { id: `${bar.id}.left`, side: 'left', pos: bar.leftPos, child: bar.leftChild ?? null },
+    { id: `${bar.id}.right`, side: 'right', pos: bar.rightPos, child: bar.rightChild ?? null }
+  ];
+}
+
 export function getHook(state, hookId) {
   if (!hookId) return null;
-  const [barId, side] = hookId.split('.');
-  const bar = getBar(state, barId);
-  if (!bar || (side !== 'left' && side !== 'right')) return null;
-  const child = side === 'left' ? bar.leftChild : bar.rightChild;
-  return { bar, side, child };
+  for (const bar of state.bars) {
+    const hook = getBarHooks(bar).find((item) => item.id === hookId);
+    if (hook) return { bar, ...hook };
+  }
+  return null;
 }
 
 export function weightAt(state, hookId) {
@@ -223,19 +362,24 @@ export function barStats(state, barId, memo = new Map()) {
   const bar = getBar(state, barId);
   if (!bar) return null;
 
-  const sideStats = (side, childId) => {
-    if (childId) {
-      const child = barStats(state, childId, memo);
-      return { load: child?.totalMass ?? 0, child };
+  const sideStats = (side) => {
+    const hooks = getBarHooks(bar).filter((hook) => hook.side === side);
+    let load = 0;
+    let torque = 0;
+    for (const hook of hooks) {
+      const hookLoad = hook.child
+        ? (barStats(state, hook.child, memo)?.totalMass ?? 0)
+        : (weightAt(state, hook.id)?.mass ?? 0);
+      load += hookLoad;
+      torque += hookLoad * hook.pos;
     }
-    const weight = weightAt(state, `${barId}.${side}`);
-    return { load: weight?.mass ?? 0, child: null };
+    return { load, torque, hooks };
   };
 
-  const left = sideStats('left', bar.leftChild);
-  const right = sideStats('right', bar.rightChild);
-  const leftTorque = left.load * bar.leftPos;
-  const rightTorque = right.load * bar.rightPos;
+  const left = sideStats('left');
+  const right = sideStats('right');
+  const leftTorque = left.torque;
+  const rightTorque = right.torque;
   const totalMass = left.load + right.load;
   const difference = rightTorque - leftTorque;
   const stats = {
@@ -270,3 +414,4 @@ export function balanceGap(state) {
   const stats = allStats(state);
   return state.bars.reduce((sum, bar) => sum + Math.abs(stats.get(bar.id)?.difference ?? 0), 0);
 }
+
