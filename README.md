@@ -9,6 +9,7 @@
 | 游戏 | 类型 | 在线玩 |
 | --- | --- | --- |
 | Pulse | 物理连锁弹球 | <https://tting-123.github.io/mini-games/pulse/> |
+| Casebook | 手写案件推理 | <https://tting-123.github.io/mini-games/casebook/> |
 
 每个游戏都有自己的 README、测试和开发工具，放在各自的目录里。
 
@@ -35,6 +36,7 @@ npm run audit     # Pulse 随机关卡公平性审计
 mini-games/
 ├── index.html            合集首页（卡片列表）
 ├── favicon.svg
+├── casebook/             案卷：手写案件推理
 ├── pulse/                Pulse 游戏本体
 │   ├── index.html  src/  tests/  tools/  favicon.svg
 │   └── README.md  AGENTS.md

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0d1117" />
+  <meta name="description" content="案卷：手写案件推理。有限提问次数，交叉比对证词，指认凶手还要说清凭什么。" />
+  <title>CASEBOOK — 案卷</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="case-tag"><span id="case-tag">第一案</span><h1 id="case-title">晚宴之后</h1></div>
+      <div class="topbar-right">
+        <div class="budget"><span class="budget-label">提问</span><span id="questions-left">6</span><span class="budget-max">/6</span></div>
+        <button id="accuse-button" class="primary" type="button">指认凶手</button>
+      </div>
+    </header>
+
+    <section class="brief">
+      <p id="brief-text"></p>
+      <ul id="facts-list" class="facts"></ul>
+    </section>
+
+    <section class="board">
+      <aside class="suspects">
+        <div class="column-label">嫌疑人</div>
+        <div id="suspect-list"></div>
+        <div id="key-meter" class="key-meter"></div>
+      </aside>
+
+      <div class="record">
+        <div class="column-label">审问记录</div>
+        <div id="record-list" class="record-list">
+          <p class="placeholder">选一个人，问一个问题。你只有有限的机会。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="topics">
+      <div class="column-label">提问 <span id="topic-owner"></span></div>
+      <div id="topic-list" class="topic-list"></div>
+    </section>
+
+    <section id="accuse-panel" class="overlay is-hidden">
+      <div class="panel">
+        <div class="panel-kicker">指认</div>
+        <p class="panel-hint">指对人，还要指出哪句话是决定性的。</p>
+        <div class="panel-block">
+          <div class="column-label">凶手是谁</div>
+          <div id="accuse-suspects" class="chip-row"></div>
+        </div>
+        <div class="panel-block">
+          <div class="column-label">哪句话证死了他</div>
+          <div id="accuse-evidence" class="evidence-list"></div>
+        </div>
+        <div class="panel-actions">
+          <button id="confirm-accuse" class="primary" type="button" disabled>确认指认</button>
+          <button id="cancel-accuse" class="ghost" type="button">再问问</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="verdict" class="overlay is-hidden">
+      <div class="panel verdict-panel">
+        <div id="verdict-kicker" class="panel-kicker">结案</div>
+        <h2 id="verdict-title"></h2>
+        <p id="verdict-text"></p>
+        <div id="solution-box" class="solution"></div>
+        <div class="panel-actions">
+          <button id="next-case" class="primary" type="button">下一案</button>
+          <button id="retry-case" class="ghost" type="button">重来</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="page-footer">
+      <span>先问，再想，最后指认</span>
+    </footer>
+  </main>
+  <script type="module" src="./src/game.js"></script>
+</body>
+</html>
