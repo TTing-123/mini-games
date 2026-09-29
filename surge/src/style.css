@@ -144,6 +144,31 @@ h1 span {
 }
 .primary:hover { background: rgba(77, 226, 213, .24); }
 
+.rule-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 18px auto 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(77, 226, 213, .2);
+  border-radius: 999px;
+  background: rgba(10, 29, 39, .7);
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: .02em;
+}
+.rule-strip b {
+  color: var(--cyan);
+  font: 700 11px/1 var(--mono);
+}
+.rule-strip i {
+  color: #3e6874;
+  font-style: normal;
+}
+
 .game-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px;
@@ -257,6 +282,100 @@ h1 span {
   letter-spacing: .04em;
 }
 
+.guide-panel {
+  width: min(94vw, 760px);
+  padding: 28px;
+  border: 1px solid rgba(77, 226, 213, .32);
+  border-radius: 20px;
+  background: linear-gradient(160deg, #102a34, #091820);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .5);
+}
+.guide-panel h2 {
+  margin: 0 0 20px;
+  font-size: clamp(22px, 4vw, 30px);
+  letter-spacing: .02em;
+}
+.guide-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.guide-step {
+  min-height: 128px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(5, 17, 24, .42);
+}
+.guide-step > span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  background: rgba(77, 226, 213, .13);
+  color: var(--cyan);
+  font: 700 12px/1 var(--mono);
+}
+.guide-step b {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 15px;
+}
+.guide-step small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+.guide-example {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid rgba(245, 184, 75, .2);
+  border-radius: 14px;
+  background: rgba(245, 184, 75, .045);
+}
+.example-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.example-row i {
+  color: var(--muted);
+  font-style: normal;
+}
+.example-row small { margin-left: auto; color: var(--amber); }
+.example-arrow { color: var(--cyan); font-size: 26px; line-height: 1; }
+.example-cell {
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(132, 216, 221, .18);
+  border-radius: 9px;
+  background: rgba(217, 255, 252, .03);
+}
+.example-cell.has-cyan {
+  border-color: rgba(77, 226, 213, .65);
+  background: radial-gradient(circle at 35% 30%, #eafffc, var(--cyan) 50%, #1a8d8b);
+  box-shadow: 0 0 16px rgba(77, 226, 213, .35);
+}
+.guide-example p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.guide-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -282,6 +401,8 @@ h1 span {
 
 @media (max-width: 860px) {
   .shell { width: min(100% - 28px, 720px); padding-top: 20px; }
+  .guide-steps { grid-template-columns: 1fr; }
+  .guide-step { min-height: 0; }
   .game-layout { grid-template-columns: 1fr; gap: 12px; }
   .side-panel {
     padding: 4px 0 0;
@@ -297,6 +418,12 @@ h1 span {
 }
 
 @media (max-width: 560px) {
+  .rule-strip { width: 100%; flex-wrap: wrap; border-radius: 14px; line-height: 1.5; }
+  .rule-strip i { display: none; }
+  .guide-panel { padding: 20px; }
+  .guide-actions { flex-direction: column-reverse; }
+  .guide-actions button { width: 100%; }
+  .example-row small { width: 100%; margin-left: 0; }
   .topbar { align-items: flex-start; flex-direction: column; }
   .topbar-right { width: 100%; justify-content: space-between; }
   .turn-chip { flex: 1; justify-content: center; }

@@ -25,6 +25,10 @@ const resultKicker = document.querySelector('#result-kicker');
 const resultTitle = document.querySelector('#result-title');
 const resultText = document.querySelector('#result-text');
 const againButton = document.querySelector('#again');
+const guideButton = document.querySelector('#guide-button');
+const guide = document.querySelector('#guide');
+const guideStart = document.querySelector('#guide-start');
+const guideClose = document.querySelector('#guide-close');
 
 const VIEW = 700;
 const MARGIN = 22;
@@ -32,6 +36,7 @@ const GAP = 8;
 const CELL = (VIEW - MARGIN * 2 - GAP * (SIZE - 1)) / SIZE;
 const DRAG_THRESHOLD = 17;
 const DEBUG = new URLSearchParams(location.search).has('debug');
+const GUIDE_KEY = 'surge-guide-v2';
 
 let state = createInitialState();
 let drag = null;
@@ -40,6 +45,8 @@ let flash = null;
 let aiThinking = false;
 let aiTimer = null;
 let audioContext = null;
+let forcedTutorial = false;
+let tutorialCoach = false;
 
 function setupCanvas() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -336,6 +343,43 @@ function drawLastLine(now) {
   ctx.restore();
 }
 
+function drawTutorial(now) {
+  if (!forcedTutorial || state.ply > 0 || state.turn !== CYAN) return;
+  const from = cellCenter(3, 3);
+  const to = cellCenter(3, 4);
+  const pulse = .5 + .5 * Math.sin(now / 240);
+
+  ctx.save();
+  ctx.strokeStyle = `rgba(77, 226, 213, ${.55 + pulse * .4})`;
+  ctx.lineWidth = 3 + pulse * 2;
+  ctx.beginPath();
+  ctx.arc(from.x, from.y, CELL * .43 + pulse * 5, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(77, 226, 213, .95)';
+  ctx.fillStyle = 'rgba(77, 226, 213, .95)';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(from.x + CELL * .28, from.y);
+  ctx.lineTo(to.x - CELL * .18, to.y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(to.x - CELL * .18, to.y);
+  ctx.lineTo(to.x - CELL * .3, to.y - CELL * .12);
+  ctx.lineTo(to.x - CELL * .3, to.y + CELL * .12);
+  ctx.closePath();
+  ctx.fill();
+
+  drawRoundedFill(from.x - 108, from.y - 77, 216, 36, 10, 'rgba(4, 20, 27, .9)', 'rgba(77, 226, 213, .5)', 1);
+  ctx.fillStyle = '#dff8f7';
+  ctx.font = '700 14px "Trebuchet MS", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('按住闪烁格，向右拖', from.x, from.y - 59);
+  ctx.restore();
+}
+
 function render(now = performance.now()) {
   ctx.clearRect(0, 0, VIEW, VIEW);
   drawBackdrop();
@@ -345,6 +389,7 @@ function render(now = performance.now()) {
   drawPreview();
   drawLastLine(now);
   drawStones(now);
+  drawTutorial(now);
   requestAnimationFrame(render);
 }
 
@@ -354,7 +399,11 @@ function updateUi() {
   turnLabel.textContent = state.winner ? '对局结束' : isAiTurn ? 'AI 推潮中' : '你的回合';
   plyLabel.textContent = String(state.ply);
   stateLabel.textContent = state.winner ? (state.winner === CYAN ? '你赢了' : 'AI 赢了') : isAiTurn ? 'AI 行动' : '你先';
-  if (state.winner) {
+  if (forcedTutorial) {
+    hint.textContent = '先按住闪烁格，再向右拖。';
+  } else if (tutorialCoach) {
+    hint.textContent = '你刚才同时完成了落子和推线。再找一格，自己试一次。';
+  } else if (state.winner) {
     hint.textContent = state.winner === CYAN ? '青线接通上下。再来一局？' : '琥珀线接通左右。再试一次。';
   } else if (isAiTurn) {
     hint.textContent = 'AI 正在找最稳的一推…';
@@ -411,12 +460,55 @@ function clearAiTimer() {
   aiThinking = false;
 }
 
+function markGuideSeen() {
+  try {
+    localStorage.setItem(GUIDE_KEY, '1');
+  } catch (_) {
+    /* 隐私模式写不了就算了 */
+  }
+}
+
+function hasSeenGuide() {
+  try {
+    return localStorage.getItem(GUIDE_KEY) === '1';
+  } catch (_) {
+    return true;
+  }
+}
+
+function openGuide() {
+  guide.classList.remove('is-hidden');
+}
+
+function closeGuide() {
+  markGuideSeen();
+  forcedTutorial = false;
+  tutorialCoach = false;
+  guide.classList.add('is-hidden');
+  updateUi();
+}
+
+function startGuideGame() {
+  startNewGame();
+  markGuideSeen();
+  forcedTutorial = true;
+  tutorialCoach = false;
+  guide.classList.add('is-hidden');
+  updateUi();
+}
+
+function maybeOpenGuide() {
+  if (!hasSeenGuide()) openGuide();
+}
+
 function startNewGame() {
   clearAiTimer();
   state = createInitialState();
   drag = null;
   hover = null;
   flash = null;
+  forcedTutorial = false;
+  tutorialCoach = false;
   result.classList.add('is-hidden');
   updateUi();
 }
@@ -437,6 +529,13 @@ function playMove(move) {
   if (!next) return false;
   state = next;
   flash = { start: performance.now(), last: state.last };
+  if (forcedTutorial) {
+    forcedTutorial = false;
+    tutorialCoach = true;
+    markGuideSeen();
+  } else if (tutorialCoach) {
+    tutorialCoach = false;
+  }
   playMoveSound();
   updateUi();
   if (state.winner) {
@@ -482,6 +581,10 @@ canvas.addEventListener('pointerdown', (event) => {
   const point = pointerPoint(event);
   const cell = pointToCell(point);
   if (!cell || state.board[index(cell.r, cell.c)] !== EMPTY) return;
+  if (forcedTutorial && (cell.r !== 3 || cell.c !== 3)) {
+    hint.textContent = '先按住闪烁格，再向右拖。';
+    return;
+  }
   drag = {
     ...cell,
     startX: point.x,
@@ -522,6 +625,10 @@ canvas.addEventListener('pointerup', (event) => {
   if (!drag) return;
   const current = drag;
   drag = null;
+  if (forcedTutorial && (current.r !== 3 || current.c !== 3 || current.dr !== 0 || current.dc !== 1)) {
+    hint.textContent = '先按住闪烁格，再向右拖。';
+    return;
+  }
   if (current.dr !== null && current.dc !== null) {
     const move = { r: current.r, c: current.c, dr: current.dr, dc: current.dc };
     if (isLegalMove(state, move)) playMove(move);
@@ -535,6 +642,9 @@ canvas.addEventListener('pointerleave', () => {
 
 restartButton.addEventListener('click', startNewGame);
 againButton.addEventListener('click', startNewGame);
+guideButton.addEventListener('click', openGuide);
+guideStart.addEventListener('click', startGuideGame);
+guideClose.addEventListener('click', closeGuide);
 
 if (DEBUG) {
   window.__surge = {
@@ -549,5 +659,6 @@ if (DEBUG) {
 }
 
 setupCanvas();
-updateUi();
+startNewGame();
+maybeOpenGuide();
 requestAnimationFrame(render);
