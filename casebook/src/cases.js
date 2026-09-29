@@ -217,7 +217,7 @@ export const CASES = [
         topics: [
           { id: 'where', label: '你昨晚在哪？', answer: '在街对面的奶茶店。从那儿能看见她家的窗户，我看见她在窗边打电话，穿着白T恤。', key: true },
           { id: 'relation', label: '你们为什么分的？', answer: '她说我管得太多。分手后我找过她两次，是想把话说清楚。' },
-          { id: 'why', label: '你为什么在对面？', answer: '就是路过，坐下来喝了杯东西。我没上楼。' }
+          { id: 'arrive', label: '你几点到那儿的？', answer: '九点半前后。坐了大半个钟头，一直在看街对面那栋楼。' }
         ]
       },
       {
@@ -345,7 +345,7 @@ export const CASES = [
         note: '住在附近，几乎每晚都在楼下听节目',
         topics: [
           { id: 'live', label: '你昨晚在楼下听到什么？', answer: '我一直听到十二点。方姐的声音没停过，中间还念了两次天气。', key: true },
-          { id: 'why', label: '你为什么在楼下？', answer: '习惯了。夜市边上有张长椅，我坐那儿听。不过昨晚下雨，人少。' },
+          { id: 'know', label: '你认识方姐吗？', answer: '不认识。她的节目我听了三年，人没见过。' },
           { id: 'see', label: '有没有看到八楼有什么动静？', answer: '八楼亮着灯。窗帘拉着，看不见里面。' }
         ]
       },
@@ -454,7 +454,7 @@ export const CASES = [
         topics: [
           { id: 'saw', label: '你看到什么了？', answer: '一个穿红雨衣的人从后巷跑出来，跑得很快。那件雨衣是老魏的，整条巷子就他有。', key: true },
           { id: 'time', label: '你几点听见动静的？', answer: '十点前后。我正在关铺子，外面的雨还挺大。' },
-          { id: 'why', label: '你为什么出去看？', answer: '听见一声闷响，像是什么重的摔了。这种天气我不太敢多管，就探了个头。' }
+          { id: 'distance', label: '你铺子离后巷多远？', answer: '隔着一个门面。听见闷响我就出来了，前后没几秒。' }
         ]
       },
       {
@@ -487,7 +487,7 @@ export const CASES = [
         topics: [
           { id: 'back', label: '昨晚小刘几点回来的？', answer: '十二点都过了。他回来的时候浑身是水，雨衣团在手里，进楼道还把水抖了一地。', key: true },
           { id: 'rent', label: '他房租还欠着吗？', answer: '欠两个月了。催过他几次，他总说下个月。' },
-          { id: 'usual', label: '他平时几点回来？', answer: '说不好。有时候早，有时候半夜。打零工的嘛。' }
+          { id: 'friends', label: '他平时和什么人来往？', answer: '没见有朋友。独来独往，偶尔有人来找他，也都在门口说完就走。' }
         ]
       }
     ],
@@ -840,7 +840,7 @@ export const CASES = [
         role: '隔壁布店',
         note: '两家的后院相通',
         topics: [
-          { id: 'see', label: '下午看到什么了吗？', answer: '四点多的时候，看见学徒从后院回来，手里拎着个布包，包得挺紧。', key: true },
+          { id: 'see', label: '你从后院那边看见谁了吗？', answer: '四点多的时候，看见学徒从后院回来，手里拎着个布包，包得挺紧。', key: true },
           { id: 'noise', label: '听到什么动静了吗？', answer: '有一声闷响。这种老房子常有动静，我没在意。' },
           { id: 'relation', label: '这两家关系怎么样？', answer: '一般。掌柜脾气不好，跟谁都能呛两句，倒也没什么大仇。' }
         ]
@@ -1115,7 +1115,7 @@ export const CASES = [
         note: '和死者在排练时争执过角色分配',
         topics: [
           { id: 'act3', label: '你什么时候下的台？', answer: '第三幕演到一半的时候我从侧幕下来换了口水，那时候是八点四十多。', key: true },
-          { id: 'why', label: '你为什么去后台？', answer: '嗓子干。水杯放在换装间门口，我没往里走。' },
+          { id: 'whothere', label: '你在后台碰到人了吗？', answer: '没有。我在换装间门口拿了水杯就回台口了，前后不到两分钟。' },
           { id: 'fight', label: '你们为什么争执？', answer: '他觉得我抢了他的戏份。其实本子就是这么写的，跟我有什么关系。' }
         ]
       },
@@ -1317,7 +1317,7 @@ export const CASES = [
         topics: [
           { id: 'argue', label: '你们前几天吵过？', answer: '谈不上吵。我说了句重话，说她不给孩子面子。后来我也后悔了。', key: true },
           { id: 'where', label: '你昨晚在哪？', answer: '在家。我老婆在，孩子也在。' },
-          { id: 'relation', label: '你为什么找她？', answer: '孩子在班里被点名批评过几次，脸上挂不住。' }
+          { id: 'kid', label: '你孩子在班上怎么样？', answer: '成绩中游。就是最近老说不想去学校，我问了几次他也不说。' }
         ]
       }
     ],

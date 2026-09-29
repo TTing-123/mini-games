@@ -138,3 +138,27 @@ test('a case can be jumped to directly, and restarting keeps you there', () => {
   assert.equal(core.state.log.length, 0, 'restart clears the testimony you collected');
   assert.equal(core.state.questionsLeft, getCase(2).questions);
 });
+
+// 字符级 Jaccard，用来发现「同一个嫌疑人被问了两遍几乎一样的事」
+function labelSimilarity(a, b) {
+  const setA = new Set([...a]);
+  const setB = new Set([...b]);
+  const shared = [...setA].filter((ch) => setB.has(ch)).length;
+  return shared / new Set([...setA, ...setB]).size;
+}
+
+test('no suspect gets asked the same thing twice', () => {
+  for (const data of CASES) {
+    for (const person of data.suspects) {
+      for (let i = 0; i < person.topics.length; i += 1) {
+        for (let j = i + 1; j < person.topics.length; j += 1) {
+          const score = labelSimilarity(person.topics[i].label, person.topics[j].label);
+          assert.ok(
+            score < 0.5,
+            `${data.title} / ${person.name}: 两个问题太像（${score.toFixed(2)}）——「${person.topics[i].label}」vs「${person.topics[j].label}」`
+          );
+        }
+      }
+    }
+  }
+});
