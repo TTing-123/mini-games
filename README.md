@@ -38,9 +38,6 @@ mini-games/
 ├── pulse/                Pulse 游戏本体
 │   ├── index.html  src/  tests/  tools/  favicon.svg
 │   └── README.md  AGENTS.md
-├── prism/                Prism 游戏本体（已下架，仅作存档）
-├── blast/                Blast 游戏本体（已下架，仅作存档）
-├── polarity/             Polarity 游戏本体（已下架，仅作存档）
 │   ├── index.html  src/  tests/  tools/  favicon.svg
 │   └── README.md  NOTES.md（含市场调研结论）
 └── .github/workflows/pages.yml
