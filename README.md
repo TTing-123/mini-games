@@ -10,7 +10,6 @@
 | --- | --- | --- |
 | Pulse | 物理连锁弹球 | <https://tting-123.github.io/mini-games/pulse/> |
 | Casebook | 手写案件推理 | <https://tting-123.github.io/mini-games/casebook/> |
-| Surge | 抽象棋：落子推线 | <https://tting-123.github.io/mini-games/surge/> |
 
 每个游戏都有自己的 README、测试和开发工具，放在各自的目录里。
 
@@ -22,7 +21,7 @@
 py -m http.server 8080
 ```
 
-`http://localhost:8080` 是合集首页，`http://localhost:8080/pulse/`、`http://localhost:8080/casebook/`、`http://localhost:8080/surge/` 分别直接进三个游戏。
+`http://localhost:8080` 是合集首页，`http://localhost:8080/pulse/` 和 `http://localhost:8080/casebook/` 分别直接进两个游戏。
 
 ## 测试
 
@@ -39,7 +38,6 @@ mini-games/
 ├── favicon.svg
 ├── pulse/                物理连锁弹球
 ├── casebook/             手写案件推理
-├── surge/                抽象棋：推潮棋
 └── .github/workflows/pages.yml
 ```
 
@@ -61,4 +59,4 @@ node tools/market-check.mjs "机制关键词"
 4. `.github/workflows/pages.yml` 的 Stage 步骤里加上它的运行时文件
 5. 存档写 localStorage 时带游戏前缀，避免和其他游戏撞名
 
-第三个游戏已经出现；SURGE 仍保持独立。等确认三款游戏里哪些代码真的重复，再考虑 `shared/`。
+共享代码先别急着抽：等第三个游戏出现、确认哪些是真的重复，再考虑 `shared/`。
