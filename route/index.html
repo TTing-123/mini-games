@@ -1,0 +1,66 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#08131a" />
+  <meta name="description" content="ROUTE 绘线防御：敌人沿着你画的路线前进，炮台自动射击。实时重画路线，守住核心。" />
+  <title>ROUTE — 绘线防御</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <p class="kicker">DRAW THE PATH / LIVE DEFENSE</p>
+        <h1>ROUTE <span>绘线防御</span></h1>
+      </div>
+      <div class="topbar-right">
+        <div class="stat-chip"><span>核心</span><b id="core-hp">6</b></div>
+        <div class="stat-chip"><span>波次</span><b id="wave">1</b></div>
+        <div class="stat-chip"><span>分数</span><b id="score">0</b></div>
+        <button id="restart" class="ghost" type="button">重开</button>
+      </div>
+    </header>
+
+    <section class="game-layout">
+      <div class="board-wrap">
+        <canvas id="board" width="960" height="620" aria-label="ROUTE 绘线防御棋盘"></canvas>
+      </div>
+
+      <aside class="side-panel">
+        <section class="panel-block">
+          <p class="label">怎么玩</p>
+          <p class="tip">按住并画一条线。敌人会沿着它走，炮台自动射击。线越长，敌人暴露在火力下的时间越久。</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">墨水</p>
+          <div class="meter"><i id="ink-bar"></i></div>
+          <div class="meter-row"><span>当前线长</span><b id="ink-value">0</b></div>
+          <div class="meter-row"><span>重画冷却</span><b id="redraw-value">就绪</b></div>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">炮台弹药</p>
+          <div id="turret-list" class="turret-list"></div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <section id="gameover" class="overlay is-hidden">
+    <div class="result-panel">
+      <p class="kicker">防线失守</p>
+      <h2>核心被击穿</h2>
+      <p id="gameover-text"></p>
+      <div class="result-actions">
+        <button id="again" class="primary" type="button">再来一局</button>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="./src/game.js"></script>
+</body>
+</html>
