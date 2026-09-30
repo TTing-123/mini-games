@@ -7,14 +7,11 @@ import {
   cycleCell,
   getPuzzleCount,
   nextDeduction,
-  setCell,
-  undoState
+  setCell
 } from './nono-core.js';
 
 const board = document.querySelector('#board');
 const levelLabel = document.querySelector('#level-label');
-const moveLabel = document.querySelector('#move-label');
-const undoButton = document.querySelector('#undo');
 const hintButton = document.querySelector('#hint');
 const restartButton = document.querySelector('#restart');
 const levelTitle = document.querySelector('#level-title');
@@ -108,7 +105,7 @@ function applyBoardSize() {
 }
 function renderBoard() {
   const tutorial = state.tutorial ? findTutorialTarget() : null;
-  const deduction = !state.tutorial && state.puzzleIndex < 3 && state.moves === 0 ? nextDeduction(state) : null;
+  const deduction = !state.tutorial && state.puzzleIndex < 4 && state.grid.every((row) => row.every((cell) => cell === UNKNOWN)) ? nextDeduction(state) : null;
   board.innerHTML = '';
   board.style.setProperty('--cols', state.width);
   board.style.setProperty('--rows', state.height);
@@ -215,10 +212,8 @@ function paintCell(row, col, markMode, fromDrag = false) {
 
 function updateHud() {
   levelLabel.textContent = `${state.puzzleIndex + 1} / ${getPuzzleCount()}`;
-  moveLabel.textContent = String(state.moves);
   levelTitle.textContent = state.title;
   levelHint.textContent = state.hint;
-  undoButton.disabled = state.undoStack.length === 0;
 }
 
 function renderAll() {
@@ -252,7 +247,7 @@ function showResult() {
   saveBest();
   renderLevelGrid();
   resultTitle.textContent = state.title;
-  resultText.textContent = `${'★'.repeat(stars)}${'☆'.repeat(3 - stars)} · 用了 ${state.moves} 次操作`;
+  resultText.textContent = `${'★'.repeat(stars)}${'☆'.repeat(3 - stars)} · 图案完成`;
   resultNext.textContent = state.puzzleIndex === getPuzzleCount() - 1 ? '回到第一关' : '下一关';
   result.classList.remove('is-hidden');
 }
@@ -267,13 +262,6 @@ modeMark.addEventListener('click', () => {
   mode = 'mark';
   modeMark.classList.add('active');
   modeFill.classList.remove('active');
-});
-
-undoButton.addEventListener('click', () => {
-  const next = undoState(state);
-  if (!next) return;
-  state = next;
-  renderAll();
 });
 
 hintButton.addEventListener('click', () => {

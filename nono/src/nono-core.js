@@ -105,7 +105,7 @@ export function isLineSolvable(puzzle) {
   return true;
 }
 
-const LEVEL_ROWS = [
+const HANDMADE_LEVELS = [
   { title: '教程', tutorial: true, hint: '数字 2 表示连续填两格，点高亮格子', rows: ['110', '110', '000'] },
   { title: '爱心', hint: '先从最满的行开始', rows: ['01110', '11111', '11111', '01110', '00100'] },
   { title: '方框', hint: '四条边都是连续块', rows: ['11111', '10001', '10001', '10001', '11111'] },
@@ -119,6 +119,45 @@ const LEVEL_ROWS = [
   { title: '皇冠', hint: '顶部有三个尖', rows: ['1010000101', '1110000111', '1111001111', '1111111111', '1111111111', '1111111111', '0111111110', '0011111100', '0011111100', '0000000000'] }
 ];
 
+function generateSymmetricPatterns(count = 40) {
+  const patterns = [];
+  for (let seed = 1; patterns.length < count && seed < 10000; seed += 1) {
+    let value = seed >>> 0;
+    const random = () => {
+      value += 0x6D2B79F5;
+      let t = value;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const size = 10;
+    const grid = Array.from({ length: size }, () => Array(size).fill(0));
+    for (let row = 0; row < 5; row += 1) {
+      for (let col = 0; col < 5; col += 1) {
+        if (random() < 0.46) {
+          grid[row][col] = 1;
+          grid[row][size - 1 - col] = 1;
+          grid[size - 1 - row][col] = 1;
+          grid[size - 1 - row][size - 1 - col] = 1;
+        }
+      }
+    }
+    const filled = grid.flat().reduce((sum, cell) => sum + cell, 0);
+    if (filled < 18 || filled > 62) continue;
+    const rowClues = grid.map(cluesFromLine);
+    const colClues = Array.from({ length: size }, (_, col) => cluesFromLine(grid.map((row) => row[col])));
+    const puzzle = { width: size, height: size, solution: grid, rowClues, colClues };
+    if (!isLineSolvable(puzzle)) continue;
+    patterns.push({
+      title: `对称图案 ${patterns.length + 1}`,
+      hint: '从最长的行列开始',
+      rows: grid.map((row) => row.join(''))
+    });
+  }
+  return patterns;
+}
+
+const LEVEL_ROWS = [...HANDMADE_LEVELS, ...generateSymmetricPatterns(40)];
 function buildPuzzle(config, index) {
   const solution = config.rows.map((row) => row.split('').map(Number));
   const height = solution.length;
@@ -152,8 +191,6 @@ export function createState(index = 0) {
     colClues: puzzle.colClues.map((line) => line.slice()),
     solution: puzzle.solution.map((row) => row.slice()),
     grid: Array.from({ length: puzzle.height }, () => Array.from({ length: puzzle.width }, () => UNKNOWN)),
-    moves: 0,
-    undoStack: [],
     won: false
   };
 }
@@ -167,8 +204,6 @@ export function setCell(state, row, col, value) {
   return {
     ...state,
     grid,
-    moves: state.moves + 1,
-    undoStack: [...state.undoStack, state.grid.map((line) => line.slice())],
     won: isStateSolved({ ...state, grid })
   };
 }
@@ -177,19 +212,6 @@ export function cycleCell(state, row, col) {
   const current = state.grid[row][col];
   const next = current === UNKNOWN ? FILLED : current === FILLED ? BLANK : UNKNOWN;
   return setCell(state, row, col, next);
-}
-
-export function undoState(state) {
-  if (!state.undoStack.length) return null;
-  const undoStack = state.undoStack.slice(0, -1);
-  const grid = state.undoStack[state.undoStack.length - 1].map((line) => line.slice());
-  return {
-    ...state,
-    grid,
-    moves: Math.max(0, state.moves - 1),
-    undoStack,
-    won: false
-  };
 }
 
 export function isStateSolved(state) {

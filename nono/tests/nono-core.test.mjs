@@ -13,12 +13,11 @@ import {
   isStateSolved,
   nextDeduction,
   setCell,
-  solveByLines,
-  undoState
+  solveByLines
 } from '../src/nono-core.js';
 
-test('there are ten puzzles plus a tutorial', () => {
-  assert.equal(getPuzzleCount(), 11);
+test('there are fifty puzzles plus a tutorial', () => {
+  assert.equal(getPuzzleCount(), 51);
   assert.ok(getPuzzleInfo(0));
 });
 
@@ -48,15 +47,6 @@ test('cells cycle through fill, blank, and unknown', () => {
   assert.equal(state.grid[0][0], BLANK);
   state = cycleCell(state, 0, 0);
   assert.equal(state.grid[0][0], UNKNOWN);
-});
-
-test('undo restores the previous grid', () => {
-  let state = createState(0);
-  state = setCell(state, 0, 0, FILLED);
-  const moved = state;
-  const undone = undoState(moved);
-  assert.equal(undone.grid[0][0], UNKNOWN);
-  assert.equal(undone.moves, 0);
 });
 
 test('a deduction is always a forced filled or blank cell', () => {
