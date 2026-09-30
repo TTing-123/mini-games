@@ -1,5 +1,4 @@
 import {
-  BLANK,
   FILLED,
   UNKNOWN,
   cluesFromLine,
@@ -17,8 +16,6 @@ const restartButton = document.querySelector('#restart');
 const levelTitle = document.querySelector('#level-title');
 const levelHint = document.querySelector('#level-hint');
 const levelGrid = document.querySelector('#level-grid');
-const modeFill = document.querySelector('#mode-fill');
-const modeMark = document.querySelector('#mode-mark');
 const result = document.querySelector('#result');
 const resultTitle = document.querySelector('#result-title');
 const resultText = document.querySelector('#result-text');
@@ -29,11 +26,10 @@ const BEST_KEY = 'nono-best-stars';
 const PIXELS = ['#4de2d5', '#f5b84b', '#ff6b6b', '#7c83ff', '#7ee787', '#ff9f43', '#d980fa', '#5aa9e6', '#ffd166', '#58d68d'];
 
 let state = createState(0);
-let mode = 'fill';
 let dragging = false;
 let dragDirty = false;
 let dragLast = null;
-let dragMarkMode = false;
+let dragValue = FILLED;
 let hintCount = 0;
 let resultShown = false;
 let bestStars = loadBest();
@@ -156,22 +152,22 @@ function renderBoard() {
       if ((col + 1) % 5 === 0 && col !== state.width - 1) cell.classList.add('thick-right');
       if ((row + 1) % 5 === 0 && row !== state.height - 1) cell.classList.add('thick-bottom');
       if (state.grid[row][col] === FILLED) cell.classList.add('is-filled');
-      if (state.grid[row][col] === BLANK) cell.classList.add('is-marked');
       if (deduction && deduction.row === row && deduction.col === col) cell.classList.add('is-hint');
       if (tutorial && tutorial.col === col && state.solution[row][col] === 1 && state.grid[row][col] !== FILLED) cell.classList.add('is-hint');
       cell.addEventListener('pointerdown', (event) => {
         event.preventDefault();
+        if (event.button !== 0) return;
         dragging = true;
         dragDirty = false;
         dragLast = String(row) + ',' + String(col);
-        dragMarkMode = event.button === 2;
-        paintCell(row, col, dragMarkMode, true);
+        dragValue = state.grid[row][col] === FILLED ? UNKNOWN : FILLED;
+        paintCell(row, col, dragValue, true);
       });
       cell.addEventListener('pointerenter', () => {
         const key = String(row) + ',' + String(col);
         if (dragging && dragLast !== key) {
           dragLast = key;
-          paintCell(row, col, dragMarkMode, true);
+          paintCell(row, col, dragValue, true);
         }
       });
       cell.addEventListener('contextmenu', (event) => {
@@ -188,16 +184,10 @@ function updateCellDom(row, col) {
   if (!cell) return;
   const value = state.grid[row][col];
   cell.classList.toggle('is-filled', value === FILLED);
-  cell.classList.toggle('is-marked', value === BLANK);
 }
 
-function paintCell(row, col, markMode, fromDrag = false) {
+function paintCell(row, col, value, fromDrag = false) {
   if (state.won) return;
-  const current = state.grid[row][col];
-  const effectiveMode = markMode ? 'mark' : mode;
-  const value = effectiveMode === 'mark'
-    ? (current === BLANK ? UNKNOWN : BLANK)
-    : (current === FILLED ? UNKNOWN : FILLED);
   const next = setCell(state, row, col, value);
   if (!next || next === state) return;
   state = next;
@@ -253,18 +243,6 @@ function showResult() {
   result.classList.remove('is-hidden');
 }
 
-modeFill.addEventListener('click', () => {
-  mode = 'fill';
-  modeFill.classList.add('active');
-  modeMark.classList.remove('active');
-});
-
-modeMark.addEventListener('click', () => {
-  mode = 'mark';
-  modeMark.classList.add('active');
-  modeFill.classList.remove('active');
-});
-
 hintButton.addEventListener('click', () => {
   const deduction = nextDeduction(state);
   if (!deduction) return;
@@ -283,13 +261,13 @@ window.addEventListener('pointerup', () => {
   if (dragging && dragDirty) {
     dragging = false;
     dragLast = null;
-    dragMarkMode = false;
+    dragValue = FILLED;
     renderAll();
     if (state.won) showResult();
   } else {
     dragging = false;
     dragLast = null;
-    dragMarkMode = false;
+    dragValue = FILLED;
   }
 });
 
