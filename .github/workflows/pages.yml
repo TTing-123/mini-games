@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run game tests
-        run: node --test pulse/tests/*.test.mjs casebook/tests/*.test.mjs pour/tests/*.test.mjs
+        run: node --test pulse/tests/*.test.mjs casebook/tests/*.test.mjs nono/tests/*.test.mjs
       - name: Stage static site
         run: |
           mkdir -p _site/pulse
@@ -33,9 +33,9 @@ jobs:
           mkdir -p _site/casebook
           cp casebook/index.html casebook/favicon.svg _site/casebook/
           cp -R casebook/src _site/casebook/src
-          mkdir -p _site/pour
-          cp pour/index.html pour/favicon.svg _site/pour/
-          cp -R pour/src _site/pour/src
+          mkdir -p _site/nono
+          cp nono/index.html nono/favicon.svg _site/nono/
+          cp -R nono/src _site/nono/src
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

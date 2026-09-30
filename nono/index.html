@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#071219" />
-  <meta name="description" content="POUR 倒色：点击一根试管，再点另一根，把液体倒过去，直到每种颜色分开。" />
-  <title>POUR — 倒色</title>
+  <meta name="description" content="NONO 数织：根据每行每列的连续块数字，填出隐藏像素图。" />
+  <title>NONO — 数织</title>
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <link rel="stylesheet" href="./src/style.css" />
 </head>
@@ -13,45 +13,42 @@
   <main class="shell">
     <header class="topbar">
       <div class="brand">
-        <p class="kicker">ONE ACTION / COLOR SORTING</p>
-        <h1>POUR <span>倒色</span></h1>
+        <p class="kicker">GRID LOGIC / PIXEL REVEAL</p>
+        <h1>NONO <span>数织</span></h1>
       </div>
       <div class="topbar-right">
         <div class="stat-chip"><span>关卡</span><b id="level-label">1 / 10</b></div>
-        <div class="stat-chip"><span>步数</span><b id="move-label">0</b></div>
-        <div class="stat-chip"><span>最佳</span><b id="best-label">-</b></div>
+        <div class="stat-chip"><span>操作</span><b id="move-label">0</b></div>
         <button id="undo" class="ghost" type="button">撤销</button>
+        <button id="hint" class="ghost" type="button">提示</button>
         <button id="restart" class="ghost" type="button">重来</button>
       </div>
     </header>
 
     <section class="game-layout">
       <div class="board-wrap">
-        <div id="rack" class="rack" aria-label="试管架"></div>
+        <div id="board" class="board" aria-label="数织棋盘"></div>
       </div>
 
       <aside class="side-panel">
         <section class="panel-block">
           <p class="label">怎么玩</p>
-          <div class="mini-rule">
-            <span class="mini-tube"><i style="background:#4de2d5"></i></span>
-            <b>点一下</b>
-            <span class="mini-arrow">→</span>
-            <span class="mini-tube"><i style="background:#f5b84b"></i></span>
-            <b>再点一下</b>
-          </div>
-          <p class="tip">顶层颜色相同，或者目标是空试管，才能倒过去。</p>
+          <p class="tip">数字表示这一行或这一列里，连续填色块的长度。比如 <b>3</b> 就是连续三格。</p>
         </section>
 
         <section class="panel-block">
-          <p class="label">目标</p>
-          <p class="tip">让每根试管只装一种颜色。装满四格的试管会自动固定。</p>
+          <p class="label">操作</p>
+          <div class="mode-switch">
+            <button id="mode-fill" class="mode active" type="button">填格</button>
+            <button id="mode-mark" class="mode" type="button">打叉</button>
+          </div>
+          <p class="tip">可以按住拖动连续填格。右键也可以打叉。</p>
         </section>
 
         <section class="panel-block">
           <p class="label">当前关</p>
-          <div id="level-title" class="level-title">三色起步</div>
-          <p id="level-hint" class="level-hint">先找顶层颜色相同的试管</p>
+          <div id="level-title" class="level-title">爱心</div>
+          <p id="level-hint" class="level-hint">先从最满的行开始</p>
         </section>
 
         <section class="panel-block">
@@ -64,9 +61,8 @@
 
   <section id="result" class="overlay is-hidden">
     <div class="result-panel">
-      <p class="kicker">颜色分开</p>
-      <h2 id="result-title">完成</h2>
-      <p id="result-stars" class="stars"></p>
+      <p class="kicker">图案完成</p>
+      <h2 id="result-title">爱心</h2>
       <p id="result-text"></p>
       <div class="result-actions">
         <button id="result-next" class="primary" type="button">下一关</button>
