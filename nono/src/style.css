@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: #071219;
   --line: #1b3b47;
   --text: #e9f8f6;
@@ -36,33 +36,36 @@ h1 span { display: inline-block; margin-left: 12px; color: var(--muted); font-si
 .ghost:disabled { opacity: .35; cursor: default; }
 .primary { border: 1px solid rgba(77,226,213,.62); background: rgba(77,226,213,.14); color: #dffffb; }
 .primary:hover { background: rgba(77,226,213,.24); }
-.game-layout { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 26px; align-items: center; padding-top: 24px; }
-.board-wrap { min-width: 0; overflow-x: auto; padding: 22px 0; }
+.game-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 28px; align-items: start; padding-top: 18px; }
+.board-wrap { min-width: 0; display: flex; align-items: flex-start; justify-content: center; overflow: visible; padding: 8px 0 0; }
 .board {
   --cell: 34px;
   --clue-w: 92px;
   --clue-h: 92px;
   --pixel: #4de2d5;
+  width: 100%;
+  min-height: 620px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  user-select: none;
+  touch-action: none;
+}
+.puzzle {
   display: grid;
   grid-template-columns: var(--clue-w) repeat(var(--cols), var(--cell));
   grid-template-rows: var(--clue-h) repeat(var(--rows), var(--cell));
   width: max-content;
-  min-width: 0;
-  margin: 0 auto;
-  padding: 12px;
-  border: 1px solid rgba(125,228,225,.16);
-  border-radius: 20px;
-  background: rgba(6,19,26,.72);
-  box-shadow: 0 24px 60px rgba(0,0,0,.36);
-  user-select: none;
-  touch-action: none;
+  padding: 16px calc(16px + var(--clue-w)) calc(16px + var(--clue-h)) 16px;
 }
-.corner { border-right: 2px solid rgba(125,228,225,.18); border-bottom: 2px solid rgba(125,228,225,.18); }
-.col-clue, .row-clue { display: flex; align-items: flex-end; justify-content: center; gap: 2px; color: var(--muted); font: 700 11px/1 var(--mono); }
-.col-clue { flex-direction: column; padding: 4px 2px 7px; border-bottom: 2px solid rgba(125,228,225,.18); }
-.row-clue { justify-content: flex-end; padding: 2px 8px 2px 2px; border-right: 2px solid rgba(125,228,225,.18); }
+.corner { }
+.col-clue, .row-clue { display: flex; gap: 2px; color: var(--muted); font: 700 11px/1 var(--mono); }
+.col-clue { flex-direction: column; align-items: center; justify-content: flex-end; padding: 4px 2px 7px; }
+.row-clue { align-items: center; justify-content: flex-end; padding: 2px 8px 2px 2px; }
 .col-clue b, .row-clue b { display: block; color: inherit; font-weight: 700; }
 .col-clue.is-done, .row-clue.is-done { color: var(--cyan); text-shadow: 0 0 10px rgba(77,226,213,.35); }
+.col-clue.is-tutorial { color: var(--purple); text-shadow: 0 0 14px rgba(154,98,232,.7); animation: tutorialClue 1s ease-in-out infinite; }
 .cell {
   position: relative;
   border-right: 1px solid rgba(125,228,225,.1);
@@ -79,9 +82,8 @@ h1 span { display: inline-block; margin-left: 12px; color: var(--muted); font-si
 .cell.is-marked::after { transform: translate(-50%,-50%) rotate(-45deg); }
 .cell.is-hint { animation: hintCell 1s ease-in-out infinite; }
 .cell.thick-right { border-right: 2px solid rgba(125,228,225,.45); }
-.cell.thick-bottom, .col-clue.thick-bottom { border-bottom: 2px solid rgba(125,228,225,.45); }
-.row-clue.thick-bottom { border-bottom: 2px solid rgba(125,228,225,.45); }
-.side-panel { padding-left: 22px; border-left: 1px solid var(--line); }
+.cell.thick-bottom { border-bottom: 2px solid rgba(125,228,225,.45); }
+.side-panel { padding-left: 24px; border-left: 1px solid var(--line); }
 .panel-block { padding: 18px 0; border-bottom: 1px solid rgba(27,59,71,.8); }
 .panel-block:first-child { padding-top: 0; }
 .panel-block:last-child { border-bottom: 0; }
@@ -106,18 +108,20 @@ h1 span { display: inline-block; margin-left: 12px; color: var(--muted); font-si
 .result-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
 @keyframes pop { from { transform: scale(.75); } to { transform: scale(1); } }
 @keyframes hintCell { 50% { box-shadow: inset 0 0 0 3px var(--purple), 0 0 18px rgba(154,98,232,.6); } }
+@keyframes tutorialClue { 50% { transform: translateY(-3px); } }
 @media (max-width: 860px) {
   .shell { width: min(100% - 28px, 720px); padding-top: 20px; }
   .game-layout { grid-template-columns: 1fr; gap: 12px; }
-  .side-panel { padding: 4px 0 0; border-left: 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; }
+  .board-wrap { min-height: 0; }
+  .side-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; margin-top: 12px; padding: 18px 0 0; border-left: 0; border-top: 1px solid var(--line); }
   .panel-block { padding: 16px 0; }
-  .board { --cell: 28px; --clue-w: 78px; --clue-h: 78px; }
+  .board { --cell: 34px !important; --clue-w: 72px !important; --clue-h: 72px !important; min-height: 0; }
 }
 @media (max-width: 560px) {
   .topbar { align-items: flex-start; flex-direction: column; }
   .topbar-right { width: 100%; justify-content: space-between; }
   .side-panel { grid-template-columns: 1fr; }
-  .board { --cell: 24px; --clue-w: 68px; --clue-h: 68px; padding: 8px; }
+  .board { --cell: 30px !important; --clue-w: 64px !important; --clue-h: 64px !important; min-height: 0; }
   .result-actions { flex-direction: column-reverse; }
   .result-actions button { width: 100%; }
 }

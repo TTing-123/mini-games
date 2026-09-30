@@ -1,4 +1,4 @@
-﻿import {
+import {
   BLANK,
   FILLED,
   UNKNOWN,
@@ -80,19 +80,46 @@ function renderLevelGrid() {
   }
 }
 
+function findTutorialTarget() {
+  for (let col = 0; col < state.width; col += 1) {
+    const filledRows = [];
+    for (let row = 0; row < state.height; row += 1) {
+      if (state.solution[row][col] === 1) filledRows.push(row);
+    }
+    if (!filledRows.length) continue;
+    if (filledRows.some((row) => state.grid[row][col] !== FILLED)) return { col };
+  }
+  return null;
+}
+function applyBoardSize() {
+  if (state.width >= 10) {
+    board.style.setProperty('--cell', '40px');
+    board.style.setProperty('--clue-w', '86px');
+    board.style.setProperty('--clue-h', '86px');
+  } else if (state.width >= 8) {
+    board.style.setProperty('--cell', '46px');
+    board.style.setProperty('--clue-w', '92px');
+    board.style.setProperty('--clue-h', '92px');
+  } else {
+    board.style.setProperty('--cell', '56px');
+    board.style.setProperty('--clue-w', '96px');
+    board.style.setProperty('--clue-h', '96px');
+  }
+}
 function renderBoard() {
-  const deduction = state.puzzleIndex < 3 && state.moves === 0 ? nextDeduction(state) : null;
+  const tutorial = state.tutorial ? findTutorialTarget() : null;
+  const deduction = !state.tutorial && state.puzzleIndex < 3 && state.moves === 0 ? nextDeduction(state) : null;
   board.innerHTML = '';
   board.style.setProperty('--cols', state.width);
   board.style.setProperty('--rows', state.height);
   board.style.setProperty('--pixel', PIXELS[state.puzzleIndex % PIXELS.length]);
-  if (state.width >= 10) board.style.setProperty('--cell', '30px');
-  else if (state.width >= 8) board.style.setProperty('--cell', '36px');
-  else board.style.setProperty('--cell', '48px');
+  applyBoardSize();
+  const puzzle = document.createElement('div');
+  puzzle.className = 'puzzle';
 
   const corner = document.createElement('div');
   corner.className = 'corner';
-  board.append(corner);
+  puzzle.append(corner);
 
   for (let col = 0; col < state.width; col += 1) {
     const clue = document.createElement('div');
@@ -100,12 +127,13 @@ function renderBoard() {
     if ((col + 1) % 5 === 0 && col !== state.width - 1) clue.classList.add('thick-bottom');
     if (lineMatches(state.colClues[col], colFilled(col))) clue.classList.add('is-done');
     if (deduction && deduction.col === col) clue.classList.add('is-done');
+    if (tutorial && tutorial.col === col) clue.classList.add('is-tutorial');
     for (const value of state.colClues[col]) {
       const b = document.createElement('b');
       b.textContent = String(value);
       clue.append(b);
     }
-    board.append(clue);
+    puzzle.append(clue);
   }
 
   for (let row = 0; row < state.height; row += 1) {
@@ -119,7 +147,7 @@ function renderBoard() {
       b.textContent = String(value);
       clue.append(b);
     }
-    board.append(clue);
+    puzzle.append(clue);
 
     for (let col = 0; col < state.width; col += 1) {
       const cell = document.createElement('button');
@@ -132,6 +160,7 @@ function renderBoard() {
       if (state.grid[row][col] === FILLED) cell.classList.add('is-filled');
       if (state.grid[row][col] === BLANK) cell.classList.add('is-marked');
       if (deduction && deduction.row === row && deduction.col === col) cell.classList.add('is-hint');
+      if (tutorial && tutorial.col === col && state.solution[row][col] === 1 && state.grid[row][col] !== FILLED) cell.classList.add('is-hint');
       cell.addEventListener('pointerdown', (event) => {
         event.preventDefault();
         dragging = true;
@@ -150,9 +179,10 @@ function renderBoard() {
         event.preventDefault();
         paintCell(row, col, true);
       });
-      board.append(cell);
+      puzzle.append(cell);
     }
   }
+  board.append(puzzle);
 }
 
 function updateCellDom(row, col) {
@@ -281,5 +311,3 @@ if (DEBUG) {
 }
 
 renderAll();
-
-

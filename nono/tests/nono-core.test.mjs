@@ -1,4 +1,4 @@
-﻿import test from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   BLANK,
@@ -17,8 +17,8 @@ import {
   undoState
 } from '../src/nono-core.js';
 
-test('there are ten puzzles', () => {
-  assert.equal(getPuzzleCount(), 10);
+test('there are ten puzzles plus a tutorial', () => {
+  assert.equal(getPuzzleCount(), 11);
   assert.ok(getPuzzleInfo(0));
 });
 
@@ -35,8 +35,8 @@ test('line clues collapse consecutive runs', () => {
 
 test('a puzzle starts empty with the right dimensions', () => {
   const state = createState(0);
-  assert.equal(state.width, 5);
-  assert.equal(state.height, 5);
+  assert.equal(state.width, 3);
+  assert.equal(state.height, 3);
   assert.ok(state.grid.every((row) => row.every((cell) => cell === UNKNOWN)));
 });
 

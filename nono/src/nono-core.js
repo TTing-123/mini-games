@@ -1,4 +1,4 @@
-﻿export const UNKNOWN = 0;
+export const UNKNOWN = 0;
 export const FILLED = 1;
 export const BLANK = 2;
 
@@ -106,6 +106,7 @@ export function isLineSolvable(puzzle) {
 }
 
 const LEVEL_ROWS = [
+  { title: '教程', tutorial: true, hint: '数字 2 表示连续填两格，点高亮格子', rows: ['110', '110', '000'] },
   { title: '爱心', hint: '先从最满的行开始', rows: ['01110', '11111', '11111', '01110', '00100'] },
   { title: '方框', hint: '四条边都是连续块', rows: ['11111', '10001', '10001', '10001', '11111'] },
   { title: '箭头', hint: '中间连续块最多', rows: ['00100', '01110', '11111', '00100', '00100'] },
@@ -124,7 +125,7 @@ function buildPuzzle(config, index) {
   const width = solution[0].length;
   const rowClues = solution.map(cluesFromLine);
   const colClues = Array.from({ length: width }, (_, col) => cluesFromLine(solution.map((row) => row[col])));
-  return { index, title: config.title, hint: config.hint, solution, height, width, rowClues, colClues };
+  return { index, title: config.title, hint: config.hint, tutorial: Boolean(config.tutorial), solution, height, width, rowClues, colClues };
 }
 
 export const PUZZLES = LEVEL_ROWS.map(buildPuzzle);
@@ -144,6 +145,7 @@ export function createState(index = 0) {
     puzzleIndex: index,
     title: puzzle.title,
     hint: puzzle.hint,
+    tutorial: puzzle.tutorial,
     width: puzzle.width,
     height: puzzle.height,
     rowClues: puzzle.rowClues.map((line) => line.slice()),
@@ -213,4 +215,3 @@ export function nextDeduction(state) {
   }
   return null;
 }
-
