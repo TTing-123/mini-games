@@ -1,0 +1,80 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#071219" />
+  <meta name="description" content="POUR 倒色：点击一根试管，再点另一根，把液体倒过去，直到每种颜色分开。" />
+  <title>POUR — 倒色</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <p class="kicker">ONE ACTION / COLOR SORTING</p>
+        <h1>POUR <span>倒色</span></h1>
+      </div>
+      <div class="topbar-right">
+        <div class="stat-chip"><span>关卡</span><b id="level-label">1 / 10</b></div>
+        <div class="stat-chip"><span>步数</span><b id="move-label">0</b></div>
+        <div class="stat-chip"><span>最佳</span><b id="best-label">-</b></div>
+        <button id="undo" class="ghost" type="button">撤销</button>
+        <button id="restart" class="ghost" type="button">重来</button>
+      </div>
+    </header>
+
+    <section class="game-layout">
+      <div class="board-wrap">
+        <div id="rack" class="rack" aria-label="试管架"></div>
+      </div>
+
+      <aside class="side-panel">
+        <section class="panel-block">
+          <p class="label">怎么玩</p>
+          <div class="mini-rule">
+            <span class="mini-tube"><i style="background:#4de2d5"></i></span>
+            <b>点一下</b>
+            <span class="mini-arrow">→</span>
+            <span class="mini-tube"><i style="background:#f5b84b"></i></span>
+            <b>再点一下</b>
+          </div>
+          <p class="tip">顶层颜色相同，或者目标是空试管，才能倒过去。</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">目标</p>
+          <p class="tip">让每根试管只装一种颜色。装满四格的试管会自动固定。</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">当前关</p>
+          <div id="level-title" class="level-title">三色起步</div>
+          <p id="level-hint" class="level-hint">先找顶层颜色相同的试管</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">跳关</p>
+          <div id="level-grid" class="level-grid"></div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <section id="result" class="overlay is-hidden">
+    <div class="result-panel">
+      <p class="kicker">颜色分开</p>
+      <h2 id="result-title">完成</h2>
+      <p id="result-stars" class="stars"></p>
+      <p id="result-text"></p>
+      <div class="result-actions">
+        <button id="result-next" class="primary" type="button">下一关</button>
+        <button id="result-retry" class="ghost" type="button">重来</button>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="./src/game.js"></script>
+</body>
+</html>
