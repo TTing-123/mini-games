@@ -98,6 +98,102 @@ const LEVELS = [
       '###############'
     ]
   }
+  ,
+  {
+    id: 'S6',
+    title: '双开关',
+    hint: '两个开关都要被压住',
+    parTime: 50,
+    parSwaps: 2,
+    rows: [
+      '###############',
+      '#P..C...O..#..#',
+      '#..........D..#',
+      '#....O.....#..#',
+      '#..........#..#',
+      '#....C.....#..#',
+      '#..........#..#',
+      '#..........#KX#',
+      '#..........#..#',
+      '###############'
+    ]
+  },
+  {
+    id: 'S7',
+    title: '尖刺走廊',
+    hint: '箱子在尖刺的另一边',
+    parTime: 35,
+    parSwaps: 2,
+    rows: [
+      '###############',
+      '#P..C..^^.C.KX#',
+      '#             #',
+      '#             #',
+      '#             #',
+      '#             #',
+      '#             #',
+      '#             #',
+      '#             #',
+      '###############'
+    ]
+  },
+  {
+    id: 'S8',
+    title: '敌人和尖刺',
+    hint: '敌人会追过来，但要先过尖刺',
+    parTime: 40,
+    parSwaps: 3,
+    rows: [
+      '###############',
+      '#P..E..^^.C.KX#',
+      '#             #',
+      '#             #',
+      '#             #',
+      '#             #',
+      '#             #',
+      '#             #',
+      '#             #',
+      '###############'
+    ]
+  },
+  {
+    id: 'S9',
+    title: '双钥匙',
+    hint: '两把钥匙都要拿到，点击会直接收集',
+    parTime: 45,
+    parSwaps: 4,
+    rows: [
+      '###############',
+      '#P C  K  C  KX#',
+      '#             #',
+      '#             #',
+      '#             #',
+      '#             #',
+      '#             #',
+      '#             #',
+      '#             #',
+      '###############'
+    ]
+  },
+  {
+    id: 'S10',
+    title: '最后一关',
+    hint: '开关、尖刺、敌人，全部一起用',
+    parTime: 65,
+    parSwaps: 5,
+    rows: [
+      '###############',
+      '#P..C.O..#....#',
+      '#........#....#',
+      '#..^^....D....#',
+      '#........#..K.#',
+      '#..E.....#....#',
+      '#........#....#',
+      '#........#...X#',
+      '#........#....#',
+      '###############'
+    ]
+  }
 ];
 
 export function getLevelCount() {
@@ -130,7 +226,13 @@ function parseLevel(index) {
     time: 0,
     swapCooldown: 0,
     damageCooldown: 0,
-    nextId: 1
+    nextId: 1,
+    platesTotal: 0,
+    platesPressed: 0,
+    keysTotal: 0,
+    swapCount: 0,
+    parTime: level.parTime ?? 40,
+    parSwaps: level.parSwaps ?? 3
   };
 
   for (let row = 0; row < ROWS; row += 1) {
@@ -298,6 +400,7 @@ export function swapWith(state, targetId) {
     target.collected = true;
     state.keys = state.keys.filter((key) => key.id !== target.id);
   }
+  state.swapCount += 1;
   state.swapCooldown = .62;
   applyTileEffects(state);
   return true;
@@ -360,11 +463,19 @@ export function update(state, dt) {
   }
 
   const playerCell = cellOf(state.player);
-  const platePressed = state.crates.some((crate) => {
+  const occupied = new Set([`${playerCell.col},${playerCell.row}`]);
+  for (const crate of state.crates) {
     const cell = cellOf(crate);
-    return tileAt(state, cell.col, cell.row) === PLATE;
-  }) || tileAt(state, playerCell.col, playerCell.row) === PLATE;
-  state.doorOpen = platePressed;
+    occupied.add(`${cell.col},${cell.row}`);
+  }
+  let platesPressed = 0;
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let col = 0; col < COLS; col += 1) {
+      if (tileAt(state, col, row) === PLATE && occupied.has(`${col},${row}`)) platesPressed += 1;
+    }
+  }
+  state.platesPressed = platesPressed;
+  state.doorOpen = state.platesTotal === 0 || platesPressed >= state.platesTotal;
 
   const hasKey = state.keys.length === 0 || state.keys.some((key) => key.collected);
   if (hasKey && Math.hypot(state.exit.x - state.player.x, state.exit.y - state.player.y) < TILE * .45) {

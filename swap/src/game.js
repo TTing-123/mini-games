@@ -18,7 +18,6 @@ import {
   getLevelCount,
   tileAt
 } from './swap-core.js';
-import { createTutorial } from './tutorial.js';
 
 const canvas = document.querySelector('#board');
 const ctx = canvas.getContext('2d');
@@ -34,13 +33,13 @@ const resultTitle = document.querySelector('#result-title');
 const resultText = document.querySelector('#result-text');
 const resultNext = document.querySelector('#result-next');
 const resultRetry = document.querySelector('#result-retry');
-const tutorialButton = document.querySelector('#tutorial-button');
-const tutorialOverlay = document.querySelector('#tutorial');
-const tutorialCanvas = document.querySelector('#tutorial-canvas');
-const tutorialStart = document.querySelector('#tutorial-start');
-const tutorialAnim = createTutorial(tutorialCanvas);
+const timeLabel = document.querySelector('#time-label');
+const swapLabel = document.querySelector('#swap-label');
+const keyLabel = document.querySelector('#key-label');
+const resultStars = document.querySelector('#result-stars');
+const levelGrid = document.querySelector('#level-grid');
 const DEBUG = new URLSearchParams(location.search).has('debug');
-const TUTORIAL_KEY = 'swap-tutorial-v1';
+const BEST_KEY = 'swap-best-stars';
 
 const core = new SwapCore();
 const keys = new Set();
@@ -331,46 +330,76 @@ function drawSwapFlash() {
   ctx.restore();
 }
 
-function drawFirstLevelHint(now) {
-  if (core.state.levelIndex !== 0 || core.state.won || !core.state.crates.length) return;
-  const crate = core.state.crates[0];
-  const pulse = .5 + .5 * Math.sin(now / 220);
-  ctx.save();
+function drawHand(x, y) {
+  ctx.fillStyle = '#f4ffff';
+  ctx.strokeStyle = '#071219';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x, y + 16);
+  ctx.lineTo(x + 5, y + 12);
+  ctx.lineTo(x + 9, y + 18);
+  ctx.lineTo(x + 12, y + 16);
+  ctx.lineTo(x + 8, y + 10);
+  ctx.lineTo(x + 15, y + 9);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+}
+
+function drawHintRing(x, y, pulse) {
   ctx.setLineDash([7, 7]);
   ctx.strokeStyle = `rgba(154,98,232,${.45 + pulse * .4})`;
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.arc(crate.x, crate.y, 28 + pulse * 5, 0, Math.PI * 2);
+  ctx.arc(x, y, 28 + pulse * 5, 0, Math.PI * 2);
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = '#f4ffff';
-  ctx.strokeStyle = '#071219';
-  ctx.lineWidth = 2;
-  const hx = crate.x + 23;
-  const hy = crate.y - 26;
-  ctx.beginPath();
-  ctx.moveTo(hx, hy);
-  ctx.lineTo(hx, hy + 16);
-  ctx.lineTo(hx + 5, hy + 12);
-  ctx.lineTo(hx + 9, hy + 18);
-  ctx.lineTo(hx + 12, hy + 16);
-  ctx.lineTo(hx + 8, hy + 10);
-  ctx.lineTo(hx + 15, hy + 9);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
+}
+
+function drawEmbeddedHints(now) {
+  if (core.state.levelIndex > 2 || core.state.won) return;
+  const crate = core.state.crates[0];
+  if (!crate) return;
+  const pulse = .5 + .5 * Math.sin(now / 220);
+  ctx.save();
+  drawHintRing(crate.x, crate.y, pulse);
+  drawHand(crate.x + 23, crate.y - 26);
+
+  if (core.state.levelIndex >= 1) {
+    ctx.setLineDash([7, 8]);
+    ctx.strokeStyle = 'rgba(154,98,232,.55)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(core.state.player.x, core.state.player.y);
+    ctx.lineTo(crate.x, crate.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  if (core.state.levelIndex === 2) {
+    let plate = null;
+    for (let row = 0; row < ROWS && !plate; row += 1) {
+      for (let col = 0; col < COLS; col += 1) {
+        if (tileAt(core.state, col, row) === PLATE) {
+          plate = cellCenter(col, row);
+          break;
+        }
+      }
+    }
+    if (plate) {
+      drawHintRing(plate.x, plate.y, pulse);
+      ctx.setLineDash([7, 8]);
+      ctx.strokeStyle = 'rgba(245,184,75,.72)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(crate.x, crate.y);
+      ctx.lineTo(plate.x, plate.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
   ctx.restore();
-}
-
-function openTutorial() {
-  tutorialOverlay.classList.remove('is-hidden');
-  tutorialAnim.start();
-}
-
-function closeTutorial() {
-  tutorialOverlay.classList.add('is-hidden');
-  tutorialAnim.stop();
-  try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch (_) { /* 忽略隐私模式 */ }
 }
 function render() {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
@@ -380,16 +409,57 @@ function render() {
   core.state.keys.forEach(drawKey);
   core.state.enemies.forEach(drawEnemy);
   drawTarget();
+  drawEmbeddedHints(performance.now());
   drawPlayer();
   drawSwapFlash();
   requestAnimationFrame(render);
 }
 
+function loadBestStars() {
+  try {
+    const raw = localStorage.getItem(BEST_KEY);
+    const data = raw ? JSON.parse(raw) : {};
+    return data && typeof data === 'object' ? data : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveBestStars(data) {
+  try { localStorage.setItem(BEST_KEY, JSON.stringify(data)); } catch (_) { /* 忽略隐私模式 */ }
+}
+
+const bestStars = loadBestStars();
+
+function calculateStars(state) {
+  const time = state.time;
+  const swaps = state.swapCount;
+  if (time <= state.parTime && swaps <= state.parSwaps) return 3;
+  if (time <= state.parTime * 1.6 && swaps <= state.parSwaps + 2) return 2;
+  return 1;
+}
+
+function renderLevelGrid() {
+  levelGrid.innerHTML = '';
+  for (let index = 0; index < getLevelCount(); index += 1) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'level-button';
+    button.textContent = String(index + 1);
+    if (index === core.state.levelIndex) button.classList.add('is-current');
+    if (bestStars[index]) button.classList.add('is-solved');
+    button.addEventListener('click', () => loadLevel(index));
+    levelGrid.append(button);
+  }
+}
 function updateHud() {
   const total = getLevelCount();
   levelLabel.textContent = `${core.state.levelIndex + 1} / ${total}`;
   levelTitle.textContent = core.state.title;
   levelHint.textContent = core.state.hint;
+  timeLabel.textContent = core.state.time.toFixed(1);
+  swapLabel.textContent = String(core.state.swapCount);
+  keyLabel.textContent = `${core.state.keysTotal - core.state.keys.length}/${core.state.keysTotal}`;
   hearts.innerHTML = '';
   for (let index = 0; index < core.state.player.hpMax; index += 1) {
     const heart = document.createElement('span');
@@ -403,9 +473,19 @@ function showResult(won) {
   if (resultShown) return;
   resultShown = true;
   const last = core.state.levelIndex >= getLevelCount() - 1;
+  let stars = 0;
+  if (won) {
+    stars = calculateStars(core.state);
+    bestStars[core.state.levelIndex] = Math.max(bestStars[core.state.levelIndex] ?? 0, stars);
+    saveBestStars(bestStars);
+    renderLevelGrid();
+  }
+  resultStars.textContent = won ? `${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}` : '';
   resultKicker.textContent = won ? '关卡完成' : '被抓住了';
   resultTitle.textContent = won ? (last ? '全部换位完成' : '通过') : '再来一次';
-  resultText.textContent = won ? (last ? '五组换位谜题全部解决。' : '钥匙拿到了，出口也找到了。') : '生命归零。想一想还能和谁换位。';
+  resultText.textContent = won
+    ? (last ? '十组换位谜题全部解决。' : `用时 ${core.state.time.toFixed(1)} 秒 · 换位 ${core.state.swapCount} 次`)
+    : '生命归零。想一想还能和谁换位。';
   resultNext.textContent = won ? (last ? '回到第一关' : '下一关') : '重来';
   result.classList.remove('is-hidden');
 }
@@ -450,6 +530,7 @@ function loadLevel(index) {
   resultShown = false;
   result.classList.add('is-hidden');
   updateHud();
+  renderLevelGrid();
 }
 
 function restart() {
@@ -458,6 +539,7 @@ function restart() {
   resultShown = false;
   result.classList.add('is-hidden');
   updateHud();
+  renderLevelGrid();
 }
 
 function nextLevel() {
@@ -470,6 +552,7 @@ function nextLevel() {
   resultShown = false;
   result.classList.add('is-hidden');
   updateHud();
+  renderLevelGrid();
 }
 
 function frame(now) {
@@ -515,8 +598,6 @@ canvas.addEventListener('pointerdown', (event) => {
   tone(680, .08, 'sine', .012, .05);
 });
 
-tutorialButton.addEventListener('click', openTutorial);
-tutorialStart.addEventListener('click', closeTutorial);
 restartButton.addEventListener('click', restart);
 nextButton.addEventListener('click', nextLevel);
 resultNext.addEventListener('click', () => {
@@ -535,6 +616,6 @@ if (DEBUG) {
 }
 
 setupCanvas();
+renderLevelGrid();
 render();
 requestAnimationFrame(frame);
-if (localStorage.getItem(TUTORIAL_KEY) !== '1') openTutorial();

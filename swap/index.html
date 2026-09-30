@@ -19,7 +19,9 @@
       <div class="topbar-right">
         <div class="stat-chip"><span>关卡</span><b id="level-label">1 / 5</b></div>
         <div class="stat-chip hearts" id="hearts" aria-label="生命"></div>
-        <button id="tutorial-button" class="ghost" type="button">演示</button>
+        <div class="stat-chip"><span>时间</span><b id="time-label">0.0</b></div>
+        <div class="stat-chip"><span>换位</span><b id="swap-label">0</b></div>
+        <div class="stat-chip"><span>钥匙</span><b id="key-label">0/1</b></div>
         <button id="restart" class="ghost" type="button">重来</button>
         <button id="next" class="primary" type="button" disabled>下一关</button>
       </div>
@@ -46,25 +48,23 @@
 
         <section class="panel-block">
           <p class="label">目标</p>
-          <p class="tip">拿到钥匙，然后走到出口。箱子可以填坑，敌人可以被换到尖刺或坑里。</p>
+          <p class="tip">拿到全部钥匙，然后走到出口。箱子可以填坑，敌人可以被换到尖刺或坑里。</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">跳关</p>
+          <div id="level-grid" class="level-grid"></div>
         </section>
       </aside>
     </section>
   </main>
 
-  <section id="tutorial" class="overlay is-hidden">
-    <div class="tutorial-panel">
-      <p class="kicker">基础操作演示</p>
-      <canvas id="tutorial-canvas" width="520" height="300"></canvas>
-      <div class="tutorial-legend"><span>移动</span><i>→</i><span>点击换位</span><i>→</i><span>点击钥匙直接拿到</span><i>→</i><span>去出口</span></div>
-      <div class="result-actions"><button id="tutorial-start" class="primary" type="button">看懂了，开始</button></div>
-    </div>
-  </section>
   <section id="result" class="overlay is-hidden">
     <div class="result-panel">
       <p id="result-kicker" class="kicker">关卡完成</p>
       <h2 id="result-title">通过</h2>
       <p id="result-text"></p>
+      <p id="result-stars" class="stars"></p>
       <div class="result-actions">
         <button id="result-next" class="primary" type="button">下一关</button>
         <button id="result-retry" class="ghost" type="button">重来</button>
