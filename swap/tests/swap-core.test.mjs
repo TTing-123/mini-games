@@ -1,4 +1,4 @@
-﻿import test from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   COLS,
@@ -48,8 +48,8 @@ test('a key can be pulled across a pit by swapping twice', () => {
   const keyBefore = { x: key.x, y: key.y };
   assert.equal(swapWith(state, key.id), true);
   assert.equal(state.player.x, keyBefore.x);
-  assert.equal(key.x, before.x);
-  assert.equal(key.collected, false);
+  assert.equal(key.collected, true);
+  assert.equal(state.keys.length, 0);
 });
 
 test('walls block line of sight', () => {

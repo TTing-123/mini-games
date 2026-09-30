@@ -1,4 +1,4 @@
-﻿import {
+import {
   COLS,
   DOOR,
   EXIT,
@@ -18,6 +18,7 @@
   getLevelCount,
   tileAt
 } from './swap-core.js';
+import { createTutorial } from './tutorial.js';
 
 const canvas = document.querySelector('#board');
 const ctx = canvas.getContext('2d');
@@ -33,7 +34,13 @@ const resultTitle = document.querySelector('#result-title');
 const resultText = document.querySelector('#result-text');
 const resultNext = document.querySelector('#result-next');
 const resultRetry = document.querySelector('#result-retry');
+const tutorialButton = document.querySelector('#tutorial-button');
+const tutorialOverlay = document.querySelector('#tutorial');
+const tutorialCanvas = document.querySelector('#tutorial-canvas');
+const tutorialStart = document.querySelector('#tutorial-start');
+const tutorialAnim = createTutorial(tutorialCanvas);
 const DEBUG = new URLSearchParams(location.search).has('debug');
+const TUTORIAL_KEY = 'swap-tutorial-v1';
 
 const core = new SwapCore();
 const keys = new Set();
@@ -76,139 +83,223 @@ function drawTiles() {
       const y = row * TILE;
       const tile = tileAt(core.state, col, row);
       if (tile === WALL) {
-        ctx.fillStyle = '#17323f';
-        roundedRect(x + 3, y + 3, TILE - 6, TILE - 6, 10);
+        const g = ctx.createLinearGradient(x, y, x, y + TILE);
+        g.addColorStop(0, '#234653');
+        g.addColorStop(1, '#122b35');
+        ctx.fillStyle = g;
+        roundedRect(x + 3, y + 3, TILE - 6, TILE - 6, 9);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(125,228,225,.12)';
+        ctx.strokeStyle = 'rgba(180,235,232,.16)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(5,16,22,.5)';
         ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x + 8, y + TILE / 2);
+        ctx.lineTo(x + TILE - 8, y + TILE / 2);
+        ctx.moveTo(x + TILE / 2, y + 8);
+        ctx.lineTo(x + TILE / 2, y + TILE - 8);
         ctx.stroke();
       } else if (tile === PIT) {
-        ctx.fillStyle = '#03090d';
+        const g = ctx.createRadialGradient(x + TILE / 2, y + TILE / 2, 4, x + TILE / 2, y + TILE / 2, TILE * .7);
+        g.addColorStop(0, '#000000');
+        g.addColorStop(1, '#071219');
+        ctx.fillStyle = g;
         ctx.fillRect(x, y, TILE, TILE);
-        ctx.strokeStyle = 'rgba(255,116,104,.12)';
-        ctx.strokeRect(x + 5, y + 5, TILE - 10, TILE - 10);
+        ctx.strokeStyle = 'rgba(0,0,0,.9)';
+        ctx.lineWidth = 6;
+        ctx.strokeRect(x + 4, y + 4, TILE - 8, TILE - 8);
       } else {
-        ctx.fillStyle = (row + col) % 2 ? '#0b202a' : '#0d2430';
+        const g = ctx.createLinearGradient(x, y, x + TILE, y + TILE);
+        g.addColorStop(0, (row + col) % 2 ? '#102a35' : '#12313d');
+        g.addColorStop(1, '#0a1c25');
+        ctx.fillStyle = g;
         ctx.fillRect(x, y, TILE, TILE);
-        ctx.strokeStyle = 'rgba(125,228,225,.07)';
+        ctx.strokeStyle = 'rgba(125,228,225,.1)';
+        ctx.lineWidth = 1;
         ctx.strokeRect(x + .5, y + .5, TILE - 1, TILE - 1);
+        ctx.fillStyle = 'rgba(255,255,255,.035)';
+        ctx.fillRect(x + 8, y + 8, 3, 3);
+        ctx.fillRect(x + TILE - 13, y + TILE - 14, 2, 2);
       }
 
       if (tile === SPIKE) {
-        ctx.fillStyle = '#ff7468';
         for (let index = 0; index < 3; index += 1) {
-          const sx = x + 12 + index * 15;
+          const sx = x + 10 + index * 15;
+          const g = ctx.createLinearGradient(sx, y + 16, sx, y + TILE - 10);
+          g.addColorStop(0, '#ffd0ca');
+          g.addColorStop(.5, '#ff7468');
+          g.addColorStop(1, '#842b30');
+          ctx.fillStyle = g;
           ctx.beginPath();
-          ctx.moveTo(sx, y + TILE - 12);
-          ctx.lineTo(sx + 7, y + 16);
-          ctx.lineTo(sx + 14, y + TILE - 12);
+          ctx.moveTo(sx, y + TILE - 10);
+          ctx.lineTo(sx + 7, y + 15);
+          ctx.lineTo(sx + 14, y + TILE - 10);
           ctx.closePath();
           ctx.fill();
         }
       } else if (tile === PLATE) {
+        ctx.fillStyle = 'rgba(245,184,75,.13)';
+        roundedRect(x + 10, y + 10, TILE - 20, TILE - 20, 8);
+        ctx.fill();
         ctx.strokeStyle = core.state.doorOpen ? '#4de2d5' : '#f5b84b';
         ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.arc(x + TILE / 2, y + TILE / 2, 16, 0, Math.PI * 2);
+        ctx.arc(x + TILE / 2, y + TILE / 2, 15, 0, Math.PI * 2);
         ctx.stroke();
       } else if (tile === DOOR) {
-        ctx.fillStyle = core.state.doorOpen ? 'rgba(77,226,213,.22)' : '#f5b84b';
-        roundedRect(x + 8, y + 5, TILE - 16, TILE - 10, 8);
+        const open = core.state.doorOpen;
+        ctx.fillStyle = open ? 'rgba(77,226,213,.18)' : '#b8792f';
+        roundedRect(x + 7, y + 4, TILE - 14, TILE - 8, 8);
+        ctx.fill();
+        ctx.strokeStyle = open ? '#4de2d5' : '#f5b84b';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.fillStyle = open ? '#4de2d5' : '#5a3518';
+        ctx.beginPath();
+        ctx.arc(x + TILE - 16, y + TILE / 2, 3, 0, Math.PI * 2);
         ctx.fill();
       } else if (tile === EXIT) {
         const pulse = .5 + .5 * Math.sin(performance.now() / 250);
         ctx.strokeStyle = '#f5b84b';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 5;
+        ctx.shadowColor = '#f5b84b';
+        ctx.shadowBlur = 18 + pulse * 12;
         ctx.beginPath();
         ctx.arc(x + TILE / 2, y + TILE / 2, 15 + pulse * 4, 0, Math.PI * 2);
         ctx.stroke();
+        ctx.shadowBlur = 0;
       }
     }
   }
 }
-
 function drawPlayer() {
   const player = core.state.player;
   const pulse = .5 + .5 * Math.sin(performance.now() / 180);
   ctx.save();
   ctx.translate(player.x, player.y);
   ctx.shadowColor = '#4de2d5';
-  ctx.shadowBlur = 18;
-  ctx.fillStyle = '#4de2d5';
+  ctx.shadowBlur = 20;
+  const body = ctx.createRadialGradient(-6, -8, 2, 0, 0, 19);
+  body.addColorStop(0, '#eafffc');
+  body.addColorStop(.35, '#4de2d5');
+  body.addColorStop(1, '#176f73');
+  ctx.fillStyle = body;
   ctx.beginPath();
-  ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+  ctx.arc(0, 0, 17, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
   ctx.fillStyle = '#071219';
   ctx.beginPath();
-  ctx.arc(0, 0, 6, 0, Math.PI * 2);
+  ctx.ellipse(0, -3, 10, 7, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = `rgba(245,184,75,${.35 + pulse * .4})`;
+  ctx.fillStyle = '#eafffc';
+  ctx.beginPath();
+  ctx.arc(-3.5, -3, 2.2, 0, Math.PI * 2);
+  ctx.arc(3.5, -3, 2.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#a8e9e4';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(0, 0, player.radius + 7 + pulse * 3, 0, Math.PI * 2);
+  ctx.arc(0, 0, 22 + pulse * 2, 0, Math.PI * 2);
   ctx.stroke();
+  ctx.fillStyle = '#4de2d5';
+  ctx.fillRect(-8, 9, 16, 4);
   ctx.restore();
 }
-
 function drawCrate(crate) {
   ctx.save();
-  ctx.fillStyle = '#f5b84b';
+  ctx.translate(crate.x, crate.y);
   ctx.shadowColor = '#f5b84b';
   ctx.shadowBlur = 14;
-  roundedRect(crate.x - 16, crate.y - 16, 32, 32, 7);
+  const wood = ctx.createLinearGradient(-18, -18, 18, 18);
+  wood.addColorStop(0, '#d79a4c');
+  wood.addColorStop(.5, '#a9682d');
+  wood.addColorStop(1, '#71401d');
+  ctx.fillStyle = wood;
+  roundedRect(-18, -18, 36, 36, 5);
   ctx.fill();
   ctx.shadowBlur = 0;
-  ctx.strokeStyle = 'rgba(255,255,255,.42)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  ctx.fillStyle = 'rgba(255,217,150,.42)';
+  ctx.fillRect(-14, -15, 28, 6);
+  ctx.fillRect(-14, 9, 28, 6);
+  ctx.strokeStyle = '#4f2c14';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(-18, -18, 36, 36);
   ctx.beginPath();
-  ctx.moveTo(crate.x - 10, crate.y - 10);
-  ctx.lineTo(crate.x + 10, crate.y + 10);
-  ctx.moveTo(crate.x + 10, crate.y - 10);
-  ctx.lineTo(crate.x - 10, crate.y + 10);
+  ctx.moveTo(-14, -14);
+  ctx.lineTo(14, 14);
+  ctx.moveTo(14, -14);
+  ctx.lineTo(-14, 14);
   ctx.stroke();
+  ctx.fillStyle = '#f5b84b';
+  [[-14,-14],[14,-14],[-14,14],[14,14]].forEach(([px, py]) => {
+    ctx.beginPath();
+    ctx.arc(px, py, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+  });
   ctx.restore();
 }
-
 function drawEnemy(enemy) {
   ctx.save();
   ctx.translate(enemy.x, enemy.y);
   ctx.shadowColor = '#ff7468';
-  ctx.shadowBlur = 16;
-  ctx.fillStyle = '#ff7468';
-  ctx.beginPath();
-  ctx.moveTo(0, -18);
-  ctx.lineTo(16, 14);
-  ctx.lineTo(-16, 14);
-  ctx.closePath();
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.strokeStyle = 'rgba(255,255,255,.4)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawKey(key) {
-  if (key.collected) return;
-  ctx.save();
-  ctx.shadowColor = '#f5b84b';
   ctx.shadowBlur = 18;
-  ctx.fillStyle = '#f5b84b';
+  const body = ctx.createRadialGradient(-5, -8, 2, 0, 0, 20);
+  body.addColorStop(0, '#ffd5d0');
+  body.addColorStop(.35, '#ff7468');
+  body.addColorStop(1, '#8e2f34');
+  ctx.fillStyle = body;
   ctx.beginPath();
-  ctx.arc(key.x, key.y - 3, 8, 0, Math.PI * 2);
+  for (let index = 0; index < 12; index += 1) {
+    const angle = -Math.PI / 2 + index * Math.PI / 6;
+    const radius = index % 2 ? 13 : 19;
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
+    if (index === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
   ctx.fill();
   ctx.shadowBlur = 0;
   ctx.fillStyle = '#071219';
   ctx.beginPath();
-  ctx.arc(key.x, key.y - 3, 3, 0, Math.PI * 2);
+  ctx.arc(-5, -3, 3, 0, Math.PI * 2);
+  ctx.arc(5, -3, 3, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillRect(key.x - 2, key.y + 3, 4, 15);
-  ctx.fillRect(key.x + 2, key.y + 12, 8, 4);
+  ctx.strokeStyle = 'rgba(255,255,255,.45)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
   ctx.restore();
 }
-
+function drawKey(key) {
+  if (key.collected) return;
+  ctx.save();
+  ctx.translate(key.x, key.y);
+  ctx.shadowColor = '#f5b84b';
+  ctx.shadowBlur = 18;
+  ctx.strokeStyle = '#f5b84b';
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(0, -10, 9, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(0, -1);
+  ctx.lineTo(0, 18);
+  ctx.moveTo(0, 11);
+  ctx.lineTo(10, 11);
+  ctx.moveTo(0, 17);
+  ctx.lineTo(7, 17);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(255,255,255,.4)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(0, -10, 9, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
 function drawTarget() {
   if (!hoverTarget) return;
   const valid = hoverTarget;
@@ -240,6 +331,47 @@ function drawSwapFlash() {
   ctx.restore();
 }
 
+function drawFirstLevelHint(now) {
+  if (core.state.levelIndex !== 0 || core.state.won || !core.state.crates.length) return;
+  const crate = core.state.crates[0];
+  const pulse = .5 + .5 * Math.sin(now / 220);
+  ctx.save();
+  ctx.setLineDash([7, 7]);
+  ctx.strokeStyle = `rgba(154,98,232,${.45 + pulse * .4})`;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(crate.x, crate.y, 28 + pulse * 5, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#f4ffff';
+  ctx.strokeStyle = '#071219';
+  ctx.lineWidth = 2;
+  const hx = crate.x + 23;
+  const hy = crate.y - 26;
+  ctx.beginPath();
+  ctx.moveTo(hx, hy);
+  ctx.lineTo(hx, hy + 16);
+  ctx.lineTo(hx + 5, hy + 12);
+  ctx.lineTo(hx + 9, hy + 18);
+  ctx.lineTo(hx + 12, hy + 16);
+  ctx.lineTo(hx + 8, hy + 10);
+  ctx.lineTo(hx + 15, hy + 9);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function openTutorial() {
+  tutorialOverlay.classList.remove('is-hidden');
+  tutorialAnim.start();
+}
+
+function closeTutorial() {
+  tutorialOverlay.classList.add('is-hidden');
+  tutorialAnim.stop();
+  try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch (_) { /* 忽略隐私模式 */ }
+}
 function render() {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
   drawBackground();
@@ -383,6 +515,8 @@ canvas.addEventListener('pointerdown', (event) => {
   tone(680, .08, 'sine', .012, .05);
 });
 
+tutorialButton.addEventListener('click', openTutorial);
+tutorialStart.addEventListener('click', closeTutorial);
 restartButton.addEventListener('click', restart);
 nextButton.addEventListener('click', nextLevel);
 resultNext.addEventListener('click', () => {
@@ -403,5 +537,4 @@ if (DEBUG) {
 setupCanvas();
 render();
 requestAnimationFrame(frame);
-
-
+if (localStorage.getItem(TUTORIAL_KEY) !== '1') openTutorial();

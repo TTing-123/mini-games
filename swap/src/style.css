@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: #071219;
   --panel: #0d2029;
   --line: #1b3b47;
@@ -76,3 +76,30 @@ h1 span { display: inline-block; margin-left: 12px; color: var(--muted); font-si
   .result-actions { flex-direction: column-reverse; }
   .result-actions button { width: 100%; }
 }
+.tutorial-panel {
+  width: min(94vw, 620px);
+  padding: 24px;
+  border: 1px solid rgba(154, 98, 232, .4);
+  border-radius: 20px;
+  background: linear-gradient(160deg, #102a34, #0a1820);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .5);
+}
+#tutorial-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #071219;
+}
+.tutorial-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.tutorial-legend i { color: var(--purple); font-style: normal; }

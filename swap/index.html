@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
@@ -19,6 +19,7 @@
       <div class="topbar-right">
         <div class="stat-chip"><span>关卡</span><b id="level-label">1 / 5</b></div>
         <div class="stat-chip hearts" id="hearts" aria-label="生命"></div>
+        <button id="tutorial-button" class="ghost" type="button">演示</button>
         <button id="restart" class="ghost" type="button">重来</button>
         <button id="next" class="primary" type="button" disabled>下一关</button>
       </div>
@@ -51,6 +52,14 @@
     </section>
   </main>
 
+  <section id="tutorial" class="overlay is-hidden">
+    <div class="tutorial-panel">
+      <p class="kicker">基础操作演示</p>
+      <canvas id="tutorial-canvas" width="520" height="300"></canvas>
+      <div class="tutorial-legend"><span>移动</span><i>→</i><span>点击换位</span><i>→</i><span>点击钥匙直接拿到</span><i>→</i><span>去出口</span></div>
+      <div class="result-actions"><button id="tutorial-start" class="primary" type="button">看懂了，开始</button></div>
+    </div>
+  </section>
   <section id="result" class="overlay is-hidden">
     <div class="result-panel">
       <p id="result-kicker" class="kicker">关卡完成</p>

@@ -1,4 +1,4 @@
-﻿export const COLS = 15;
+export const COLS = 15;
 export const ROWS = 10;
 export const TILE = 54;
 export const WIDTH = COLS * TILE;
@@ -16,7 +16,7 @@ const LEVELS = [
   {
     id: 'S1',
     title: '跨过缺口',
-    hint: '点击远处的箱子，和它换位',
+    hint: '点击箱子换位；点击钥匙会直接拿到',
     rows: [
       '###############',
       '#P     C  K X #',
@@ -281,17 +281,23 @@ export function findSwapTarget(state, point) {
 }
 
 export function swapWith(state, targetId) {
-  if (state.won || state.lost || state.swapCooldown > 0) return false;
+  if (state.won || state.lost) return false;
   const target = getEntity(state, targetId);
   if (!target) return false;
+  if (state.swapCooldown > 0 && target.type !== 'key') return false;
   const range = Math.hypot(target.x - state.player.x, target.y - state.player.y);
   if (range > TILE * 8 || !lineOfSight(state, state.player, target)) return false;
 
   const playerPoint = { x: state.player.x, y: state.player.y };
+  const swappedKey = target.type === 'key';
   state.player.x = target.x;
   state.player.y = target.y;
   target.x = playerPoint.x;
   target.y = playerPoint.y;
+  if (swappedKey) {
+    target.collected = true;
+    state.keys = state.keys.filter((key) => key.id !== target.id);
+  }
   state.swapCooldown = .62;
   applyTileEffects(state);
   return true;
@@ -402,4 +408,3 @@ export class SwapCore {
     update(this.state, dt);
   }
 }
-
