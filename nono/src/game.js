@@ -33,6 +33,7 @@ let mode = 'fill';
 let dragging = false;
 let dragDirty = false;
 let dragLast = null;
+let dragMarkMode = false;
 let hintCount = 0;
 let resultShown = false;
 let bestStars = loadBest();
@@ -163,18 +164,18 @@ function renderBoard() {
         dragging = true;
         dragDirty = false;
         dragLast = String(row) + ',' + String(col);
-        paintCell(row, col, event.button === 2, true);
+        dragMarkMode = event.button === 2;
+        paintCell(row, col, dragMarkMode, true);
       });
       cell.addEventListener('pointerenter', () => {
         const key = String(row) + ',' + String(col);
         if (dragging && dragLast !== key) {
           dragLast = key;
-          paintCell(row, col, false, true);
+          paintCell(row, col, dragMarkMode, true);
         }
       });
       cell.addEventListener('contextmenu', (event) => {
         event.preventDefault();
-        paintCell(row, col, true);
       });
       puzzle.append(cell);
     }
@@ -282,11 +283,13 @@ window.addEventListener('pointerup', () => {
   if (dragging && dragDirty) {
     dragging = false;
     dragLast = null;
+    dragMarkMode = false;
     renderAll();
     if (state.won) showResult();
   } else {
     dragging = false;
     dragLast = null;
+    dragMarkMode = false;
   }
 });
 
