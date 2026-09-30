@@ -66,7 +66,7 @@ function renderLevelGrid() {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'level-button';
-    button.textContent = String(index + 1);
+    button.textContent = String(index);
     if (index === state.puzzleIndex) button.classList.add('is-current');
     if (bestStars[index]) button.classList.add('is-solved');
     button.addEventListener('click', () => loadPuzzle(index));
@@ -202,7 +202,7 @@ function paintCell(row, col, value, fromDrag = false) {
 }
 
 function updateHud() {
-  levelLabel.textContent = `${state.puzzleIndex + 1} / ${getPuzzleCount()}`;
+  levelLabel.textContent = `${state.puzzleIndex} / ${getPuzzleCount() - 1}`;
   levelTitle.textContent = state.title;
   levelHint.textContent = state.hint;
 }
@@ -239,7 +239,7 @@ function showResult() {
   renderLevelGrid();
   resultTitle.textContent = state.title;
   resultText.textContent = `${'★'.repeat(stars)}${'☆'.repeat(3 - stars)} · 图案完成`;
-  resultNext.textContent = state.puzzleIndex === getPuzzleCount() - 1 ? '回到第一关' : '下一关';
+  resultNext.textContent = state.puzzleIndex === getPuzzleCount() - 1 ? '回到第 0 关' : '下一关';
   result.classList.remove('is-hidden');
 }
 
