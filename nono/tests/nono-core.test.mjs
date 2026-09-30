@@ -16,8 +16,8 @@ import {
   solveByLines
 } from '../src/nono-core.js';
 
-test('there are fifty puzzles plus a tutorial', () => {
-  assert.equal(getPuzzleCount(), 51);
+test('there are ten puzzles plus a tutorial', () => {
+  assert.equal(getPuzzleCount(), 11);
   assert.ok(getPuzzleInfo(0));
 });
 
