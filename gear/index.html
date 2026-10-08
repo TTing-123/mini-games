@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0d1016" />
+  <meta name="description" content="GEAR 齿轮：把齿轮池里的齿轮装进每一级，让传动比把输出指针停在目标刻度。" />
+  <title>GEAR — 齿轮</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="GEAR — 齿轮" />
+  <meta property="og:description" content="每一级乘一次传动比，让指针停在目标刻度。" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <p class="kicker">GEAR TRAIN / RATIO PUZZLE</p>
+        <h1>GEAR <span>齿轮</span></h1>
+      </div>
+      <div class="topbar-right">
+        <div class="stat-chip"><span>关卡</span><b id="level-label">0 / 0</b></div>
+        <div class="stat-chip"><span>已装</span><b id="slot-label">0 / 0</b></div>
+        <div class="stat-chip"><span>输出</span><b id="angle-label">—</b></div>
+        <button id="hint" class="ghost" type="button">提示</button>
+        <button id="restart" class="ghost" type="button">重来</button>
+        <button id="sound" class="ghost icon" type="button" aria-label="音效开关">♪</button>
+      </div>
+    </header>
+
+    <section class="game-layout">
+      <div class="board-wrap">
+        <canvas id="board" aria-label="齿轮箱"></canvas>
+        <p class="board-note">点零件盘里的齿轮，再点空槽装上；点已装的齿轮可以拆下来。</p>
+      </div>
+
+      <aside class="side-panel">
+        <section class="panel-block">
+          <p class="label">怎么玩</p>
+          <p class="tip">每级 <b>从动 ÷ 主动</b> 累乘起来就是总传动比。输入轴固定转一整圈，输出角 = 360° × 总比。</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">目标</p>
+          <p class="tip">让输出指针停在<b>高亮刻度</b>上。齿轮池里每个齿轮只能用一次。</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">当前关</p>
+          <div id="level-title" class="level-title">一半</div>
+          <p id="level-hint" class="level-hint">从动 ÷ 主动 = 6 ÷ 12</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">跳关</p>
+          <div id="level-grid" class="level-grid"></div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <section id="result" class="overlay is-hidden">
+    <div class="result-panel">
+      <p class="kicker">指针到位</p>
+      <h2 id="result-title">一半</h2>
+      <p id="result-text"></p>
+      <div class="result-actions">
+        <button id="result-next" class="primary" type="button">下一关</button>
+        <button id="result-retry" class="ghost" type="button">重来</button>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="./src/game.js"></script>
+</body>
+</html>

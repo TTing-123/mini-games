@@ -12,6 +12,7 @@
 | Casebook | 手写案件推理 | <https://tting-123.github.io/mini-games/casebook/> |
 | Nono | 数织逻辑解谜 | <https://tting-123.github.io/mini-games/nono/> |
 | Tilt | 整盘倾倒逻辑解谜 | <https://tting-123.github.io/mini-games/tilt/> |
+| Gear | 齿轮传动比解谜 | <https://tting-123.github.io/mini-games/gear/> |
 
 每个游戏都有自己的 README、测试和开发工具，放在各自的目录里。
 
@@ -33,7 +34,7 @@ py -m http.server 8080
 ## 测试
 
 ```powershell
-npm test              # 所有游戏的逻辑测试（47 项）
+npm test              # 所有游戏的逻辑测试
 npm run audit         # Pulse 随机关卡公平性审计
 npm run audit:tilt    # TILT 关卡体检：可解性、最短步数、查重
 ```
@@ -83,4 +84,4 @@ node tools/market-check.mjs "机制关键词"
 4. `.github/workflows/pages.yml` 的 Stage 步骤里加上它的运行时文件
 5. 存档写 localStorage 时带游戏前缀，避免和其他游戏撞名
 
-目前四款游戏各自独立。等确认哪几款里的代码真的重复，再考虑 `shared/`。
+目前五款游戏各自独立。等确认哪几款里的代码真的重复，再考虑 `shared/`。
