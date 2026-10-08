@@ -42,8 +42,8 @@ async function view(page) {
   await page.goto(BASE + '?debug=1', { waitUntil: 'load' });
   await page.waitForTimeout(500);
 
-  record('loads level 0', (await label(page, '#level-label')) === '0 / 9', await label(page, '#level-label'));
-  record('level grid lists every level', (await page.locator('.level-grid .level-button').count()) === 10);
+  record('loads level 0', (await label(page, '#level-label')) === '0 / 33', await label(page, '#level-label'));
+  record('level grid lists every level', (await page.locator('.level-grid .level-button').count()) === 34);
   record('favicon linked', (await page.getAttribute('link[rel="icon"]', 'href')) === './favicon.svg');
   record('starts with one removal', (await label(page, '#left-label')) === '1 / 1');
 
@@ -57,41 +57,41 @@ async function view(page) {
 
   await page.click('#result-next');
   await page.waitForTimeout(250);
-  record('next level loads', (await label(page, '#level-label')) === '1 / 9');
+  record('next level loads', (await label(page, '#level-label')) === '1 / 33');
   record('next level has two removals', (await label(page, '#left-label')) === '2 / 2');
 
   await page.click('#hint');
   await page.waitForTimeout(150);
   record('hint keeps the page alive', await page.isVisible('#board'));
 
-  await page.locator('.level-grid .level-button').nth(9).click();
+  await page.locator('.level-grid .level-button').nth(33).click();
   await page.waitForTimeout(250);
-  record('level grid jumps to 9', (await label(page, '#level-label')) === '9 / 9', await label(page, '#level-label'));
-  record('big level has four removals', (await label(page, '#left-label')) === '4 / 4');
+  record('level grid jumps to 9', (await label(page, '#level-label')) === '33 / 33', await label(page, '#level-label'));
+  record('finale has five removals', (await label(page, '#left-label')) === '5 / 5');
   await page.screenshot({ path: path.join(OUT, 'desktop-level9.png') });
 
   board = await view(page);
-  await board.click(3, 1);                 // 拆一块挡路的
+  const firstRemovable = await page.evaluate(() => window.__topple.removable()[0].split(',').map(Number));
+  await board.click(firstRemovable[0], firstRemovable[1]);   // 随便拆一块能拆的
   await page.waitForTimeout(200);
-  record('removal works on a big level', (await label(page, '#left-label')) === '3 / 4', await label(page, '#left-label'));
+  record('removal works on the finale', (await label(page, '#left-label')) === '4 / 5', await label(page, '#left-label'));
   await page.click('#restart');
   await page.waitForTimeout(200);
-  record('restart restores removals', (await label(page, '#left-label')) === '4 / 4');
+  record('restart restores removals', (await label(page, '#left-label')) === '5 / 5');
 
   // 金块本身拆不掉
   const gold = await page.evaluate(() => window.__topple.state.gold);
   board = await view(page);
   await board.click(gold[0], gold[1]);
   await page.waitForTimeout(150);
-  record('the gold block cannot be removed', (await label(page, '#left-label')) === '4 / 4');
+  record('the gold block cannot be removed', (await label(page, '#left-label')) === '5 / 5');
 
-  // 失败路径：把次数用光
+  // 失败路径：教学关里拆错一块，次数就用完了
+  await page.locator('.level-grid .level-button').nth(0).click();
+  await page.waitForTimeout(200);
   board = await view(page);
-  for (const cell of [[3, 1], [5, 1], [7, 1], [2, 2]]) {
-    await board.click(cell[0], cell[1]);
-    await page.waitForTimeout(120);
-  }
-  await page.waitForTimeout(600);
+  await board.click(4, 2);                 // 拆最底下那块：金块只会降一格，到不了目标
+  await page.waitForTimeout(700);
   record('running out of removals shows the failure panel', await page.isVisible('#result') && (await label(page, '#result-kicker')) === '砖用完了');
   await page.screenshot({ path: path.join(OUT, 'desktop-lose.png') });
   await page.close();

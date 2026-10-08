@@ -138,6 +138,10 @@ function drawBlock(cx, cy, size, kind, alpha = 1) {
     grad.addColorStop(0, '#ffe9a8');
     grad.addColorStop(0.55, '#e8b23c');
     grad.addColorStop(1, '#a4720f');
+  } else if (kind === 'steel') {
+    grad.addColorStop(0, '#8b98a8');
+    grad.addColorStop(0.5, '#5d697a');
+    grad.addColorStop(1, '#39424f');
   } else {
     grad.addColorStop(0, '#5a6678');
     grad.addColorStop(1, '#2b323d');
@@ -146,13 +150,23 @@ function drawBlock(cx, cy, size, kind, alpha = 1) {
   ctx.fill();
   ctx.shadowBlur = 0;
   ctx.lineWidth = Math.max(1, size * 0.035);
-  ctx.strokeStyle = kind === 'gold' ? 'rgba(255, 246, 214, .75)' : 'rgba(160, 186, 214, .35)';
+  ctx.strokeStyle = kind === 'gold' ? 'rgba(255, 246, 214, .75)'
+    : (kind === 'steel' ? 'rgba(226, 238, 250, .55)' : 'rgba(160, 186, 214, .35)');
   ctx.stroke();
   // 顶面高光，一眼看出是砖
   ctx.globalAlpha = alpha * 0.5;
   roundRect(x + side * 0.14, y + side * 0.12, side * 0.72, side * 0.12, side * 0.06);
   ctx.fillStyle = kind === 'gold' ? 'rgba(255, 255, 240, .6)' : 'rgba(206, 226, 246, .45)';
   ctx.fill();
+  if (kind === 'steel') {
+    ctx.globalAlpha = alpha * 0.75;
+    ctx.fillStyle = 'rgba(228, 240, 252, .8)';
+    for (const [ox, oy] of [[0.26, 0.72], [0.74, 0.72]]) {
+      ctx.beginPath();
+      ctx.arc(x + side * ox, y + side * oy, side * 0.05, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
   ctx.restore();
 }
 
@@ -208,7 +222,8 @@ function draw(time) {
   for (const cell of state.blocks) {
     if (moving.has(cell)) continue;
     const [row, col] = cell.split(',').map(Number);
-    const kind = (row === state.gold[0] && col === state.gold[1]) ? 'gold' : 'brick';
+    const kind = (row === state.gold[0] && col === state.gold[1]) ? 'gold'
+      : (state.steel.has(cell) ? 'steel' : 'brick');
     const center = centerOf(row, col);
     drawBlock(center.x, center.y, geo.cell, kind);
   }
@@ -401,6 +416,7 @@ if (DEBUG) {
     get geo() { return geo; },
     loadLevel,
     hint: () => nextHint(state),
+    removable: () => [...state.blocks].filter((key) => canRemove(state, ...key.split(',').map(Number))),
     click: (row, col) => {
       const event = { pointerType: 'mouse', button: 0, preventDefault() {}, clientX: 0, clientY: 0 };
       const rect = canvas.getBoundingClientRect();

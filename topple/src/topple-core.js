@@ -10,26 +10,33 @@ function parseLevel(config, index) {
   const height = rows.length;
   const width = rows[0].length;
   const blocks = new Set();
+  const steel = new Set();
   let gold = null;
   let target = null;
   for (let row = 0; row < height; row += 1) {
     for (let col = 0; col < width; col += 1) {
       const char = rows[row][col] ?? '.';
       if (char === '#') blocks.add(KEY(row, col));
+      else if (char === 'S') { blocks.add(KEY(row, col)); steel.add(KEY(row, col)); }
       else if (char === 'G') { blocks.add(KEY(row, col)); gold = [row, col]; }
       else if (char === 'T') target = [row, col];
     }
   }
+  // 目标格可以写在网格里（T），也可以用 target 字段单独给——
+  // 因为目标格本身可能就是一块砖（玩家先拆掉它，金块才落进来）。
+  const finalTarget = config.target ? config.target.slice() : target;
   return {
     index,
     title: config.title,
     hint: config.hint ?? '',
     tutorial: Boolean(config.tutorial),
+    concept: config.concept ?? '',
     width,
     height,
     blocks,
+    steel,
     gold,
-    target,
+    target: finalTarget,
     maxRemovals: config.maxRemovals ?? 3
   };
 }
@@ -44,10 +51,12 @@ export function createState(index = 0) {
   if (!puzzle) return null;
   // 开局先结算一次：关卡里没接地的结构会自己落下（关卡设计错误也会在这里暴露）
   const blocks = new Set(puzzle.blocks);
-  const resolved = resolve(blocks, puzzle.gold, puzzle.height);
+  const steel = new Set(puzzle.steel);
+  const resolved = resolve(blocks, puzzle.gold, puzzle.height, steel);
   const state = {
     puzzleIndex: index,
     blocks,
+    steel,
     gold: resolved.gold,
     removed: [],
     status: 'playing',
@@ -123,7 +132,7 @@ function dropDistance(group, blocks, height) {
 }
 
 // 结算：与地面断开的部分整体下落，可能连着塌第二、第三次。
-export function resolve(blocks, gold, height) {
+export function resolve(blocks, gold, height, steel = new Set()) {
   const falls = [];
   let goldCell = gold;
   let guard = 0;
@@ -147,6 +156,12 @@ export function resolve(blocks, gold, height) {
         return KEY(row + distance, col);
       });
       for (const cell of targets) blocks.add(cell);
+      // 钢砖跟着这一坨一起移动（不然掉下来就变成可拆了）
+      for (let i = 0; i < group.length; i += 1) {
+        if (!steel.has(group[i])) continue;
+        steel.delete(group[i]);
+        steel.add(targets[i]);
+      }
       const goldKey = KEY(goldCell[0], goldCell[1]);
       if (group.includes(goldKey)) goldCell = [goldCell[0] + distance, goldCell[1]];
       falls.push({ from: group.slice(), to: targets.slice(), distance });
@@ -154,7 +169,7 @@ export function resolve(blocks, gold, height) {
     }
     if (!moved) break;
   }
-  return { falls, gold: goldCell };
+  return { falls, gold: goldCell, steel };
 }
 
 export function isWon(state) {
@@ -168,6 +183,7 @@ export function canRemove(state, row, col) {
   if (state.removed.length >= puzzle.maxRemovals) return false;
   const key = KEY(row, col);
   if (!state.blocks.has(key)) return false;
+  if (state.steel.has(key)) return false;         // 钢砖拆不掉
   return !(row === state.gold[0] && col === state.gold[1]);
 }
 
@@ -175,11 +191,13 @@ export function removeBlock(state, row, col) {
   if (!canRemove(state, row, col)) return state;
   const puzzle = PUZZLES[state.puzzleIndex];
   const blocks = new Set(state.blocks);
+  const steel = new Set(state.steel);
   blocks.delete(KEY(row, col));
-  const resolved = resolve(blocks, state.gold, state.height ?? puzzle.height);
+  const resolved = resolve(blocks, state.gold, state.height ?? puzzle.height, steel);
   const next = {
     ...state,
     blocks,
+    steel,
     gold: resolved.gold,
     removed: state.removed.concat([[row, col]]),
     lastFalls: resolved.falls
@@ -197,14 +215,16 @@ function signature(state) {
 // 搜索最少拆除次数。拆除顺序无关的分支会被签名去重。
 export function solve(state, limit = 80000) {
   const puzzle = PUZZLES[state.puzzleIndex];
-  let best = null;
+  const solutions = [];
   let visited = 0;
-  const seen = new Set([signature(state)]);
+  const seen = new Map();      // 签名 -> 走到这里的最短长度，用来剪枝
   const walk = (current, sequence) => {
     if (visited > limit) return;
     visited += 1;
+    if (solutions.length && sequence.length > solutions[0].length) return;
     if (isWon(current)) {
-      if (!best || sequence.length < best.length) best = sequence.slice();
+      if (!solutions.length || sequence.length < solutions[0].length) solutions.length = 0;
+      if (sequence.length === solutions[0]?.length || !solutions.length) solutions.push(sequence.slice());
       return;
     }
     if (sequence.length >= puzzle.maxRemovals) return;
@@ -214,13 +234,24 @@ export function solve(state, limit = 80000) {
       const next = removeBlock(current, row, col);
       if (next === current) continue;
       const sig = signature(next);
-      if (seen.has(sig)) continue;
-      seen.add(sig);
+      const reached = seen.get(sig);
+      if (reached !== undefined && reached <= sequence.length + 1) continue;
+      seen.set(sig, sequence.length + 1);
       walk(next, sequence.concat([[row, col]]));
     }
   };
   walk(state, []);
-  return { solvable: Boolean(best), removals: best ? best.length : null, sequence: best, visited };
+  const best = solutions[0] ?? null;
+  const firstMoves = new Set(solutions.map((seq) => seq[0].join(',')));
+  return {
+    solvable: Boolean(best),
+    removals: best ? best.length : null,
+    sequence: best,
+    count: solutions.length,
+    firstMoves: firstMoves.size,
+    solutions,
+    visited
+  };
 }
 
 export function nextHint(state) {
