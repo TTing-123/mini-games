@@ -33,8 +33,8 @@ const colorNote = document.querySelector('#color-note');
 const DEBUG = new URLSearchParams(location.search).has('debug');
 const BEST_KEY = 'tilt-best';
 const MUTE_KEY = 'tilt-muted';
-const SLIDE_MS = 150;
-const SINK_MS = 240;
+const SLIDE_MS = 130;      // 滑动动画；落地后立刻能接下一次输入
+const GHOST_MS = 240;      // 落进凹槽后的消失动画，不占用输入
 const HINT_MS = 2400;
 const SWIPE_MIN = 26;
 // 0 = 无色。带色方块和同色凹槽共用一套配色。
@@ -53,7 +53,7 @@ let minMoves = 0;
 let hintDir = null;
 let hintUntil = 0;
 let hintCount = 0;
-let animation = null;
+let visuals = [];       // 正在播放的滑动动画；输入不等它
 let shakeUntil = 0;
 let dragStart = null;
 let resultShown = false;
@@ -271,25 +271,21 @@ function draw(time) {
     }
   }
 
-  if (animation) {
-    const elapsed = time - animation.t0;
-    const slide = clamp(elapsed / SLIDE_MS, 0, 1);
-    const eased = easeOut(slide);
-    for (const entry of animation.entries) {
-      const fromX = m.ox + (entry.from[1] + 0.5) * m.cell;
-      const fromY = m.oy + (entry.from[0] + 0.5) * m.cell;
-      const toX = m.ox + (entry.to[1] + 0.5) * m.cell;
-      const toY = m.oy + (entry.to[0] + 0.5) * m.cell;
-      const cx = fromX + (toX - fromX) * eased;
-      const cy = fromY + (toY - fromY) * eased;
+  if (visuals.length) {
+    for (const visual of visuals) {
+      const progress = easeOut(clamp((time - visual.t0) / SLIDE_MS, 0, 1));
+      const row = visual.from[0] + (visual.to[0] - visual.from[0]) * progress;
+      const col = visual.from[1] + (visual.to[1] - visual.from[1]) * progress;
       let scale = 1;
       let alpha = 1;
-      if (entry.sink && slide >= 1) {
-        const sink = clamp((elapsed - SLIDE_MS) / SINK_MS, 0, 1);
-        scale = 1 - sink * 0.82;
-        alpha = 1 - sink;
+      if (visual.sink) {
+        const fade = clamp((time - visual.t0 - SLIDE_MS) / GHOST_MS, 0, 1);
+        if (fade > 0) {
+          scale = 1 - fade * 0.84;
+          alpha = 1 - fade;
+        }
       }
-      drawBlock(cx, cy, m.cell, gap, entry.color, scale, alpha);
+      drawBlock(m.ox + (col + 0.5) * m.cell, m.oy + (row + 0.5) * m.cell, m.cell, gap, visual.color, scale, alpha);
     }
   } else {
     for (const [row, col] of state.blocks) {
@@ -305,42 +301,64 @@ function draw(time) {
   ctx.restore();
 }
 
-function frame(time) {
-  if (animation && time - animation.t0 >= SLIDE_MS + SINK_MS) {
-    const finished = animation;
-    animation = null;
-    state = finished.next;
-    if (state.won) showResult();
+// 取某个方块此刻画在哪一格，让新动画从它当前位置接着走，打断旧动画也不会跳。
+function drawnPosition(cell, time) {
+  for (const visual of visuals) {
+    if (visual.to[0] !== cell[0] || visual.to[1] !== cell[1]) continue;
+    const progress = easeOut(clamp((time - visual.t0) / SLIDE_MS, 0, 1));
+    return [
+      visual.from[0] + (visual.to[0] - visual.from[0]) * progress,
+      visual.from[1] + (visual.to[1] - visual.from[1]) * progress
+    ];
   }
+  return [cell[0], cell[1]];
+}
+
+function frame(time) {
+  if (visuals.length) {
+    visuals = visuals.filter((visual) => time - visual.t0 < SLIDE_MS + (visual.sink ? GHOST_MS : 0));
+  }
+  if (state.won && !visuals.length && !resultShown) showResult();
   draw(time);
   requestAnimationFrame(frame);
 }
 
+// 按下的方向在按钮上闪一下，给一个立刻的反馈。
+function flash(dir) {
+  const button = padButtons.find((item) => item.dataset.dir === dir);
+  if (!button) return;
+  button.classList.add('is-active');
+  setTimeout(() => button.classList.remove('is-active'), 110);
+}
+
 function tryTilt(dir) {
-  if (animation || state.won) return;
+  if (state.won) return;
+  flash(dir);
   const plan = tiltPlan(state, dir);
   if (!plan.moves.length) return;
   if (!plan.changed) {
-    shakeUntil = performance.now() + 220;
-    tone(120, 0.12, 'square', 0.03);
+    shakeUntil = performance.now() + 200;
+    tone(120, 0.1, 'square', 0.03);
     return;
   }
-  animation = {
-    t0: performance.now(),
-    next: plan.state,
-    entries: plan.moves.map((move) => ({
-      from: move.from,
-      to: move.to,
-      color: move.color,
-      sink: plan.sunk.some((spot) => spot[0] === move.to[0] && spot[1] === move.to[1])
-    }))
-  };
+  const time = performance.now();
+  // 模型先动、动画后追。这是 2048 的做法：输入永远不等动画。
+  const entries = plan.moves.map((move) => ({
+    color: move.color,
+    from: drawnPosition(move.from, time),
+    to: [move.to[0], move.to[1]],
+    t0: time,
+    sink: plan.sunk.some((spot) => spot[0] === move.to[0] && spot[1] === move.to[1])
+  }));
+  const sank = plan.sunk.length > 0;
+  state = plan.state;
+  visuals = entries;
   moves += 1;
   hintDir = null;
   hintUntil = 0;
   updateHud();
-  tone(plan.sunk.length ? 520 : 360, 0.14, 'triangle', 0.045);
-  if (plan.sunk.length) setTimeout(() => tone(780, 0.18, 'sine', 0.04), 130);
+  tone(360, 0.1, 'triangle', 0.04);
+  if (sank) setTimeout(() => tone(780, 0.16, 'sine', 0.04), SLIDE_MS);
 }
 
 function updateHud() {
@@ -369,7 +387,7 @@ function loadLevel(index) {
   moves = 0;
   hintCount = 0;
   resultShown = false;
-  animation = null;
+  visuals = [];
   hintUntil = 0;
   const path = solve(state);
   minMoves = path ? path.length : 0;
@@ -411,6 +429,7 @@ window.addEventListener('keydown', (event) => {
   const dir = KEY_DIRS[event.key];
   if (!dir) return;
   event.preventDefault();
+  if (event.repeat) return;   // 长按不连发，避免一路滑到底
   tryTilt(dir);
 });
 
@@ -432,7 +451,17 @@ canvas.addEventListener('pointerup', (event) => {
 canvas.addEventListener('pointercancel', () => { dragStart = null; });
 
 for (const button of padButtons) {
-  button.addEventListener('click', () => tryTilt(button.dataset.dir));
+  // 用 pointerdown 而不是 click：手机上 click 会有几百毫秒延迟，手感发木。
+  button.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    event.preventDefault();
+    tryTilt(button.dataset.dir);
+  });
+  // 键盘回车触发的 click（detail 为 0）仍然要能用。
+  button.addEventListener('click', (event) => {
+    if (event.detail !== 0) return;
+    tryTilt(button.dataset.dir);
+  });
 }
 
 hintButton.addEventListener('click', () => {
@@ -467,6 +496,7 @@ if (DEBUG) {
     get moves() { return moves; },
     loadLevel,
     tryTilt,
+    get visuals() { return visuals.length; },
     bestMove,
     arrowFor
   };

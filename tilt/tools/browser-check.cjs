@@ -67,6 +67,18 @@ const label = async (page, selector) => (await page.textContent(selector)).trim(
   await page.click('#restart');
   await page.waitForTimeout(200);
   record('restart resets moves', (await label(page, '#move-label')) === '0');
+
+  // 2048 式输入：连按不丢手，动画只是追上去。回廊的最短解是 → ↓ ←。
+  await page.locator('.level-grid .level-button').nth(3).click();
+  await page.waitForTimeout(200);
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowLeft');
+  record('rapid input is never dropped', (await label(page, '#move-label')) === '3', await label(page, '#move-label'));
+  await page.waitForTimeout(700);
+  record('rapid input still finishes the level', await page.isVisible('#result'));
+  await page.click('#result-retry');
+  await page.waitForTimeout(200);
   await page.close();
   await ctx.close();
 
