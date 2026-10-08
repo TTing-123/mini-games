@@ -97,3 +97,10 @@ h1 span { color: var(--paper); font-family: var(--serif); font-weight: 500; }
   .result-actions { flex-direction: column-reverse; }
   .result-actions button { width: 100%; }
 }
+.chain.is-grid { display: grid; grid-template-columns: repeat(var(--cols, 13), minmax(0, 1fr)); grid-template-rows: repeat(var(--rows, 13), minmax(0, 1fr)); gap: 6px; max-width: 690px; }
+.chain.is-grid .cell { width: auto; height: auto; }
+.entry-badge { position: absolute; top: -7px; left: -7px; z-index: 2; display: grid; place-items: center; min-width: 19px; height: 19px; padding: 0 4px; border-radius: 7px; background: var(--entry-color); color: #fff7e9; font: 700 10px/1 var(--mono); box-shadow: 0 0 0 3px var(--paper); }
+@media (max-width: 600px) {
+  .chain.is-grid { gap: 3px; max-width: 100%; }
+  .entry-badge { top: -5px; left: -5px; min-width: 15px; height: 15px; font-size: 8px; box-shadow: 0 0 0 2px var(--paper); }
+}

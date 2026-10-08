@@ -3,19 +3,29 @@ import { LEVELS } from './levels.js';
 
 function buildPuzzle(config, index) {
   const blanks = [...config.mask].flatMap((flag, position) => flag === '1' ? [position] : []);
-  const entries = config.idioms.map((entry, entryIndex) => ({
-    index: entryIndex,
-    answer: entry.answer,
-    clue: entry.clue,
-    start: entry.start,
-    length: [...entry.answer].length
-  }));
+  const cells = config.cells ?? [...config.solution].map((char, position) => ({ row: 0, col: position }));
+  const entries = config.idioms.map((entry, entryIndex) => {
+    const cellsForEntry = entry.cells ?? Array.from({ length: 4 }, (_, offset) => entry.start + offset);
+    return {
+      index: entryIndex,
+      answer: entry.answer,
+      clue: entry.clue,
+      line: entry.line ?? 0,
+      start: entry.start ?? cellsForEntry[0],
+      cells: cellsForEntry,
+      length: [...entry.answer].length
+    };
+  });
   return {
     index,
+    kind: config.kind ?? 'chain',
     title: config.title,
     hint: config.hint,
     solution: config.solution,
     mask: config.mask,
+    width: config.width ?? config.solution.length,
+    height: config.height ?? 1,
+    cells,
     blanks,
     bank: config.bank.slice(),
     entries
@@ -100,7 +110,7 @@ export function entryStatus(state, entryIndex) {
   const puzzle = PUZZLES[state.puzzleIndex];
   const entry = puzzle.entries[entryIndex];
   if (!entry) return 'empty';
-  const positions = Array.from({ length: entry.length }, (_, offset) => entry.start + offset);
+  const positions = entry.cells;
   const blankPositions = positions.filter((position) => puzzle.blanks.includes(position));
   const allCorrect = positions.every((position) => {
     if (!puzzle.blanks.includes(position)) return true;

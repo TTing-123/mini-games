@@ -1,6 +1,7 @@
 // 由人工整理的成语链生成 WEAVE 关卡数据。
 // 工具只负责重叠位置、空白分布、字池和校验；成语与释义全部手写。
 import { writeFileSync } from 'node:fs';
+import { CROSS_LEVELS } from './cross-levels.mjs';
 
 const DECOY_POOL = '天地日月山水风云人心手口目耳金石木火土雨雪春夏秋冬东南西北上下左右前后大小多少长短高低明暗真假动静冷暖新旧美丑善恶得失来去有无生死古今';
 const chains = [
@@ -228,41 +229,43 @@ function seeded(seed) {
   };
 }
 
-function validate() {
-  const answers = new Set();
-  for (const level of chains) {
-    if (level.idioms.length < 2) throw new Error(level.title + ': 至少需要两条成语');
-    for (let i = 0; i < level.idioms.length - 1; i += 1) {
-      const current = level.idioms[i][0];
-      const next = level.idioms[i + 1][0];
-      if (current.at(-1) !== next[0]) throw new Error(`${level.title}: ${current} 和 ${next} 不接`);
-    }
-    for (const [answer, clue] of level.idioms) {
-      if ([...answer].length !== 4) throw new Error(level.title + ': 非四字成语 ' + answer);
-      if (!clue) throw new Error(level.title + ': 缺少释义 ' + answer);
-      if (answers.has(answer)) throw new Error('重复成语：' + answer);
-      answers.add(answer);
-    }
+function validateLine(level, idioms, answers, label) {
+  if (idioms.length < 2) throw new Error(level.title + ': ' + label + '至少需要两条成语');
+  for (let i = 0; i < idioms.length - 1; i += 1) {
+    const current = idioms[i][0];
+    const next = idioms[i + 1][0];
+    if (current.at(-1) !== next[0]) throw new Error(`${level.title}: ${current} 和 ${next} 不接`);
+  }
+  for (const [answer, clue] of idioms) {
+    if ([...answer].length !== 4) throw new Error(level.title + ': 非四字成语 ' + answer);
+    if (!clue) throw new Error(level.title + ': 缺少释义 ' + answer);
+    if (answers.has(answer)) throw new Error('重复成语：' + answer);
+    answers.add(answer);
   }
 }
 
-function maskFor(solution, idioms, blankCount, seed) {
+function validate() {
+  const answers = new Set();
+  for (const level of chains) validateLine(level, level.idioms, answers, '');
+  for (const level of CROSS_LEVELS) validateLine(level, level.horizontal, answers, '横链');
+  for (const level of CROSS_LEVELS) validateLine(level, level.vertical, answers, '竖链');
+}
+function maskForCells(cells, entries, blankCount, seed) {
   const show = new Set();
   const random = seeded(seed * 17 + blankCount);
-  idioms.forEach(([answer], index) => {
-    const start = index * 3;
-    show.add(start + ((seed + index * 2) % answer.length));
-  });
-  const showCount = solution.length - blankCount;
-  if (showCount < idioms.length) throw new Error('空白太多，无法保证每条成语至少露出一个字');
-  const candidates = [...Array(solution.length).keys()].filter((index) => !show.has(index));
+  entries.forEach((entry, index) => show.add(entry.cells[(seed + index * 2) % entry.cells.length]));
+  for (const [index, entry] of entries.entries()) {
+    if (!entry.cells.some((position) => show.has(position))) show.add(entry.cells[(seed + index) % entry.cells.length]);
+  }
+  const showCount = cells.length - blankCount;
+  if (showCount < entries.length) throw new Error('空白太多，无法保证每条成语至少露出一个字');
+  const candidates = cells.map((_, index) => index).filter((index) => !show.has(index));
   while (show.size < showCount) {
     const pick = Math.floor(random() * candidates.length);
     show.add(candidates.splice(pick, 1)[0]);
   }
-  return [...solution].map((_, index) => show.has(index) ? '0' : '1').join('');
+  return cells.map((_, index) => show.has(index) ? '0' : '1').join('');
 }
-
 function pickDecoys(solution, count, seed) {
   const forbidden = new Set(solution);
   const chars = [...DECOY_POOL].filter((char) => !forbidden.has(char));
@@ -300,31 +303,106 @@ function shuffledBank(items, required, seed) {
   return bank;
 }
 
-function build() {
-  validate();
-  const levels = chains.map((level, index) => {
-    const solution = level.idioms[0][0] + level.idioms.slice(1).map(([answer]) => answer.slice(1)).join('');
-    const mask = maskFor(solution, level.idioms, level.blankCount, index);
-    const blanks = [...mask].flatMap((flag, position) => flag === '1' ? [position] : []);
-    const decoys = pickDecoys(solution, level.decoyCount, index);
-    const required = blanks.map((position) => solution[position]).join('');
-    const bank = shuffledBank(blanks.map((position) => solution[position]).concat(decoys), required, index + 101);
-    return {
-      title: level.title,
-      hint: level.hint,
-      solution,
-      mask,
-      bank,
-      idioms: level.idioms.map(([answer, clue], idiomIndex) => ({ answer, clue, start: idiomIndex * 3 }))
-    };
-  });
-  const body = levels.map((level) => {
-    const idioms = level.idioms.map((entry) => `      { answer: '${entry.answer}', clue: '${entry.clue}', start: ${entry.start} }`).join(',\n');
-    return `  {\n    title: '${level.title}',\n    hint: '${level.hint}',\n    solution: '${level.solution}',\n    mask: '${level.mask}',\n    bank: [${level.bank.map((char) => `'${char}'`).join(', ')}],\n    idioms: [\n${idioms}\n    ]\n  }`;
-  }).join(',\n');
-  const source = `// WEAVE 关卡数据：成语链由人工挑选，空白与字池由 tools/build-levels.mjs 生成。\n// 0 = 已给出，1 = 空缺；相邻成语共享首尾一个字。\n\nexport const LEVELS = [\n${body}\n];\n`;
-  writeFileSync(new URL('../src/levels.js', import.meta.url), source, 'utf8');
-  console.log(`生成 ${levels.length} 关`);
+function combineIdioms(idioms) {
+  return idioms[0][0] + idioms.slice(1).map(([answer]) => answer.slice(1)).join('');
 }
 
-build();
+function bankFor(solution, blanks, decoyCount, seed) {
+  const required = blanks.map((position) => solution[position]).join('');
+  const decoys = pickDecoys(solution, decoyCount, seed);
+  return shuffledBank(blanks.map((position) => solution[position]).concat(decoys), required, seed + 101);
+}
+
+function buildChain(level, index) {
+  const solution = combineIdioms(level.idioms);
+  const cells = [...solution].map((char, position) => ({ row: 0, col: position, char }));
+  const idioms = level.idioms.map(([answer, clue], idiomIndex) => {
+    const start = idiomIndex * 3;
+    return {
+      answer,
+      clue,
+      line: 0,
+      start,
+      cells: Array.from({ length: 4 }, (_, offset) => start + offset)
+    };
+  });
+  const mask = maskForCells(cells, idioms, level.blankCount, index);
+  const blanks = [...mask].flatMap((flag, position) => flag === '1' ? [position] : []);
+  return {
+    kind: 'chain',
+    title: level.title,
+    hint: level.hint,
+    solution,
+    mask,
+    bank: bankFor(solution, blanks, level.decoyCount, index),
+    width: solution.length,
+    height: 1,
+    cells: cells.map(({ row, col }) => ({ row, col })),
+    idioms
+  };
+}
+
+function buildCross(level, index) {
+  const horizontal = combineIdioms(level.horizontal);
+  const vertical = combineIdioms(level.vertical);
+  if (horizontal[level.crossH] !== vertical[level.crossV]) {
+    throw new Error(`${level.title}: 交叉字不一致`);
+  }
+  const grid = new Map();
+  const put = (row, col, char) => {
+    const key = row + ',' + col;
+    const current = grid.get(key);
+    if (current && current !== char) throw new Error(`${level.title}: 交叉位置 ${key} 有两个字`);
+    grid.set(key, char);
+  };
+  for (let i = 0; i < horizontal.length; i += 1) put(level.crossV, i, horizontal[i]);
+  for (let i = 0; i < vertical.length; i += 1) put(i, level.crossH, vertical[i]);
+  const coords = [...grid.entries()].map(([key, char]) => {
+    const [row, col] = key.split(',').map(Number);
+    return { row, col, char };
+  }).sort((a, b) => a.row - b.row || a.col - b.col);
+  const positionByKey = new Map(coords.map((cell, position) => [cell.row + ',' + cell.col, position]));
+  const cells = coords.map(({ row, col, char }) => ({ row, col, char }));
+  const solution = cells.map((cell) => cell.char).join('');
+  const makeEntries = (idioms, line, horizontalLine) => idioms.map(([answer, clue], idiomIndex) => {
+    const start = idiomIndex * 3;
+    const cellIds = Array.from({ length: 4 }, (_, offset) => {
+      const point = start + offset;
+      const key = horizontalLine
+        ? level.crossV + ',' + point
+        : point + ',' + level.crossH;
+      return positionByKey.get(key);
+    });
+    return { answer, clue, line, start: cellIds[0], cells: cellIds };
+  });
+  const idioms = makeEntries(level.horizontal, 0, true).concat(makeEntries(level.vertical, 1, false));
+  const mask = maskForCells(cells, idioms, level.blankCount, index);
+  const blanks = [...mask].flatMap((flag, position) => flag === '1' ? [position] : []);
+  return {
+    kind: 'cross',
+    title: level.title,
+    hint: level.hint,
+    solution,
+    mask,
+    bank: bankFor(solution, blanks, level.decoyCount, index + 500),
+    width: Math.max(...cells.map((cell) => cell.col)) + 1,
+    height: Math.max(...cells.map((cell) => cell.row)) + 1,
+    cells: cells.map(({ row, col }) => ({ row, col })),
+    idioms
+  };
+}
+
+function build() {
+  validate();
+  const levels = chains.map(buildChain).concat(CROSS_LEVELS.map((level, offset) => buildCross(level, chains.length + offset)));
+  const body = levels.map((level) => {
+    const idioms = level.idioms.map((entry) =>
+      `      { answer: '${entry.answer}', clue: '${entry.clue}', line: ${entry.line}, start: ${entry.start}, cells: [${entry.cells.join(', ')}] }`
+    ).join(',\n');
+    const cells = level.cells.map((cell) => `{ row: ${cell.row}, col: ${cell.col} }`).join(', ');
+    return `  {\n    kind: '${level.kind}',\n    title: '${level.title}',\n    hint: '${level.hint}',\n    solution: '${level.solution}',\n    mask: '${level.mask}',\n    bank: [${level.bank.map((char) => `'${char}'`).join(', ')}],\n    width: ${level.width},\n    height: ${level.height},\n    cells: [${cells}],\n    idioms: [\n${idioms}\n    ]\n  }`;
+  }).join(',\n');
+  const source = `// WEAVE 关卡数据：成语链由人工挑选，空白与字池由 tools/build-levels.mjs 生成。\n// chain = 单条长链；cross = 两条链共享一个交点。\n// 0 = 已给出，1 = 空缺；每条成语的 cells 指向共享的格子编号。\n\nexport const LEVELS = [\n${body}\n];\n`;
+  writeFileSync(new URL('../src/levels.js', import.meta.url), source, 'utf8');
+  console.log(`生成 ${levels.length} 关（${chains.length} 长链 + ${CROSS_LEVELS.length} 交叉）`);
+}build();

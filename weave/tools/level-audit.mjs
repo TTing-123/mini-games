@@ -11,14 +11,34 @@ const rows = [];
 for (let index = 0; index < PUZZLES.length; index += 1) {
   const puzzle = PUZZLES[index];
   const flags = [];
-  const expected = puzzle.entries[0].answer + puzzle.entries.slice(1).map((entry) => entry.answer.slice(1)).join('');
-  if (expected !== puzzle.solution) { flags.push('链条拼接错误'); problems += 1; }
-  if (puzzle.mask.length !== puzzle.solution.length) { flags.push('遮罩长度错误'); problems += 1; }
+  if (puzzle.mask.length !== puzzle.solution.length || puzzle.cells.length !== puzzle.solution.length) {
+    flags.push('遮罩 / 格子长度错误');
+    problems += 1;
+  }
 
-  for (let i = 0; i < puzzle.entries.length - 1; i += 1) {
-    const current = puzzle.entries[i];
-    const next = puzzle.entries[i + 1];
-    if (current.answer.at(-1) !== next.answer[0]) { flags.push(`${current.answer} 不接 ${next.answer}`); problems += 1; }
+  for (const entry of puzzle.entries) {
+    const actual = entry.cells.map((position) => puzzle.solution[position]).join('');
+    if (actual !== entry.answer) { flags.push(`${entry.answer} 的实际格子不匹配`); problems += 1; }
+  }
+
+  const lines = new Map();
+  for (const entry of puzzle.entries) {
+    if (!lines.has(entry.line)) lines.set(entry.line, []);
+    lines.get(entry.line).push(entry);
+  }
+  for (const entries of lines.values()) {
+    for (let i = 0; i < entries.length - 1; i += 1) {
+      const current = entries[i];
+      const next = entries[i + 1];
+      if (current.answer.at(-1) !== next.answer[0]) {
+        flags.push(`${current.answer} 不接 ${next.answer}`);
+        problems += 1;
+      }
+      if (current.cells.at(-1) !== next.cells[0]) {
+        flags.push(`${current.answer} 与 ${next.answer} 没有共享同一格`);
+        problems += 1;
+      }
+    }
   }
 
   for (const entry of puzzle.entries) {
@@ -38,10 +58,7 @@ for (let index = 0; index < PUZZLES.length; index += 1) {
     available.splice(at, 1);
   }
 
-  const entryShows = puzzle.entries.map((entry) => {
-    const cells = Array.from({ length: 4 }, (_, offset) => entry.start + offset);
-    return cells.some((position) => !puzzle.blanks.includes(position));
-  });
+  const entryShows = puzzle.entries.map((entry) => entry.cells.some((position) => !puzzle.blanks.includes(position)));
   if (entryShows.some((shown) => !shown)) { flags.push('有成语整条都是空白'); problems += 1; }
 
   let state = createState(index);
@@ -59,11 +76,11 @@ for (let index = 0; index < PUZZLES.length; index += 1) {
 
   const blankCount = puzzle.blanks.length;
   const decoyCount = puzzle.bank.length - blankCount;
-  const difficulty = blankCount + decoyCount;
+  const difficulty = blankCount + decoyCount + (puzzle.kind === 'cross' ? 2 : 0);
   rows.push({ index, title: puzzle.title, blanks: blankCount, decoys: decoyCount, difficulty });
   console.log(
     `${String(index).padStart(2)}  ${puzzle.title.padEnd(5, '　')}  ` +
-    `成语 ${puzzle.entries.length} · 空缺 ${blankCount} · 干扰 ${decoyCount} · 难度 ${difficulty}` +
+    `${puzzle.kind === 'cross' ? '交叉' : '长链'} · 成语 ${puzzle.entries.length} · 空缺 ${blankCount} · 干扰 ${decoyCount} · 难度 ${difficulty}` +
     (flags.length ? `  ⚠ ${flags.join('；')}` : '')
   );
 }

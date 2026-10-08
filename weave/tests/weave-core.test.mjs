@@ -24,13 +24,21 @@ function solveLevel(index) {
 }
 
 test('there are enough handwritten levels', () => {
-  assert.ok(getPuzzleCount() >= 20, '关卡数至少 20，当前 ' + getPuzzleCount());
+  assert.ok(getPuzzleCount() >= 30, '关卡数至少 30，当前 ' + getPuzzleCount());
 });
 
-test('every adjacent idiom shares its end and next first character', () => {
+test('every line of idioms shares its end and next first character', () => {
   for (const puzzle of PUZZLES) {
-    for (let i = 0; i < puzzle.entries.length - 1; i += 1) {
-      assert.equal(puzzle.entries[i].answer.at(-1), puzzle.entries[i + 1].answer[0], puzzle.title);
+    const lines = new Map();
+    for (const entry of puzzle.entries) {
+      if (!lines.has(entry.line)) lines.set(entry.line, []);
+      lines.get(entry.line).push(entry);
+    }
+    for (const entries of lines.values()) {
+      for (let i = 0; i < entries.length - 1; i += 1) {
+        assert.equal(entries[i].answer.at(-1), entries[i + 1].answer[0], puzzle.title);
+        assert.equal(entries[i].cells.at(-1), entries[i + 1].cells[0], puzzle.title);
+      }
     }
   }
 });
@@ -125,19 +133,26 @@ test('taking a tile back clears the cell', () => {
 
 test('entry status tracks empty and correct lines', () => {
   const puzzle = PUZZLES[0];
-  const entryIndex = puzzle.entries.findIndex((entry) => {
-    const cells = Array.from({ length: entry.length }, (_, offset) => entry.start + offset);
-    return cells.some((position) => puzzle.blanks.includes(position));
-  });
+  const entryIndex = puzzle.entries.findIndex((entry) => entry.cells.some((position) => puzzle.blanks.includes(position)));
   const entry = puzzle.entries[entryIndex];
   let state = createState(0);
   assert.equal(entryStatus(state, entryIndex), 'empty');
-  const cells = Array.from({ length: entry.length }, (_, offset) => entry.start + offset);
-  for (const position of cells.filter((position) => puzzle.blanks.includes(position))) {
+  for (const position of entry.cells.filter((position) => puzzle.blanks.includes(position))) {
     const tile = state.tiles.find((item) => item.at === null && item.char === puzzle.solution[position]);
     state = placeTile(state, tile.tileId, position);
   }
   assert.equal(entryStatus(state, entryIndex), 'correct');
+});
+
+test('cross levels use two lines and one shared cell', () => {
+  const cross = PUZZLES.find((puzzle) => puzzle.kind === 'cross');
+  assert.ok(cross, '至少要有一个交叉关');
+  assert.equal(new Set(cross.entries.map((entry) => entry.line)).size, 2);
+  const shared = new Map();
+  for (const entry of cross.entries) {
+    for (const cell of entry.cells) shared.set(cell, (shared.get(cell) || 0) + 1);
+  }
+  assert.ok([...shared.values()].some((count) => count > 1), '交叉关要有一个共享格');
 });
 
 test('the hint always names a correct tile for a missing character', () => {

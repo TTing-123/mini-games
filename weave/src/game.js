@@ -68,7 +68,7 @@ function renderLevels() {
 function cellFlags(position) {
   const puzzle = PUZZLES[state.puzzleIndex];
   const statuses = puzzle.entries
-    .filter((entry) => position >= entry.start && position < entry.start + entry.length)
+    .filter((entry) => entry.cells.includes(position))
     .map((entry) => entryStatus(state, entry.index));
   return {
     correct: statuses.length > 0 && statuses.every((status) => status === 'correct'),
@@ -76,29 +76,30 @@ function cellFlags(position) {
   };
 }
 
-function renderChain() {
-  const puzzle = PUZZLES[state.puzzleIndex];
-  chain.innerHTML = '';
+function renderCell(position, puzzle) {
+  const cell = document.createElement('button');
+  cell.type = 'button';
+  cell.className = 'cell';
+  cell.dataset.position = String(position);
+  const blank = puzzle.blanks.includes(position);
+  const tile = tileAt(state, position);
+  const flags = blank ? cellFlags(position) : { correct: true, wrong: false };
+  if (blank && !tile) cell.classList.add('is-empty');
+  if (blank && selectedTile !== null) cell.classList.add('is-target');
+  if (flags.correct) cell.classList.add('is-correct');
+  if (flags.wrong) cell.classList.add('is-wrong');
+  cell.textContent = blank ? (tile ? tile.char : '') : puzzle.solution[position];
+  return cell;
+}
+
+function renderChainBoard(puzzle) {
   chain.style.setProperty('--length', puzzle.solution.length);
-  chain.classList.toggle('is-solved', state.status === 'won');
   const linkPositions = new Set(puzzle.entries.slice(1).map((entry) => entry.start));
   for (let position = 0; position < puzzle.solution.length; position += 1) {
-    const cell = document.createElement('button');
-    cell.type = 'button';
-    cell.className = 'cell';
-    cell.dataset.position = String(position);
-    const blank = puzzle.blanks.includes(position);
-    const tile = tileAt(state, position);
-    const flags = blank ? cellFlags(position) : { correct: true, wrong: false };
+    const cell = renderCell(position, puzzle);
     if (linkPositions.has(position)) cell.classList.add('is-link');
-    if (blank && !tile) cell.classList.add('is-empty');
-    if (blank && selectedTile !== null) cell.classList.add('is-target');
-    if (flags.correct) cell.classList.add('is-correct');
-    if (flags.wrong) cell.classList.add('is-wrong');
-    cell.textContent = blank ? (tile ? tile.char : '') : puzzle.solution[position];
     chain.append(cell);
   }
-
   rungs.innerHTML = '';
   rungs.style.setProperty('--length', puzzle.solution.length);
   puzzle.entries.forEach((entry) => {
@@ -118,6 +119,40 @@ function renderChain() {
   });
 }
 
+function renderCrossBoard(puzzle) {
+  chain.style.setProperty('--cols', puzzle.width);
+  chain.style.setProperty('--rows', puzzle.height);
+  const starts = new Map();
+  puzzle.entries.forEach((entry) => {
+    const first = entry.cells[0];
+    if (!starts.has(first)) starts.set(first, []);
+    starts.get(first).push(entry);
+  });
+  puzzle.cells.forEach((meta, position) => {
+    const cell = renderCell(position, puzzle);
+    cell.style.gridColumn = String(meta.col + 1);
+    cell.style.gridRow = String(meta.row + 1);
+    const badges = starts.get(position);
+    if (badges) {
+      const badge = document.createElement('span');
+      badge.className = 'entry-badge';
+      badge.textContent = badges.map((entry) => entry.index + 1).join('/');
+      badge.style.setProperty('--entry-color', COLORS[badges[0].index % COLORS.length]);
+      cell.append(badge);
+    }
+    chain.append(cell);
+  });
+  rungs.innerHTML = '';
+}
+
+function renderChain() {
+  const puzzle = PUZZLES[state.puzzleIndex];
+  chain.innerHTML = '';
+  chain.classList.toggle('is-solved', state.status === 'won');
+  chain.classList.toggle('is-grid', puzzle.kind === 'cross');
+  if (puzzle.kind === 'cross') renderCrossBoard(puzzle);
+  else renderChainBoard(puzzle);
+}
 function renderBank() {
   const puzzle = PUZZLES[state.puzzleIndex];
   bank.innerHTML = '';
