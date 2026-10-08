@@ -1,7 +1,7 @@
 // WEAVE 交叉关的手写内容：两条成语链在一个共享字上交叉。
 export const CROSS_LEVELS = [
   {
-    title: '一气呵成', hint: '两条链在“气”上交叉，共享字只能放一次。', blankCount: 10, decoyCount: 1,
+    title: '一气呵成', hint: '两条链在“气”上交叉，共享字只能放一次。', blankCount: 12, decoyCount: 4,
     crossH: 3, crossV: 3,
     horizontal: [
       ['扬眉吐气', '摆脱压抑后心情舒畅、得意'],
@@ -17,7 +17,7 @@ export const CROSS_LEVELS = [
     ]
   },
   {
-    title: '话中有话', hint: '“传为佳话”的最后一个字，也是左链的第一个字。', blankCount: 11, decoyCount: 2,
+    title: '话中有话', hint: '“传为佳话”的最后一个字，也是左链的第一个字。', blankCount: 13, decoyCount: 5,
     crossH: 12, crossV: 0,
     horizontal: [
       ['接踵而至', '一个接一个地到来'],
@@ -33,7 +33,7 @@ export const CROSS_LEVELS = [
     ]
   },
   {
-    title: '接二连三', hint: '“短兵相接”的“接”正好接上下面的链。', blankCount: 12, decoyCount: 3,
+    title: '接二连三', hint: '“短兵相接”的“接”正好接上下面的链。', blankCount: 14, decoyCount: 6,
     crossH: 12, crossV: 0,
     horizontal: [
       ['一分为二', '全面地看待事物，看到两面'],
@@ -49,7 +49,7 @@ export const CROSS_LEVELS = [
     ]
   },
   {
-    title: '龙行天下', hint: '“车水马龙”的“龙”是两条链的交点。', blankCount: 13, decoyCount: 4,
+    title: '龙行天下', hint: '“车水马龙”的“龙”是两条链的交点。', blankCount: 15, decoyCount: 7,
     crossH: 12, crossV: 0,
     horizontal: [
       ['顾全大局', '从整体利益出发考虑'],
@@ -65,7 +65,7 @@ export const CROSS_LEVELS = [
     ]
   },
   {
-    title: '继往开来', hint: '交点藏在两条链的中段，先把共同的“开”找出来。', blankCount: 14, decoyCount: 5,
+    title: '继往开来', hint: '交点藏在两条链的中段，先把共同的“开”找出来。', blankCount: 16, decoyCount: 8,
     crossH: 11, crossV: 7,
     horizontal: [
       ['散兵游勇', '没有统属的士兵，也指分散的力量'],
@@ -81,7 +81,7 @@ export const CROSS_LEVELS = [
     ]
   },
   {
-    title: '全力以赴', hint: '两链从同一个“一”字出发，再向不同方向展开。', blankCount: 15, decoyCount: 6,
+    title: '全力以赴', hint: '两链从同一个“一”字出发，再向不同方向展开。', blankCount: 17, decoyCount: 9,
     crossH: 0, crossV: 0,
     horizontal: [
       ['一应俱全', '一切都齐全'],
@@ -96,4 +96,36 @@ export const CROSS_LEVELS = [
       ['云消雾散', '疑虑或困境像云雾一样消散']
     ]
   }
-];
+,
+  {
+    title: '久旱逢甘雨', hint: '这一关混入了五字俗语，先找“雨”的共同位置。', blankCount: 17, decoyCount: 9,
+    crossH: 4, crossV: 1,
+    horizontal: [
+      ['久旱逢甘雨', '长期干旱后终于下雨，比喻盼望已久的好事到来'],
+      ['雨过天晴', '风雨过后天气转晴，比喻情况好转'],
+      ['晴空万里', '天空晴朗，没有一点云'],
+      ['里应外合', '外面攻打，里面接应，互相配合']
+    ],
+    vertical: [
+      ['风雨同舟', '在风雨中同坐一条船，比喻共同度过困难'],
+      ['舟车劳顿', '旅途奔波，十分劳累'],
+      ['顿开茅塞', '忽然理解、醒悟过来'],
+      ['塞翁失马', '坏事有时也能变成好事']
+    ]
+  },
+  {
+    title: '人心齐泰山移', hint: '这条链含六字俗语；交点“国”在链的末端。', blankCount: 17, decoyCount: 10,
+    crossH: 14, crossV: 0,
+    horizontal: [
+      ['人心齐泰山移', '大家团结一致，就能产生巨大力量'],
+      ['移花接木', '暗中更换人或事物，以假乱真'],
+      ['木已成舟', '事情已成定局，无法改变'],
+      ['舟中敌国', '同船的人都像敌人，形容不得人心']
+    ],
+    vertical: [
+      ['国色天香', '形容女子美貌，也形容牡丹'],
+      ['香车宝马', '华丽的车马，形容出行豪华'],
+      ['马到成功', '战马一到就取得胜利，形容事情顺利'],
+      ['功成身退', '功业建成后主动退居幕后']
+    ]
+  }];

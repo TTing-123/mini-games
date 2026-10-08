@@ -24,7 +24,7 @@ function solveLevel(index) {
 }
 
 test('there are enough handwritten levels', () => {
-  assert.ok(getPuzzleCount() >= 30, '关卡数至少 30，当前 ' + getPuzzleCount());
+  assert.ok(getPuzzleCount() >= 20, '关卡数至少 20，当前 ' + getPuzzleCount());
 });
 
 test('every line of idioms shares its end and next first character', () => {

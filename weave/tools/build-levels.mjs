@@ -237,7 +237,7 @@ function validateLine(level, idioms, answers, label) {
     if (current.at(-1) !== next[0]) throw new Error(`${level.title}: ${current} 和 ${next} 不接`);
   }
   for (const [answer, clue] of idioms) {
-    if ([...answer].length !== 4) throw new Error(level.title + ': 非四字成语 ' + answer);
+    if ([...answer].length < 4 || [...answer].length > 8) throw new Error(level.title + ': 长度不在 4-8 个字 ' + answer);
     if (!clue) throw new Error(level.title + ': 缺少释义 ' + answer);
     if (answers.has(answer)) throw new Error('重复成语：' + answer);
     answers.add(answer);
@@ -316,15 +316,13 @@ function bankFor(solution, blanks, decoyCount, seed) {
 function buildChain(level, index) {
   const solution = combineIdioms(level.idioms);
   const cells = [...solution].map((char, position) => ({ row: 0, col: position, char }));
-  const idioms = level.idioms.map(([answer, clue], idiomIndex) => {
-    const start = idiomIndex * 3;
-    return {
-      answer,
-      clue,
-      line: 0,
-      start,
-      cells: Array.from({ length: 4 }, (_, offset) => start + offset)
-    };
+  let cursor = 0;
+  const idioms = level.idioms.map(([answer, clue]) => {
+    const length = [...answer].length;
+    const start = cursor;
+    const cells = Array.from({ length }, (_, offset) => start + offset);
+    cursor += length - 1;
+    return { answer, clue, line: 0, start, cells };
   });
   const mask = maskForCells(cells, idioms, level.blankCount, index);
   const blanks = [...mask].flatMap((flag, position) => flag === '1' ? [position] : []);
@@ -364,17 +362,22 @@ function buildCross(level, index) {
   const positionByKey = new Map(coords.map((cell, position) => [cell.row + ',' + cell.col, position]));
   const cells = coords.map(({ row, col, char }) => ({ row, col, char }));
   const solution = cells.map((cell) => cell.char).join('');
-  const makeEntries = (idioms, line, horizontalLine) => idioms.map(([answer, clue], idiomIndex) => {
-    const start = idiomIndex * 3;
-    const cellIds = Array.from({ length: 4 }, (_, offset) => {
-      const point = start + offset;
-      const key = horizontalLine
-        ? level.crossV + ',' + point
-        : point + ',' + level.crossH;
-      return positionByKey.get(key);
+  const makeEntries = (idioms, line, horizontalLine) => {
+    let cursor = 0;
+    return idioms.map(([answer, clue]) => {
+      const length = [...answer].length;
+      const start = cursor;
+      const cellIds = Array.from({ length }, (_, offset) => {
+        const point = start + offset;
+        const key = horizontalLine
+          ? level.crossV + ',' + point
+          : point + ',' + level.crossH;
+        return positionByKey.get(key);
+      });
+      cursor += length - 1;
+      return { answer, clue, line, start: cellIds[0], cells: cellIds };
     });
-    return { answer, clue, line, start: cellIds[0], cells: cellIds };
-  });
+  };
   const idioms = makeEntries(level.horizontal, 0, true).concat(makeEntries(level.vertical, 1, false));
   const mask = maskForCells(cells, idioms, level.blankCount, index);
   const blanks = [...mask].flatMap((flag, position) => flag === '1' ? [position] : []);
@@ -394,7 +397,10 @@ function buildCross(level, index) {
 
 function build() {
   validate();
-  const levels = chains.map(buildChain).concat(CROSS_LEVELS.map((level, offset) => buildCross(level, chains.length + offset)));
+  const LONG_CHAIN_INDEXES = [0, 1, 2, 3, 4, 5, 7, 8, 9, 11, 13, 15];
+  const longLevels = LONG_CHAIN_INDEXES.map((chainIndex) => buildChain(chains[chainIndex], chainIndex));
+  const crossLevels = CROSS_LEVELS.map((level, offset) => buildCross(level, 100 + offset));
+  const levels = longLevels.concat(crossLevels);
   const body = levels.map((level) => {
     const idioms = level.idioms.map((entry) =>
       `      { answer: '${entry.answer}', clue: '${entry.clue}', line: ${entry.line}, start: ${entry.start}, cells: [${entry.cells.join(', ')}] }`
@@ -404,5 +410,7 @@ function build() {
   }).join(',\n');
   const source = `// WEAVE 关卡数据：成语链由人工挑选，空白与字池由 tools/build-levels.mjs 生成。\n// chain = 单条长链；cross = 两条链共享一个交点。\n// 0 = 已给出，1 = 空缺；每条成语的 cells 指向共享的格子编号。\n\nexport const LEVELS = [\n${body}\n];\n`;
   writeFileSync(new URL('../src/levels.js', import.meta.url), source, 'utf8');
-  console.log(`生成 ${levels.length} 关（${chains.length} 长链 + ${CROSS_LEVELS.length} 交叉）`);
-}build();
+  console.log(`生成 ${levels.length} 关（${longLevels.length} 单链 + ${crossLevels.length} 交叉）`);
+}
+
+build();

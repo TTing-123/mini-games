@@ -42,7 +42,7 @@ for (let index = 0; index < PUZZLES.length; index += 1) {
   }
 
   for (const entry of puzzle.entries) {
-    if ([...entry.answer].length !== 4) { flags.push(`${entry.answer} 不是四字`); problems += 1; }
+    if ([...entry.answer].length < 4 || [...entry.answer].length > 8) { flags.push(`${entry.answer} 长度不在 4-8 个字`); problems += 1; }
     if (!entry.clue) { flags.push(`${entry.answer} 缺释义`); problems += 1; }
     if (answers.has(entry.answer)) { flags.push(`成语 ${entry.answer} 与第 ${answers.get(entry.answer)} 关重复`); problems += 1; }
     else answers.set(entry.answer, index);

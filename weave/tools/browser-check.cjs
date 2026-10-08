@@ -37,8 +37,8 @@ const tapCell = (page, position) => page.evaluate((position) => {
   await page.goto(BASE + '?debug=1', { waitUntil: 'load' });
   await page.waitForTimeout(300);
 
-  record('loads level 0', (await label(page, '#level-label')) === '0 / 29', await label(page, '#level-label'));
-  record('level grid lists every level', (await page.locator('.level-button').count()) === 30);
+  record('loads level 0', (await label(page, '#level-label')) === '0 / 19', await label(page, '#level-label'));
+  record('level grid lists every level', (await page.locator('.level-button').count()) === 20);
   record('tutorial starts with three blanks', (await label(page, '#blank-label')) === '3', await label(page, '#blank-label'));
   record('chain fits the desktop panel', await page.evaluate(() => {
     const box = document.querySelector('#chain').getBoundingClientRect();
@@ -79,17 +79,17 @@ const tapCell = (page, position) => page.evaluate((position) => {
 
   await page.click('#result-next');
   await page.waitForTimeout(80);
-  record('next level loads', (await label(page, '#level-label')) === '1 / 29');
-  await page.locator('.level-button').nth(24).dispatchEvent('pointerdown');
+  record('next level loads', (await label(page, '#level-label')) === '1 / 19');
+  await page.locator('.level-button').nth(12).dispatchEvent('pointerdown');
   await page.waitForTimeout(80);
   record('cross level uses a grid board', await page.locator('#chain.is-grid').count() === 1);
   record('cross level has 25 shared cells', await page.locator('#chain .cell').count() === 25);
   record('cross level shows eight clues', await page.locator('#clues .clue').count() === 8);
-  record('cross level starts with ten blanks', (await label(page, '#blank-label')) === '10', await label(page, '#blank-label'));
-  await page.locator('.level-button').nth(29).dispatchEvent('pointerdown');
+  record('cross level starts with twelve blanks', (await label(page, '#blank-label')) === '12', await label(page, '#blank-label'));
+  await page.locator('.level-button').nth(19).dispatchEvent('pointerdown');
   await page.waitForTimeout(80);
-  record('level grid jumps to the end', (await label(page, '#level-label')) === '29 / 29');
-  record('final level has fifteen blanks', (await label(page, '#blank-label')) === '15', await label(page, '#blank-label'));
+  record('level grid jumps to the end', (await label(page, '#level-label')) === '19 / 19');
+  record('final level has seventeen blanks', (await label(page, '#blank-label')) === '17', await label(page, '#blank-label'));
   await page.screenshot({ path: path.join(OUT, 'desktop-final.png') });
   await page.close();
   await ctx.close();
