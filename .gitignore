@@ -1,18 +1,29 @@
-.scratch/
-.godot/
+# 依赖与构建产物
 node_modules/
+package-lock.json
 dist/
+
+# 本地工具（浏览器检查用的 Playwright，按需重装）
+.pw-tmp/
+
+# 临时与草稿
+.scratch/
+*.log
+npm-debug.log*
+
+# 检查产物（随时可删，随时可重新生成）
+**/tools/.browser-check/
+**/tools/audit-report.txt
+tools/market-report.txt
+pulse/tests/.smoke_test_result
+
+# BMAD / GDS 生成物
+_bmad/**/*.import
+_bmad/**/*.translation
+**/_bmad-output/.working/
+
+# 编辑器与系统
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-pulse/tests/.smoke_test_result
-_bmad/**/*.import
-_bmad/**/*.translation
-.pw-tmp/
-package-lock.json
-**/tools/audit-report.txt
-**/tools/.browser-check/
-tools/market-report.txt
-
-

@@ -28,9 +28,12 @@ py -m http.server 8080
 ## 测试
 
 ```powershell
-npm test          # 所有游戏的逻辑测试
-npm run audit     # Pulse 随机关卡公平性审计
+npm test              # 所有游戏的逻辑测试（47 项）
+npm run audit         # Pulse 随机关卡公平性审计
+npm run audit:tilt    # TILT 关卡体检：可解性、最短步数、查重
 ```
+
+浏览器端到端检查（需要 Playwright）：见各游戏 `tools/browser-check.cjs`，桌面鼠标 + 手机触屏都会跑一遍。
 
 ## 目录结构
 
@@ -38,16 +41,28 @@ npm run audit     # Pulse 随机关卡公平性审计
 mini-games/
 ├── index.html            合集首页（卡片列表）
 ├── favicon.svg
+├── README.md             合集说明
+├── AGENTS.md             AI 代理的硬性规则
+├── GAME-DEV.md           游戏制作规范与流程（调研→原型→试玩→内容→上线）
+├── package.json          根脚本：dev / test / audit / market
+├── tools/market-check.mjs 新游戏的市场调研工具
+├── .github/workflows/pages.yml
+├── .agents/skills/       GDS / BMAD 技能（Codex 等）
+├── .claude/skills/       GDS / BMAD 技能（Claude Code）
+├── _bmad/                BMAD 配置
 ├── pulse/                物理连锁弹球
 ├── casebook/             手写案件推理
 ├── nono/                 数织逻辑解谜
-├── tilt/                 整盘倾倒逻辑解谜
-└── .github/workflows/pages.yml
+└── tilt/                 整盘倾倒逻辑解谜
 ```
+
+每个游戏的结构一致：`index.html`、`src/<game>-core.js`（纯逻辑，可单测）、`src/game.js`（渲染与交互）、`src/style.css`、`tests/`、`tools/`、`README.md`，历史文档放在 `<game>/_bmad-output/`。
 
 ## 加一个新游戏
 
-**第 0 步是先确认市面上没有重复的**（完整规则见 `AGENTS.md`）：
+完整流程、每步门禁和工具链见 **[GAME-DEV.md](./GAME-DEV.md)**；硬性红线见 AGENTS.md。概要：
+
+**第 0 步是先确认市面上没有重复的**：
 
 ```powershell
 node tools/market-check.mjs "机制关键词"
