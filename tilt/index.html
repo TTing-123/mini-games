@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#070c12" />
+  <meta name="description" content="TILT 倾倒：按一个方向，整块板子倒过去，所有方块一起滑。让每个方块都正好停在凹槽上。" />
+  <title>TILT — 倾倒</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="TILT — 倾倒" />
+  <meta property="og:description" content="按一个方向，所有方块一起滑到底。让每个方块都停在凹槽上。" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <p class="kicker">TILT LOGIC / SLIDE &amp; SINK</p>
+        <h1>TILT <span>倾倒</span></h1>
+      </div>
+      <div class="topbar-right">
+        <div class="stat-chip"><span>关卡</span><b id="level-label">0 / 0</b></div>
+        <div class="stat-chip"><span>步数</span><b id="move-label">0</b></div>
+        <button id="hint" class="ghost" type="button">提示</button>
+        <button id="restart" class="ghost" type="button">重来</button>
+        <button id="sound" class="ghost icon" type="button" aria-label="音效开关">♪</button>
+      </div>
+    </header>
+
+    <section class="game-layout">
+      <div class="board-wrap">
+        <canvas id="board" aria-label="倾倒棋盘"></canvas>
+        <div class="pad" role="group" aria-label="倾倒方向">
+          <button class="pad-button pad-up" data-dir="up" type="button" aria-label="向上倒">▲</button>
+          <button class="pad-button pad-left" data-dir="left" type="button" aria-label="向左倒">◀</button>
+          <button class="pad-button pad-down" data-dir="down" type="button" aria-label="向下倒">▼</button>
+          <button class="pad-button pad-right" data-dir="right" type="button" aria-label="向右倒">▶</button>
+        </div>
+      </div>
+
+      <aside class="side-panel">
+        <section class="panel-block">
+          <p class="label">怎么玩</p>
+          <p class="tip">往一个方向倒，<b>所有方块一起滑</b>，撞到墙才停。正好停在凹槽上的方块会被吸收。</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">目标</p>
+          <p class="tip">清空所有方块。凹槽可以反复使用，一个也够。</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">当前关</p>
+          <div id="level-title" class="level-title">一步</div>
+          <p id="level-hint" class="level-hint">往右倒，方块就会滑进凹槽</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">跳关</p>
+          <div id="level-grid" class="level-grid"></div>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">操作</p>
+          <p class="tip">方向键 / WASD，或者在棋盘上滑动。</p>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <section id="result" class="overlay is-hidden">
+    <div class="result-panel">
+      <p class="kicker">全部方块已吸收</p>
+      <h2 id="result-title">一步</h2>
+      <p id="result-text"></p>
+      <div class="result-actions">
+        <button id="result-next" class="primary" type="button">下一关</button>
+        <button id="result-retry" class="ghost" type="button">重来</button>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="./src/game.js"></script>
+</body>
+</html>
