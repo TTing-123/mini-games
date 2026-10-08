@@ -1,8 +1,8 @@
-// 关卡体检：最少拆除次数、最短解条数、开局分支数、钢砖数、难度分、概念分布，以及布局/解法查重。
+// 关卡体检：最少拆除次数、最短解条数、开局分支数、钢砖数、难度分、概念分布，以及布局/解法/玩法手感查重。
 // 用法：node topple/tools/level-audit.mjs
-import { PUZZLES, createState, isWon, solve } from '../src/topple-core.js';
+import { PUZZLES, createState, isWon, removeBlock, solve } from '../src/topple-core.js';
 
-const rowsOf = (puzzle) => {
+const rowsOf = (puzzle, includeTarget = true) => {
   const lines = [];
   for (let row = 0; row < puzzle.height; row += 1) {
     let line = '';
@@ -11,7 +11,7 @@ const rowsOf = (puzzle) => {
       if (puzzle.gold[0] === row && puzzle.gold[1] === col) line += 'G';
       else if (puzzle.steel.has(key)) line += 'S';
       else if (puzzle.blocks.has(key)) line += '#';
-      else if (puzzle.target[0] === row && puzzle.target[1] === col) line += 'T';
+      else if (includeTarget && puzzle.target[0] === row && puzzle.target[1] === col) line += 'T';
       else line += '.';
     }
     lines.push(line);
@@ -25,9 +25,27 @@ const solveSignature = (puzzle, solution) => solution
   .sort()
   .join(' ');
 
+// 玩法指纹：按每一步「有没有塌、塌多大、金块降多少」记录手感，
+// 能抓住结构不同但操作几乎一样的关卡。
+const playSignature = (state, found) => {
+  let current = state;
+  return found.sequence.map(([row, col]) => {
+    const next = removeBlock(current, row, col);
+    const falls = next.lastFalls;
+    if (!falls.length) { current = next; return 'P'; }
+    const moved = falls.reduce((sum, fall) => sum + fall.from.length, 0);
+    const size = moved <= 1 ? 's' : moved < 5 ? 'm' : moved < 12 ? 'l' : 'xl';
+    const distance = falls.map((fall) => fall.distance).join('+');
+    const goldMove = next.gold[0] - current.gold[0];
+    current = next;
+    return `F${falls.length}${size}g${goldMove}d${distance}`;
+  }).join('>');
+};
+
 let problems = 0;
 const layouts = new Map();
 const solves = new Map();
+const plays = new Map();
 const concepts = new Map();
 const entries = [];
 
@@ -44,7 +62,7 @@ for (let index = 0; index < PUZZLES.length; index += 1) {
   if (started) { flags.push('起始就达成'); problems += 1; }
   if (!found.solvable) { flags.push('无解'); problems += 1; }
 
-  const layout = rowsOf(puzzle).join('|');
+  const layout = rowsOf(puzzle, false).join('|');
   if (layouts.has(layout)) { flags.push(`布局同第 ${layouts.get(layout)} 关`); problems += 1; }
   else layouts.set(layout, index);
 
@@ -52,6 +70,10 @@ for (let index = 0; index < PUZZLES.length; index += 1) {
     const sig = solveSignature(puzzle, found.sequence);
     if (solves.has(sig)) { flags.push(`拆法同第 ${solves.get(sig)} 关`); problems += 1; }
     else solves.set(sig, index);
+
+    const play = playSignature(state, found);
+    if (plays.has(play)) { flags.push(`玩法手感和第 ${plays.get(play)} 关相同`); problems += 1; }
+    else plays.set(play, index);
   }
 
   entries.push({ index, concept, removals: found.removals, count: found.count, difficulty });

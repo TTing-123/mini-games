@@ -57,11 +57,12 @@ test('you cannot remove more blocks than the level allows', () => {
   assert.equal(state.status, 'won');
   assert.equal(canRemove(state, 2, 2), false, '结算后不能再拆');
 
-  let lost = createState(6);        // 高柱：允许拆 2 次
-  lost = removeBlock(lost, 1, 2);   // 金块掉到架子上
-  lost = removeBlock(lost, 4, 2);   // 拆掉架子（不是解）
-  assert.equal(lost.removed.length, 2);
-  assert.equal(canRemove(lost, 5, 2), false, '次数用完就不能再拆');
+  let limited = createState(6);     // 高柱：允许拆 3 次
+  limited = removeBlock(limited, 1, 2);
+  limited = removeBlock(limited, 2, 2);
+  limited = removeBlock(limited, 3, 1);
+  assert.equal(limited.removed.length, 3);
+  assert.equal(canRemove(limited, 5, 1), false, '次数用完就不能再拆');
 });
 
 test('running out of removals is a loss, not a win', () => {
@@ -116,7 +117,6 @@ test('no two levels share a layout', () => {
         if (puzzle.gold[0] === row && puzzle.gold[1] === col) line += 'G';
         else if (puzzle.steel.has(key)) line += 'S';
         else if (puzzle.blocks.has(key)) line += '#';
-        else if (puzzle.target[0] === row && puzzle.target[1] === col) line += 'T';
         else line += '.';
       }
       rows.push(line);
@@ -141,6 +141,27 @@ test('no two levels share the same removal pattern', () => {
   }
 });
 
+test('no two levels share the same play feel', () => {
+  const seen = new Map();
+  for (let index = 0; index < getPuzzleCount(); index += 1) {
+    const state = createState(index);
+    const found = solve(state);
+    let current = state;
+    const signature = found.sequence.map(([row, col]) => {
+      const next = removeBlock(current, row, col);
+      const falls = next.lastFalls;
+      if (!falls.length) { current = next; return 'P'; }
+      const moved = falls.reduce((sum, fall) => sum + fall.from.length, 0);
+      const size = moved <= 1 ? 's' : moved < 5 ? 'm' : moved < 12 ? 'l' : 'xl';
+      const distance = falls.map((fall) => fall.distance).join('+');
+      const goldMove = next.gold[0] - current.gold[0];
+      current = next;
+      return `F${falls.length}${size}g${goldMove}d${distance}`;
+    }).join('>');
+    assert.ok(!seen.has(signature), `第 ${index} 关的玩法手感与第 ${seen.get(signature)} 关相同`);
+    seen.set(signature, index);
+  }
+});
 test('the last levels are the hardest', () => {
   const counts = [];
   for (let index = 0; index < getPuzzleCount(); index += 1) counts.push(solve(createState(index)).removals);
