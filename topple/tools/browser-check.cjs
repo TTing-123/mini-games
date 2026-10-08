@@ -44,6 +44,7 @@ async function view(page) {
 
   record('loads level 0', (await label(page, '#level-label')) === '0 / 9', await label(page, '#level-label'));
   record('level grid lists every level', (await page.locator('.level-grid .level-button').count()) === 10);
+  record('favicon linked', (await page.getAttribute('link[rel="icon"]', 'href')) === './favicon.svg');
   record('starts with one removal', (await label(page, '#left-label')) === '1 / 1');
 
   let board = await view(page);
