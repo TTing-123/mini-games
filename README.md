@@ -13,6 +13,7 @@
 | Nono | 数织逻辑解谜 | <https://tting-123.github.io/mini-games/nono/> |
 | Tilt | 整盘倾倒逻辑解谜 | <https://tting-123.github.io/mini-games/tilt/> |
 | Topple | 坍塌拆塔解谜 | <https://tting-123.github.io/mini-games/topple/> |
+| Weave | 成语接龙填字 | <https://tting-123.github.io/mini-games/weave/> |
 
 每个游戏都有自己的 README、测试和开发工具，放在各自的目录里。
 
@@ -29,7 +30,7 @@
 py -m http.server 8080
 ```
 
-`http://localhost:8080` 是合集首页，`http://localhost:8080/pulse/`、`http://localhost:8080/casebook/`、`http://localhost:8080/nono/`、`http://localhost:8080/tilt/` 直接进对应游戏。
+`http://localhost:8080` 是合集首页，`http://localhost:8080/pulse/`、`http://localhost:8080/casebook/`、`http://localhost:8080/nono/`、`http://localhost:8080/tilt/`、`http://localhost:8080/topple/`、`http://localhost:8080/weave/` 直接进对应游戏。
 
 ## 测试
 
@@ -37,6 +38,7 @@ py -m http.server 8080
 npm test              # 所有游戏的逻辑测试
 npm run audit         # Pulse 随机关卡公平性审计
 npm run audit:tilt    # TILT 关卡体检：可解性、最短步数、查重
+npm run audit:weave   # WEAVE 关卡体检：链条、字池、重复、难度曲线
 ```
 
 浏览器端到端检查（需要 Playwright）：见各游戏 `tools/browser-check.cjs`，桌面鼠标 + 手机触屏都会跑一遍。
@@ -59,7 +61,9 @@ mini-games/
 ├── pulse/                物理连锁弹球
 ├── casebook/             手写案件推理
 ├── nono/                 数织逻辑解谜
-└── tilt/                 整盘倾倒逻辑解谜
+├── tilt/                 整盘倾倒逻辑解谜
+├── topple/               坍塌拆塔解谜
+└── weave/                成语接龙填字
 ```
 
 每个游戏的结构一致：`index.html`、`src/<game>-core.js`（纯逻辑，可单测）、`src/game.js`（渲染与交互）、`src/style.css`、`tests/`、`tools/`、`README.md`，历史文档放在 `<game>/_bmad-output/`。
@@ -84,4 +88,4 @@ node tools/market-check.mjs "机制关键词"
 4. `.github/workflows/pages.yml` 的 Stage 步骤里加上它的运行时文件
 5. 存档写 localStorage 时带游戏前缀，避免和其他游戏撞名
 
-目前五款游戏各自独立。等确认哪几款里的代码真的重复，再考虑 `shared/`。
+目前六款游戏各自独立。等确认哪几款里的代码真的重复，再考虑 `shared/`。

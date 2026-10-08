@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#11100d" />
+  <meta name="description" content="WEAVE 织字：把字块放回空缺，拼出一条首尾共享汉字的连续成语链。" />
+  <title>WEAVE — 织字</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <p class="kicker">WORD CHAIN / SHARED CHARACTERS</p>
+        <h1>WEAVE <span>织字</span></h1>
+      </div>
+      <div class="topbar-right">
+        <div class="stat-chip"><span>关卡</span><b id="level-label">0 / 23</b></div>
+        <div class="stat-chip"><span>空缺</span><b id="blank-label">0</b></div>
+        <button id="hint" class="ghost" type="button">提示</button>
+        <button id="restart" class="ghost" type="button">重来</button>
+      </div>
+    </header>
+
+    <section class="game-layout">
+      <main class="board-panel">
+        <section class="chain-panel" aria-label="成语链">
+          <div id="chain" class="chain"></div>
+          <div id="rungs" class="rungs"></div>
+        </section>
+
+        <section class="bank-panel">
+          <div class="section-heading">
+            <p class="label">字池</p>
+            <span id="bank-label">0 块未用</span>
+          </div>
+          <div id="bank" class="bank" aria-label="可选字块"></div>
+        </section>
+
+        <section class="clue-panel">
+          <div class="section-heading">
+            <p class="label">释义</p>
+            <span>先找两句共享的字</span>
+          </div>
+          <div id="clues" class="clues"></div>
+        </section>
+      </main>
+
+      <aside class="side-panel">
+        <section class="panel-block">
+          <p class="label">怎么玩</p>
+          <p class="tip">把字块放回虚线格。每条成语四字，下一句的第一个字就是上一句的最后一个字。</p>
+        </section>
+        <section class="panel-block">
+          <p class="label">当前关</p>
+          <div id="level-title" class="level-title">一心一意</div>
+          <p id="level-hint" class="level-hint">先看两句的首尾字，共享字只需要一块。</p>
+        </section>
+        <section class="panel-block">
+          <p class="label">跳关</p>
+          <div id="level-grid" class="level-grid"></div>
+        </section>
+        <section class="panel-block">
+          <p class="label">小提示</p>
+          <p class="tip">共享方格同时属于前后两条成语。先处理交叉处，通常比按顺序填更快。</p>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <section id="result" class="overlay is-hidden">
+    <div class="result-panel">
+      <p class="kicker">链条完成</p>
+      <h2 id="result-title">织好了</h2>
+      <p id="result-text"></p>
+      <div class="result-actions">
+        <button id="result-next" class="primary" type="button">下一关</button>
+        <button id="result-retry" class="ghost" type="button">重来</button>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="./src/game.js"></script>
+</body>
+</html>

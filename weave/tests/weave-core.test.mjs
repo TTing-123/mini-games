@@ -1,0 +1,140 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  PUZZLES,
+  createState,
+  entryStatus,
+  getPuzzleCount,
+  isSolved,
+  nextHint,
+  placeTile,
+  takeTile,
+  tileAt
+} from '../src/weave-core.js';
+
+function solveLevel(index) {
+  let state = createState(index);
+  const puzzle = PUZZLES[index];
+  for (const position of puzzle.blanks) {
+    const wanted = puzzle.solution[position];
+    const tile = state.tiles.find((item) => item.at === null && item.char === wanted);
+    state = placeTile(state, tile.tileId, position);
+  }
+  return state;
+}
+
+test('there are enough handwritten levels', () => {
+  assert.ok(getPuzzleCount() >= 20, '关卡数至少 20，当前 ' + getPuzzleCount());
+});
+
+test('every adjacent idiom shares its end and next first character', () => {
+  for (const puzzle of PUZZLES) {
+    for (let i = 0; i < puzzle.entries.length - 1; i += 1) {
+      assert.equal(puzzle.entries[i].answer.at(-1), puzzle.entries[i + 1].answer[0], puzzle.title);
+    }
+  }
+});
+
+test('answers and clues do not repeat across levels', () => {
+  const answers = new Set();
+  const clues = new Set();
+  for (const puzzle of PUZZLES) {
+    for (const entry of puzzle.entries) {
+      assert.ok(!answers.has(entry.answer), entry.answer);
+      assert.ok(!clues.has(entry.clue), entry.clue);
+      answers.add(entry.answer);
+      clues.add(entry.clue);
+    }
+  }
+});
+
+test('the bank contains every missing character', () => {
+  for (const puzzle of PUZZLES) {
+    const bank = puzzle.bank.slice();
+    for (const position of puzzle.blanks) {
+      const at = bank.indexOf(puzzle.solution[position]);
+      assert.notEqual(at, -1, `${puzzle.title} 缺少 ${puzzle.solution[position]}`);
+      bank.splice(at, 1);
+    }
+  }
+});
+
+test('every level can be completed by placing the correct tiles', () => {
+  for (let index = 0; index < getPuzzleCount(); index += 1) {
+    const state = solveLevel(index);
+    assert.equal(isSolved(state), true, PUZZLES[index].title);
+    assert.equal(state.status, 'won');
+  }
+});
+
+test('a wrong character does not complete the level', () => {
+  const puzzle = PUZZLES[0];
+  const position = puzzle.blanks[0];
+  let state = createState(0);
+  const wrong = state.tiles.find((tile) => tile.char !== puzzle.solution[position]);
+  state = placeTile(state, wrong.tileId, position);
+  assert.equal(isSolved(state), false);
+  assert.notEqual(tileAt(state, position).char, puzzle.solution[position]);
+});
+
+test('a placed tile can be moved to another blank', () => {
+  const puzzle = PUZZLES[1];
+  let state = createState(1);
+  const first = puzzle.blanks[0];
+  const tile = state.tiles.find((item) => item.char === puzzle.solution[first]);
+  state = placeTile(state, tile.tileId, first);
+  const second = puzzle.blanks[1];
+  state = placeTile(state, tile.tileId, second);
+  assert.equal(state.placements[first], null);
+  assert.equal(state.placements[second], tile.tileId);
+});
+
+test('placing onto an occupied blank sends the old tile back to the bank', () => {
+  const puzzle = PUZZLES[1];
+  let state = createState(1);
+  const position = puzzle.blanks[0];
+  const [a, b] = state.tiles.filter((tile) => tile.char !== puzzle.solution[position]).slice(0, 2);
+  state = placeTile(state, a.tileId, position);
+  state = placeTile(state, b.tileId, position);
+  assert.equal(state.placements[position], b.tileId);
+  assert.equal(state.tiles[a.tileId].at, null);
+});
+
+test('taking a tile back clears the cell', () => {
+  const puzzle = PUZZLES[0];
+  const position = puzzle.blanks[0];
+  let state = createState(0);
+  const tile = state.tiles.find((item) => item.char === puzzle.solution[position]);
+  state = placeTile(state, tile.tileId, position);
+  state = takeTile(state, position);
+  assert.equal(state.placements[position], null);
+  assert.equal(state.tiles[tile.tileId].at, null);
+});
+
+test('entry status tracks empty and correct lines', () => {
+  const puzzle = PUZZLES[0];
+  const entryIndex = puzzle.entries.findIndex((entry) => {
+    const cells = Array.from({ length: entry.length }, (_, offset) => entry.start + offset);
+    return cells.some((position) => puzzle.blanks.includes(position));
+  });
+  const entry = puzzle.entries[entryIndex];
+  let state = createState(0);
+  assert.equal(entryStatus(state, entryIndex), 'empty');
+  const cells = Array.from({ length: entry.length }, (_, offset) => entry.start + offset);
+  for (const position of cells.filter((position) => puzzle.blanks.includes(position))) {
+    const tile = state.tiles.find((item) => item.at === null && item.char === puzzle.solution[position]);
+    state = placeTile(state, tile.tileId, position);
+  }
+  assert.equal(entryStatus(state, entryIndex), 'correct');
+});
+
+test('the hint always names a correct tile for a missing character', () => {
+  for (let index = 0; index < getPuzzleCount(); index += 1) {
+    const puzzle = PUZZLES[index];
+    const state = createState(index);
+    const hint = nextHint(state);
+    assert.ok(hint, puzzle.title);
+    assert.equal(state.tiles[hint.tileId].char, puzzle.solution[hint.position]);
+    assert.ok(puzzle.blanks.includes(hint.position));
+  }
+});

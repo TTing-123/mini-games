@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run game tests
-        run: node --test pulse/tests/*.test.mjs casebook/tests/*.test.mjs nono/tests/*.test.mjs tilt/tests/*.test.mjs topple/tests/*.test.mjs
+        run: node --test pulse/tests/*.test.mjs casebook/tests/*.test.mjs nono/tests/*.test.mjs tilt/tests/*.test.mjs topple/tests/*.test.mjs weave/tests/*.test.mjs
       - name: Stage static site
         run: |
           mkdir -p _site/pulse
@@ -42,6 +42,9 @@ jobs:
           mkdir -p _site/topple
           cp topple/index.html topple/favicon.svg _site/topple/
           cp -R topple/src _site/topple/src
+          mkdir -p _site/weave
+          cp weave/index.html weave/favicon.svg _site/weave/
+          cp -R weave/src _site/weave/src
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

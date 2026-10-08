@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#11100d"/>
+  <g font-family="serif" font-size="20" text-anchor="middle">
+    <rect x="8" y="10" width="20" height="20" rx="4" fill="#d95f4b"/>
+    <text x="18" y="26" fill="#fff7e9">一</text>
+    <rect x="36" y="10" width="20" height="20" rx="4" fill="#2f7770"/>
+    <text x="46" y="26" fill="#fff7e9">心</text>
+    <rect x="22" y="34" width="20" height="20" rx="4" fill="#c59a38"/>
+    <text x="32" y="50" fill="#fff7e9">意</text>
+  </g>
+</svg>
