@@ -82,10 +82,14 @@ http://localhost:8080/topple/?debug=1
 node topple/tools/level-audit.mjs                  # 逐关体检：可解、最少拆除、解条数、开局分支、难度分、布局与拆法查重
 node topple/tools/level-forge.mjs <结构文件或目录> [次数]
                                                    # 反查每个可达落点需要几次拆除、有几条最短解、拆除的列偏移
+node topple/tools/build-levels.mjs                 # 由 structures/*.txt + 目标表生成 src/levels.js
+node topple/tools/settle-levels.mjs                # 把关卡起点写成「开局就稳定」的状态
 node topple/tools/browser-check.cjs                # 桌面 + 手机端到端检查
 ```
 
-结构文件就是地图（`#` 砖、`S` 钢砖、`G` 金块、`.` 空），不需要写目标格——目标格由锻造工具挑。
+关卡的数据源是 `tools/structures/*.txt`（手画的结构）加 `build-levels.mjs` 里的目标表：改关卡就是改这两处，再跑 `build-levels` → `settle-levels` → `level-audit`。
+
+结构文件就是地图（`#` 砖、`S` 钢砖、`G` 金块、`.` 空），不用写目标格——目标格由锻造工具挑出可达落点后再定。
 
 ## 测试
 
