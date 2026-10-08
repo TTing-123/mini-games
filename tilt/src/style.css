@@ -161,7 +161,18 @@ button { font-family: inherit; cursor: pointer; }
 .level-title { font-size: 19px; letter-spacing: .08em; }
 .level-hint { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
 
-.level-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 7px; }
+#color-note.is-hidden { display: none; }
+.level-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+  gap: 6px;
+  max-height: 208px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+.level-grid::-webkit-scrollbar { width: 6px; }
+.level-grid::-webkit-scrollbar-thumb { background: rgba(125, 200, 232, .28); border-radius: 999px; }
 .level-button {
   aspect-ratio: 1 / 1;
   border: 1px solid var(--line);

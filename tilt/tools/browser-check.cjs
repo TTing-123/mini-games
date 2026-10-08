@@ -25,7 +25,8 @@ const label = async (page, selector) => (await page.textContent(selector)).trim(
   await page.goto(BASE, { waitUntil: 'load' });
   await page.waitForTimeout(600);
 
-  record('loads level 0', (await label(page, '#level-label')) === '0 / 15', await label(page, '#level-label'));
+  record('loads level 0', (await label(page, '#level-label')) === '0 / 51', await label(page, '#level-label'));
+  record('level grid lists all 52 levels', (await page.locator('.level-grid .level-button').count()) === 52);
   record('title shown', (await label(page, '#level-title')) === '一步');
   record('favicon linked', (await page.getAttribute('link[rel="icon"]', 'href')) === './favicon.svg');
 
@@ -37,7 +38,7 @@ const label = async (page, selector) => (await page.textContent(selector)).trim(
 
   await page.click('#result-next');
   await page.waitForTimeout(250);
-  record('next level loads', (await label(page, '#level-label')) === '1 / 15');
+  record('next level loads', (await label(page, '#level-label')) === '1 / 51');
   record('moves reset', (await label(page, '#move-label')) === '0');
 
   await page.click('#hint');
@@ -46,7 +47,7 @@ const label = async (page, selector) => (await page.textContent(selector)).trim(
 
   await page.click('.level-grid .level-button:nth-child(4)');
   await page.waitForTimeout(250);
-  record('level grid jumps to 3', (await label(page, '#level-label')) === '3 / 15');
+  record('level grid jumps to 3', (await label(page, '#level-label')) === '3 / 51');
 
   const box = await page.locator('#board').boundingBox();
   await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
@@ -56,6 +57,12 @@ const label = async (page, selector) => (await page.textContent(selector)).trim(
   await page.waitForTimeout(500);
   record('swipe tilts the board', (await label(page, '#move-label')) === '1', await label(page, '#move-label'));
   await page.screenshot({ path: path.join(OUT, 'desktop-level3.png') });
+
+  await page.locator('.level-grid .level-button').nth(31).click();
+  await page.waitForTimeout(250);
+  record('colour chapter loads', (await label(page, '#level-label')) === '31 / 51', await label(page, '#level-label'));
+  record('colour rule appears in the panel', await page.isVisible('#color-note'));
+  await page.screenshot({ path: path.join(OUT, 'desktop-colour.png') });
 
   await page.click('#restart');
   await page.waitForTimeout(200);

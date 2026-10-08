@@ -2,6 +2,8 @@ import {
   FLOOR,
   HOLE,
   WALL,
+  blockColorAt,
+  hasColors,
   arrowFor,
   bestMove,
   createState,
@@ -26,6 +28,7 @@ const resultText = document.querySelector('#result-text');
 const resultNext = document.querySelector('#result-next');
 const resultRetry = document.querySelector('#result-retry');
 const padButtons = Array.from(document.querySelectorAll('.pad-button'));
+const colorNote = document.querySelector('#color-note');
 
 const DEBUG = new URLSearchParams(location.search).has('debug');
 const BEST_KEY = 'tilt-best';
@@ -34,6 +37,15 @@ const SLIDE_MS = 150;
 const SINK_MS = 240;
 const HINT_MS = 2400;
 const SWIPE_MIN = 26;
+// 0 = 无色。带色方块和同色凹槽共用一套配色。
+const PALETTE = [
+  { light: '#a9e6ff', mid: '#63c6f5', deep: '#2f7fb5', glow: 'rgba(99, 198, 245, .5)', ring: '#f2b23e' },
+  { light: '#ffc2c9', mid: '#ff7b8a', deep: '#c8445a', glow: 'rgba(255, 123, 138, .5)', ring: '#ff7b8a' },
+  { light: '#c8f7d4', mid: '#7ee787', deep: '#33a05a', glow: 'rgba(126, 231, 135, .5)', ring: '#7ee787' },
+  { light: '#ded0ff', mid: '#b98cff', deep: '#6f45c9', glow: 'rgba(185, 140, 255, .5)', ring: '#b98cff' },
+  { light: '#ffe0b8', mid: '#ffb15c', deep: '#cf7a1f', glow: 'rgba(255, 177, 92, .5)', ring: '#ffb15c' }
+];
+const paletteOf = (color) => PALETTE[color] ?? PALETTE[0];
 
 let state = createState(0);
 let moves = 0;
@@ -149,42 +161,45 @@ function drawFloor(x, y, size, gap) {
   ctx.stroke();
 }
 
-function drawHole(x, y, size, gap, time) {
+function drawHole(x, y, size, gap, time, color = 0) {
   const pulse = 0.5 + 0.5 * Math.sin(time / 420);
   const inset = size * 0.16;
   const side = size - inset * 2;
   ctx.save();
+  const palette = paletteOf(color);
   roundRect(x + inset, y + inset, side, side, size * 0.14);
-  ctx.fillStyle = 'rgba(90, 57, 12, .5)';
+  ctx.fillStyle = 'rgba(90, 57, 12, .35)';
   ctx.fill();
   ctx.lineWidth = Math.max(2, size * 0.06);
-  ctx.strokeStyle = 'rgba(242, 178, 62, ' + (0.62 + pulse * 0.38).toFixed(3) + ')';
+  ctx.strokeStyle = palette.ring + '';
+  ctx.globalAlpha = (0.62 + pulse * 0.38);
   ctx.setLineDash([size * 0.16, size * 0.1]);
   ctx.lineDashOffset = -time / 26;
   ctx.stroke();
   ctx.setLineDash([]);
   ctx.globalAlpha = 0.32 + pulse * 0.26;
-  ctx.strokeStyle = 'rgba(255, 219, 140, .9)';
+  ctx.strokeStyle = palette.light;
   ctx.lineWidth = 1.5;
   roundRect(x + inset + size * 0.14, y + inset + size * 0.14, side - size * 0.28, side - size * 0.28, size * 0.1);
   ctx.stroke();
   ctx.restore();
 }
 
-function drawBlock(cx, cy, size, gap, scale = 1, alpha = 1) {
+function drawBlock(cx, cy, size, gap, color = 0, scale = 1, alpha = 1) {
   const side = (size - gap * 2) * scale;
   const x = cx - side / 2;
   const y = cy - side / 2;
   const radius = side * 0.24;
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.shadowColor = 'rgba(99, 198, 245, .5)';
+  const palette = paletteOf(color);
+  ctx.shadowColor = palette.glow;
   ctx.shadowBlur = size * 0.34 * scale;
   roundRect(x, y, side, side, radius);
   const grad = ctx.createLinearGradient(x, y, x, y + side);
-  grad.addColorStop(0, '#a9e6ff');
-  grad.addColorStop(0.55, '#63c6f5');
-  grad.addColorStop(1, '#2f7fb5');
+  grad.addColorStop(0, palette.light);
+  grad.addColorStop(0.55, palette.mid);
+  grad.addColorStop(1, palette.deep);
   ctx.fillStyle = grad;
   ctx.fill();
   ctx.shadowBlur = 0;
@@ -251,7 +266,7 @@ function draw(time) {
       if (kind === WALL) drawWall(x, y, m.cell, gap);
       else {
         drawFloor(x, y, m.cell, gap);
-        if (kind === HOLE) drawHole(x, y, m.cell, gap, time);
+        if (kind === HOLE) drawHole(x, y, m.cell, gap, time, state.holeColors[row][col]);
       }
     }
   }
@@ -274,11 +289,11 @@ function draw(time) {
         scale = 1 - sink * 0.82;
         alpha = 1 - sink;
       }
-      drawBlock(cx, cy, m.cell, gap, scale, alpha);
+      drawBlock(cx, cy, m.cell, gap, entry.color, scale, alpha);
     }
   } else {
     for (const [row, col] of state.blocks) {
-      drawBlock(m.ox + (col + 0.5) * m.cell, m.oy + (row + 0.5) * m.cell, m.cell, gap);
+      drawBlock(m.ox + (col + 0.5) * m.cell, m.oy + (row + 0.5) * m.cell, m.cell, gap, blockColorAt(state, row, col));
     }
   }
 
@@ -316,6 +331,7 @@ function tryTilt(dir) {
     entries: plan.moves.map((move) => ({
       from: move.from,
       to: move.to,
+      color: move.color,
       sink: plan.sunk.some((spot) => spot[0] === move.to[0] && spot[1] === move.to[1])
     }))
   };
@@ -358,6 +374,7 @@ function loadLevel(index) {
   const path = solve(state);
   minMoves = path ? path.length : 0;
   hintDir = state.tutorial ? bestMove(state) : null;
+  colorNote.classList.toggle('is-hidden', !hasColors(state));
   result.classList.add('is-hidden');
   renderLevelGrid();
   updateHud();
