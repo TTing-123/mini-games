@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run game tests
-        run: node --test pulse/tests/*.test.mjs casebook/tests/*.test.mjs nono/tests/*.test.mjs tilt/tests/*.test.mjs
+        run: node --test pulse/tests/*.test.mjs casebook/tests/*.test.mjs nono/tests/*.test.mjs tilt/tests/*.test.mjs topple/tests/*.test.mjs
       - name: Stage static site
         run: |
           mkdir -p _site/pulse
@@ -39,6 +39,9 @@ jobs:
           mkdir -p _site/tilt
           cp tilt/index.html tilt/favicon.svg _site/tilt/
           cp -R tilt/src _site/tilt/src
+          mkdir -p _site/topple
+          cp topple/index.html topple/favicon.svg _site/topple/
+          cp -R topple/src _site/topple/src
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

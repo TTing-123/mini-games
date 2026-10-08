@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0b0e13" />
+  <meta name="description" content="TOPPLE 拆塔：方块只连着地面才稳，拆掉关键的一块，整块结构就会塌下来，让金块落到目标格。" />
+  <title>TOPPLE — 拆塔</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="TOPPLE — 拆塔" />
+  <meta property="og:description" content="拆掉支撑，让整块结构塌下来，把金块送到目标格。" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <p class="kicker">COLLAPSE / SUPPORT PUZZLE</p>
+        <h1>TOPPLE <span>拆塔</span></h1>
+      </div>
+      <div class="topbar-right">
+        <div class="stat-chip"><span>关卡</span><b id="level-label">0 / 0</b></div>
+        <div class="stat-chip"><span>剩余拆除</span><b id="left-label">0</b></div>
+        <button id="hint" class="ghost" type="button">提示</button>
+        <button id="restart" class="ghost" type="button">重来</button>
+        <button id="sound" class="ghost icon" type="button" aria-label="音效开关">♪</button>
+      </div>
+    </header>
+
+    <section class="game-layout">
+      <div class="board-wrap">
+        <canvas id="board" aria-label="塔"></canvas>
+        <p class="board-note">点一块砖把它拆掉：<b>只连着地面才稳</b>，断开的部分会整块塌下来。</p>
+      </div>
+
+      <aside class="side-panel">
+        <section class="panel-block">
+          <p class="label">怎么玩</p>
+          <p class="tip">砖块只要还<b>连着地面</b>（上下左右连成一串）就稳；一旦断开，那一整坨会一起坠落，落到别的砖或地面上。</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">目标</p>
+          <p class="tip">让<b>金块</b>停在闪烁的目标格上。拆除次数用完还没到位就算失败。</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">当前关</p>
+          <div id="level-title" class="level-title">拆一根</div>
+          <p id="level-hint" class="level-hint">金块横挂在柱子上</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">跳关</p>
+          <div id="level-grid" class="level-grid"></div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <section id="result" class="overlay is-hidden">
+    <div class="result-panel">
+      <p id="result-kicker" class="kicker">金块到位</p>
+      <h2 id="result-title">拆一根</h2>
+      <p id="result-text"></p>
+      <div class="result-actions">
+        <button id="result-next" class="primary" type="button">下一关</button>
+        <button id="result-retry" class="ghost" type="button">重来</button>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="./src/game.js"></script>
+</body>
+</html>
