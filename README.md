@@ -15,6 +15,11 @@
 
 每个游戏都有自己的 README、测试和开发工具，放在各自的目录里。
 
+## 开发规范
+
+- 通用规范（任何游戏项目通用，Claude Code / Codex 共用）：[`GAME-DEV.md`](./GAME-DEV.md)；同一份内容也装成了技能 `game-dev-standard`
+- 本仓库硬性红线：[`AGENTS.md`](./AGENTS.md)；Claude Code 另见 [`CLAUDE.md`](./CLAUDE.md)
+
 ## 本地运行
 
 在仓库根目录执行：
