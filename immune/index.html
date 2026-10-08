@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a0d12" />
+  <meta name="description" content="IMMUNE 免疫：病毒每回合扩散一格，你每回合投一针，让免疫区抢在病毒前盖住所有人。" />
+  <title>IMMUNE — 免疫</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="IMMUNE — 免疫" />
+  <meta property="og:description" content="两波同时扩散，谁先到就是谁的。抢在病毒前盖住所有人。" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <p class="kicker">CONTAINMENT / SPREAD RACE</p>
+        <h1>IMMUNE <span>免疫</span></h1>
+      </div>
+      <div class="topbar-right">
+        <div class="stat-chip"><span>关卡</span><b id="level-label">0 / 0</b></div>
+        <div class="stat-chip"><span>回合</span><b id="turn-label">0</b></div>
+        <div class="stat-chip"><span>疫苗</span><b id="dose-label">0</b></div>
+        <button id="hint" class="ghost" type="button">提示</button>
+        <button id="restart" class="ghost" type="button">重来</button>
+        <button id="sound" class="ghost icon" type="button" aria-label="音效开关">♪</button>
+      </div>
+    </header>
+
+    <section class="game-layout">
+      <div class="board-wrap">
+        <canvas id="board" aria-label="封锁棋盘"></canvas>
+        <div class="controls">
+          <button id="step" class="primary" type="button">推进一回合</button>
+          <p class="board-note">点<b>投放点</b>投一针（每回合最多一针），再点推进：病毒先扩散，免疫随后跟上。</p>
+        </div>
+      </div>
+
+      <aside class="side-panel">
+        <section class="panel-block">
+          <p class="label">怎么玩</p>
+          <p class="tip">病毒每回合向四邻扩散一格。<b>谁先占住格子，格子就归谁</b>——病毒先动，所以你必须提前一步。</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">目标</p>
+          <p class="tip">让免疫区盖住<b>所有人</b>。任何一个被病毒碰到就失败。</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">当前关</p>
+          <div id="level-title" class="level-title">抢先</div>
+          <p id="level-hint" class="level-hint">免疫要比病毒更早碰到人</p>
+        </section>
+
+        <section class="panel-block">
+          <p class="label">跳关</p>
+          <div id="level-grid" class="level-grid"></div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <section id="result" class="overlay is-hidden">
+    <div class="result-panel">
+      <p id="result-kicker" class="kicker">全部安全</p>
+      <h2 id="result-title">抢先</h2>
+      <p id="result-text"></p>
+      <div class="result-actions">
+        <button id="result-next" class="primary" type="button">下一关</button>
+        <button id="result-retry" class="ghost" type="button">重来</button>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="./src/game.js"></script>
+</body>
+</html>
