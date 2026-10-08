@@ -59,6 +59,18 @@ test('the bank contains every missing character', () => {
   }
 });
 
+test('the bank order is genuinely shuffled', () => {
+  const rotated = (a, b) => a.length === b.length && (a + a).includes(b);
+  for (const puzzle of PUZZLES) {
+    const required = puzzle.blanks.map((position) => puzzle.solution[position]).join('');
+    const bank = puzzle.bank.join('');
+    if (puzzle.bank.length === required.length) {
+      assert.equal(rotated(bank, required), false, `${puzzle.title} 的字池仍按答案顺序旋转`);
+    } else {
+      assert.notEqual(puzzle.bank.slice(0, required.length).join(''), required, `${puzzle.title} 的字池把答案排在了前面`);
+    }
+  }
+});
 test('every level can be completed by placing the correct tiles', () => {
   for (let index = 0; index < getPuzzleCount(); index += 1) {
     const state = solveLevel(index);

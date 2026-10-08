@@ -218,8 +218,14 @@ const chains = [
 ];
 
 function seeded(seed) {
-  let value = (seed + 1) * 9301 + 49297;
-  return () => { value = (value * 233280 + 9301) % 233280; return value / 233280; };
+  // mulberry32：旧实现里乘数对模数取模后恒为 0，实际只返回固定值，字池从未真正打乱。
+  let value = (seed + 0x6D2B79F5) >>> 0;
+  return () => {
+    value = (value + 0x6D2B79F5) >>> 0;
+    let mixed = Math.imul(value ^ (value >>> 15), value | 1);
+    mixed ^= mixed + Math.imul(mixed ^ (mixed >>> 7), mixed | 61);
+    return ((mixed ^ (mixed >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
 function validate() {
@@ -278,6 +284,22 @@ function shuffled(items, seed) {
   return result;
 }
 
+function tooOrdered(bank, required) {
+  const bankText = bank.join('');
+  if (bank.length === required.length) return (bankText + bankText).includes(required);
+  return bank.slice(0, required.length).join('') === required;
+}
+
+function shuffledBank(items, required, seed) {
+  let bank = shuffled(items, seed);
+  let attempt = 1;
+  while (tooOrdered(bank, required) && attempt < 20) {
+    bank = shuffled(items, seed + attempt * 997);
+    attempt += 1;
+  }
+  return bank;
+}
+
 function build() {
   validate();
   const levels = chains.map((level, index) => {
@@ -285,7 +307,8 @@ function build() {
     const mask = maskFor(solution, level.idioms, level.blankCount, index);
     const blanks = [...mask].flatMap((flag, position) => flag === '1' ? [position] : []);
     const decoys = pickDecoys(solution, level.decoyCount, index);
-    const bank = shuffled(blanks.map((position) => solution[position]).concat(decoys), index + 101);
+    const required = blanks.map((position) => solution[position]).join('');
+    const bank = shuffledBank(blanks.map((position) => solution[position]).concat(decoys), required, index + 101);
     return {
       title: level.title,
       hint: level.hint,
