@@ -149,8 +149,8 @@ function renderChain() {
   const puzzle = PUZZLES[state.puzzleIndex];
   chain.innerHTML = '';
   chain.classList.toggle('is-solved', state.status === 'won');
-  chain.classList.toggle('is-grid', puzzle.kind === 'cross');
-  if (puzzle.kind === 'cross') renderCrossBoard(puzzle);
+  chain.classList.toggle('is-grid', puzzle.kind !== 'chain');
+  if (puzzle.kind !== 'chain') renderCrossBoard(puzzle);
   else renderChainBoard(puzzle);
 }
 function renderBank() {
@@ -179,10 +179,11 @@ function renderClues() {
     const status = entryStatus(state, entry.index);
     if (status === 'correct') card.classList.add('is-correct');
     if (status === 'wrong') card.classList.add('is-wrong');
+    if (entry.hiddenClue && status !== 'correct') card.classList.add('is-hidden');
     const number = document.createElement('b');
     number.textContent = String(entry.index + 1);
     const text = document.createElement('p');
-    text.textContent = entry.clue;
+    text.textContent = entry.hiddenClue && status !== 'correct' ? '链索：从共享字和相邻词句推断' : entry.clue;
     card.append(number, text);
     clues.append(card);
   });

@@ -24,7 +24,7 @@ function solveLevel(index) {
 }
 
 test('there are enough handwritten levels', () => {
-  assert.ok(getPuzzleCount() >= 20, '关卡数至少 20，当前 ' + getPuzzleCount());
+  assert.ok(getPuzzleCount() >= 50, '关卡数至少 50，当前 ' + getPuzzleCount());
 });
 
 test('every line of idioms shares its end and next first character', () => {
@@ -43,13 +43,13 @@ test('every line of idioms shares its end and next first character', () => {
   }
 });
 
-test('answers and clues do not repeat across levels', () => {
-  const answers = new Set();
-  const clues = new Set();
+test('answers and clues do not repeat inside one level', () => {
   for (const puzzle of PUZZLES) {
+    const answers = new Set();
+    const clues = new Set();
     for (const entry of puzzle.entries) {
-      assert.ok(!answers.has(entry.answer), entry.answer);
-      assert.ok(!clues.has(entry.clue), entry.clue);
+      assert.ok(!answers.has(entry.answer), `${puzzle.title}: ${entry.answer}`);
+      assert.ok(!clues.has(entry.clue), `${puzzle.title}: ${entry.clue}`);
       answers.add(entry.answer);
       clues.add(entry.clue);
     }
@@ -155,6 +155,17 @@ test('cross levels use two lines and one shared cell', () => {
   assert.ok([...shared.values()].some((count) => count > 1), '交叉关要有一个共享格');
 });
 
+test('net levels use three lines and at least two shared cells', () => {
+  const net = PUZZLES.find((puzzle) => puzzle.kind === 'net');
+  assert.ok(net, '至少要有一个织网关');
+  assert.equal(new Set(net.entries.map((entry) => entry.line)).size, 3);
+  const shared = new Map();
+  for (const entry of net.entries) {
+    for (const cell of entry.cells) shared.set(cell, (shared.get(cell) || 0) + 1);
+  }
+  assert.ok([...shared.values()].filter((count) => count > 1).length >= 2, '织网关至少要有两个共享格');
+  assert.ok(PUZZLES.some((puzzle) => puzzle.entries.some((entry) => entry.hiddenClue)), '至少有隐藏释义');
+});
 test('the hint always names a correct tile for a missing character', () => {
   for (let index = 0; index < getPuzzleCount(); index += 1) {
     const puzzle = PUZZLES[index];

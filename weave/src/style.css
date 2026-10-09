@@ -104,3 +104,6 @@ h1 span { color: var(--paper); font-family: var(--serif); font-weight: 500; }
   .chain.is-grid { gap: 3px; max-width: 100%; }
   .entry-badge { top: -5px; left: -5px; min-width: 15px; height: 15px; font-size: 8px; box-shadow: 0 0 0 2px var(--paper); }
 }
+
+.clue.is-hidden p { color: #8f8a7e; letter-spacing: .04em; }
+.clue.is-hidden { border-style: dashed; }

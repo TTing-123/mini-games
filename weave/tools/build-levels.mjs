@@ -395,22 +395,245 @@ function buildCross(level, index) {
   };
 }
 
+function buildNet(level, index) {
+  const horizontal = combineIdioms(level.horizontal);
+  const verticals = level.verticals.map((vertical) => combineIdioms(vertical.idioms));
+  const baseRow = Math.max(...level.verticals.map((vertical) => vertical.crossV));
+  const grid = new Map();
+  const put = (row, col, char) => {
+    const key = row + ',' + col;
+    const current = grid.get(key);
+    if (current && current !== char) throw new Error(`${level.title}: 交叉位置 ${key} 有两个字`);
+    grid.set(key, char);
+  };
+  for (let i = 0; i < horizontal.length; i += 1) put(baseRow, i, horizontal[i]);
+  level.verticals.forEach((vertical, verticalIndex) => {
+    for (let i = 0; i < verticals[verticalIndex].length; i += 1) {
+      put(baseRow - vertical.crossV + i, vertical.crossH, verticals[verticalIndex][i]);
+    }
+  });
+  const coords = [...grid.entries()].map(([key, char]) => {
+    const [row, col] = key.split(',').map(Number);
+    return { row, col, char };
+  }).sort((a, b) => a.row - b.row || a.col - b.col);
+  const positionByKey = new Map(coords.map((cell, position) => [cell.row + ',' + cell.col, position]));
+  const cells = coords.map(({ row, col, char }) => ({ row, col, char }));
+  const solution = cells.map((cell) => cell.char).join('');
+  const hidden = new Set((level.hidden ?? []).map(([lineIndex, entryIndex]) => lineIndex + ',' + entryIndex));
+
+  const horizontalEntries = (() => {
+    let cursor = 0;
+    return level.horizontal.map(([answer, clue], entryIndex) => {
+      const length = [...answer].length;
+      const start = cursor;
+      const cellIds = Array.from({ length }, (_, offset) => positionByKey.get(baseRow + ',' + (start + offset)));
+      cursor += length - 1;
+      return { answer, clue, line: 0, start: cellIds[0], cells: cellIds, hiddenClue: hidden.has('0,' + entryIndex) };
+    });
+  })();
+  const verticalEntries = level.verticals.flatMap((vertical, verticalIndex) => {
+    let cursor = 0;
+    return vertical.idioms.map(([answer, clue], entryIndex) => {
+      const length = [...answer].length;
+      const start = cursor;
+      const rowBase = baseRow - vertical.crossV;
+      const cellIds = Array.from({ length }, (_, offset) => positionByKey.get((rowBase + start + offset) + ',' + vertical.crossH));
+      cursor += length - 1;
+      const line = verticalIndex + 1;
+      return { answer, clue, line, start: cellIds[0], cells: cellIds, hiddenClue: hidden.has(line + ',' + entryIndex) };
+    });
+  });
+  const idioms = horizontalEntries.concat(verticalEntries);
+  const mask = maskForCells(cells, idioms, level.blankCount, index);
+  const blanks = [...mask].flatMap((flag, position) => flag === '1' ? [position] : []);
+  return {
+    kind: 'net',
+    title: level.title,
+    hint: level.hint,
+    solution,
+    mask,
+    bank: bankFor(solution, blanks, level.decoyCount, index + 900),
+    width: Math.max(...cells.map((cell) => cell.col)) + 1,
+    height: Math.max(...cells.map((cell) => cell.row)) + 1,
+    cells: cells.map(({ row, col }) => ({ row, col })),
+    idioms
+  };
+}
+function sourceGroups() {
+  const groups = [];
+  chains.forEach((level, index) => groups.push({ key: 'chain-' + index, title: level.title, idioms: level.idioms }));
+  CROSS_LEVELS.forEach((level, index) => {
+    groups.push({ key: 'cross-h-' + index, title: level.title + '·横', idioms: level.horizontal });
+    groups.push({ key: 'cross-v-' + index, title: level.title + '·竖', idioms: level.vertical });
+  });
+  return groups;
+}
+
+function answerSet(group) {
+  return new Set(group.idioms.map(([answer]) => answer));
+}
+
+function groupsDisjoint(a, b) {
+  const first = answerSet(a);
+  return b.idioms.every(([answer]) => !first.has(answer));
+}
+
+function findMatches(a, b, usedCols = []) {
+  const left = combineIdioms(a.idioms);
+  const right = combineIdioms(b.idioms);
+  const matches = [];
+  for (let i = 0; i < left.length; i += 1) {
+    if (usedCols.some((col) => Math.abs(col - i) < 4)) continue;
+    for (let j = 0; j < right.length; j += 1) {
+      if (left[i] === right[j]) matches.push([i, j]);
+    }
+  }
+  return matches;
+}
+
+function signatureOf(level) {
+  return level.idioms.map((entry) => entry.answer).join('>');
+}
+
+function makeCrossSource(horizontal, vertical, crossH, crossV, seed) {
+  const probe = buildCross({ title: 'probe', hint: '', horizontal: horizontal.idioms, vertical: vertical.idioms, crossH, crossV, blankCount: 0, decoyCount: 0 }, seed);
+  const maxBlank = probe.cells.length - probe.idioms.length;
+  return {
+    title: '织网·' + horizontal.title,
+    hint: `${vertical.title} 这一族也来交叉：先找共同的交点字。`,
+    horizontal: horizontal.idioms,
+    vertical: vertical.idioms,
+    crossH,
+    crossV,
+    blankCount: Math.min(12 + (seed % 6), maxBlank),
+    decoyCount: 5 + (seed % 6),
+    hidden: seed % 4 === 0 ? [[1, 1]] : []
+  };
+}
+
+function makeNetSource(horizontal, verticalA, verticalB, matchA, matchB, seed) {
+  const source = {
+    title: '交织·' + horizontal.title,
+    hint: '三条链一起织网：先把两条竖链的共享字定下来。',
+    horizontal: horizontal.idioms,
+    verticals: [
+      { idioms: verticalA.idioms, crossH: matchA[0], crossV: matchA[1] },
+      { idioms: verticalB.idioms, crossH: matchB[0], crossV: matchB[1] }
+    ],
+    blankCount: 0,
+    decoyCount: 0,
+    hidden: seed % 3 === 0 ? [[1, 1]] : seed % 3 === 1 ? [[2, 1]] : [[1, 1], [2, 1]]
+  };
+  const probe = buildNet(source, seed + 700);
+  const maxBlank = probe.cells.length - probe.idioms.length;
+  source.blankCount = Math.min(20 + (seed % 5), maxBlank);
+  source.decoyCount = 8 + (seed % 5);
+  return source;
+}
+
+function generateCrossSources(groups, count, used) {
+  const candidates = [];
+  const seen = new Map();
+  for (let i = 0; i < groups.length; i += 1) {
+    for (let j = 0; j < groups.length; j += 1) {
+      if (i === j || !groupsDisjoint(groups[i], groups[j])) continue;
+      const matches = findMatches(groups[i], groups[j]);
+      if (!matches.length) continue;
+      const match = matches[(i + j) % matches.length];
+      let source;
+      let built;
+      try {
+        source = makeCrossSource(groups[i], groups[j], match[0], match[1], i * 37 + j);
+        built = buildCross(source, 300 + i * 37 + j);
+      } catch (_) {
+        continue;
+      }
+      const signature = signatureOf(built);
+      if (used.has(signature) || seen.has(signature)) continue;
+      seen.set(signature, source);
+      candidates.push(source);
+    }
+  }
+  const picked = [];
+  for (let index = 0; index < count && index < candidates.length; index += 1) {
+    const pick = Math.floor(index * candidates.length / count);
+    picked.push(candidates[pick]);
+  }
+  for (const source of picked) used.add(signatureOf(buildCross(source, 0)));
+  return picked;
+}
+
+function generateNetSources(groups, count, used) {
+  const candidates = [];
+  const seen = new Map();
+  for (let i = 0; i < groups.length; i += 1) {
+    for (let j = 0; j < groups.length; j += 1) {
+      if (i === j || !groupsDisjoint(groups[i], groups[j])) continue;
+      const firstMatches = findMatches(groups[i], groups[j]);
+      if (!firstMatches.length) continue;
+      const first = firstMatches[(i + j) % firstMatches.length];
+      for (let k = 0; k < groups.length; k += 1) {
+        if (k === i || k === j || !groupsDisjoint(groups[i], groups[k]) || !groupsDisjoint(groups[j], groups[k])) continue;
+        const secondMatches = findMatches(groups[i], groups[k], [first[0]]);
+        if (!secondMatches.length) continue;
+        const second = secondMatches[(i + j + k) % secondMatches.length];
+        let source;
+        let built;
+        try {
+          source = makeNetSource(groups[i], groups[j], groups[k], first, second, i * 53 + j * 17 + k);
+          built = buildNet(source, 700 + i * 53 + j * 17 + k);
+        } catch (_) {
+          continue;
+        }
+        if (built.width > 22 || built.height > 22) continue;
+        const signature = signatureOf(built);
+        if (used.has(signature) || seen.has(signature)) continue;
+        seen.set(signature, source);
+        candidates.push(source);
+      }
+    }
+  }
+  const picked = [];
+  for (let index = 0; index < count && index < candidates.length; index += 1) {
+    const pick = Math.floor(index * candidates.length / count);
+    picked.push(candidates[pick]);
+  }
+  for (const source of picked) used.add(signatureOf(buildNet(source, 0)));
+  return picked;
+}
+function levelScore(level) {
+  const blanks = [...level.mask].filter((flag) => flag === '1').length;
+  const decoys = level.bank.length - blanks;
+  return blanks + decoys + (level.kind === 'net' ? 4 : level.kind === 'cross' ? 2 : 0);
+}
 function build() {
   validate();
   const LONG_CHAIN_INDEXES = [0, 1, 2, 3, 4, 5, 7, 8, 9, 11, 13, 15];
   const longLevels = LONG_CHAIN_INDEXES.map((chainIndex) => buildChain(chains[chainIndex], chainIndex));
-  const crossLevels = CROSS_LEVELS.map((level, offset) => buildCross(level, 100 + offset));
-  const levels = longLevels.concat(crossLevels);
+  const manualCrossLevels = CROSS_LEVELS.map((level, index) => buildCross(level, 100 + index));
+  const used = new Set(longLevels.concat(manualCrossLevels).map(signatureOf));
+  const groups = sourceGroups();
+  const generatedCrossSources = generateCrossSources(groups, 20, used);
+  const netSources = generateNetSources(groups, 10, used);
+  if (generatedCrossSources.length < 20 || netSources.length < 10) {
+    throw new Error(`高级关卡生成不足：交叉 ${generatedCrossSources.length}/20，织网 ${netSources.length}/10`);
+  }
+  const generatedCrossLevels = generatedCrossSources.map((level, index) => buildCross(level, 300 + index)).sort((a, b) => levelScore(a) - levelScore(b));
+  const netLevels = netSources.map((level, index) => buildNet(level, 700 + index)).sort((a, b) => levelScore(a) - levelScore(b));
+  const levels = longLevels
+    .concat(manualCrossLevels)
+    .concat(generatedCrossLevels.slice(0, 10))
+    .concat(generatedCrossLevels.slice(10, 20))
+    .concat(netLevels);
   const body = levels.map((level) => {
     const idioms = level.idioms.map((entry) =>
-      `      { answer: '${entry.answer}', clue: '${entry.clue}', line: ${entry.line}, start: ${entry.start}, cells: [${entry.cells.join(', ')}] }`
+      `      { answer: '${entry.answer}', clue: '${entry.clue}', line: ${entry.line}, start: ${entry.start}, cells: [${entry.cells.join(', ')}], hiddenClue: ${entry.hiddenClue ? 'true' : 'false'} }`
     ).join(',\n');
     const cells = level.cells.map((cell) => `{ row: ${cell.row}, col: ${cell.col} }`).join(', ');
     return `  {\n    kind: '${level.kind}',\n    title: '${level.title}',\n    hint: '${level.hint}',\n    solution: '${level.solution}',\n    mask: '${level.mask}',\n    bank: [${level.bank.map((char) => `'${char}'`).join(', ')}],\n    width: ${level.width},\n    height: ${level.height},\n    cells: [${cells}],\n    idioms: [\n${idioms}\n    ]\n  }`;
   }).join(',\n');
-  const source = `// WEAVE 关卡数据：成语链由人工挑选，空白与字池由 tools/build-levels.mjs 生成。\n// chain = 单条长链；cross = 两条链共享一个交点。\n// 0 = 已给出，1 = 空缺；每条成语的 cells 指向共享的格子编号。\n\nexport const LEVELS = [\n${body}\n];\n`;
+  const source = `// WEAVE 关卡数据：成语/俗语链由人工挑选，空白与字池由 tools/build-levels.mjs 生成。\n// chain = 单条长链；cross = 两条链共享一个交点；net = 一条横链与两条竖链织网。\n// 0 = 已给出，1 = 空缺；每条词句的 cells 指向共享的格子编号。\n\nexport const LEVELS = [\n${body}\n];\n`;
   writeFileSync(new URL('../src/levels.js', import.meta.url), source, 'utf8');
-  console.log(`生成 ${levels.length} 关（${longLevels.length} 单链 + ${crossLevels.length} 交叉）`);
+  console.log(`生成 ${levels.length} 关（${longLevels.length} 单链 + ${manualCrossLevels.length} 手工交叉 + ${generatedCrossLevels.length} 组合交叉 + ${netLevels.length} 织网）`);
 }
-
 build();

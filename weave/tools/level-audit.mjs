@@ -3,8 +3,6 @@
 import { PUZZLES, createState, isSolved, placeTile } from '../src/weave-core.js';
 
 let problems = 0;
-const answers = new Map();
-const clues = new Map();
 const signatures = new Map();
 const rows = [];
 
@@ -41,13 +39,15 @@ for (let index = 0; index < PUZZLES.length; index += 1) {
     }
   }
 
+  const levelAnswers = new Set();
+  const levelClues = new Set();
   for (const entry of puzzle.entries) {
     if ([...entry.answer].length < 4 || [...entry.answer].length > 8) { flags.push(`${entry.answer} 长度不在 4-8 个字`); problems += 1; }
     if (!entry.clue) { flags.push(`${entry.answer} 缺释义`); problems += 1; }
-    if (answers.has(entry.answer)) { flags.push(`成语 ${entry.answer} 与第 ${answers.get(entry.answer)} 关重复`); problems += 1; }
-    else answers.set(entry.answer, index);
-    if (clues.has(entry.clue)) { flags.push(`释义与第 ${clues.get(entry.clue)} 关重复`); problems += 1; }
-    else clues.set(entry.clue, index);
+    if (levelAnswers.has(entry.answer)) { flags.push(`本关重复词句 ${entry.answer}`); problems += 1; }
+    else levelAnswers.add(entry.answer);
+    if (levelClues.has(entry.clue)) { flags.push(`本关重复释义 ${entry.clue}`); problems += 1; }
+    else levelClues.add(entry.clue);
   }
 
   const required = puzzle.blanks.map((position) => puzzle.solution[position]);
@@ -59,7 +59,7 @@ for (let index = 0; index < PUZZLES.length; index += 1) {
   }
 
   const entryShows = puzzle.entries.map((entry) => entry.cells.some((position) => !puzzle.blanks.includes(position)));
-  if (entryShows.some((shown) => !shown)) { flags.push('有成语整条都是空白'); problems += 1; }
+  if (entryShows.some((shown) => !shown)) { flags.push('有词句整条都是空白'); problems += 1; }
 
   let state = createState(index);
   for (const position of puzzle.blanks) {
@@ -70,17 +70,18 @@ for (let index = 0; index < PUZZLES.length; index += 1) {
   }
   if (!isSolved(state)) { flags.push('无法通过放置全部正字完成'); problems += 1; }
 
-  const signature = puzzle.entries.map((entry) => entry.answer).join('>');
-  if (signatures.has(signature)) { flags.push(`链与第 ${signatures.get(signature)} 关重复`); problems += 1; }
+  const type = puzzle.kind === 'net' ? '织网' : puzzle.kind === 'cross' ? '交叉' : '长链';
+  const signature = type + ':' + puzzle.entries.map((entry) => entry.answer).join('>');
+  if (signatures.has(signature)) { flags.push(`与第 ${signatures.get(signature)} 关布局和答案重复`); problems += 1; }
   else signatures.set(signature, index);
 
   const blankCount = puzzle.blanks.length;
   const decoyCount = puzzle.bank.length - blankCount;
-  const difficulty = blankCount + decoyCount + (puzzle.kind === 'cross' ? 2 : 0);
+  const difficulty = blankCount + decoyCount + (puzzle.kind === 'net' ? 4 : puzzle.kind === 'cross' ? 2 : 0);
   rows.push({ index, title: puzzle.title, blanks: blankCount, decoys: decoyCount, difficulty });
   console.log(
-    `${String(index).padStart(2)}  ${puzzle.title.padEnd(5, '　')}  ` +
-    `${puzzle.kind === 'cross' ? '交叉' : '长链'} · 成语 ${puzzle.entries.length} · 空缺 ${blankCount} · 干扰 ${decoyCount} · 难度 ${difficulty}` +
+    `${String(index).padStart(2)}  ${puzzle.title.padEnd(6, '　')}  ` +
+    `${type} · 词句 ${puzzle.entries.length} · 空缺 ${blankCount} · 干扰 ${decoyCount} · 难度 ${difficulty}` +
     (flags.length ? `  ⚠ ${flags.join('；')}` : '')
   );
 }

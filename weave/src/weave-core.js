@@ -5,11 +5,12 @@ function buildPuzzle(config, index) {
   const blanks = [...config.mask].flatMap((flag, position) => flag === '1' ? [position] : []);
   const cells = config.cells ?? [...config.solution].map((char, position) => ({ row: 0, col: position }));
   const entries = config.idioms.map((entry, entryIndex) => {
-    const cellsForEntry = entry.cells ?? Array.from({ length: 4 }, (_, offset) => entry.start + offset);
+    const cellsForEntry = entry.cells ?? Array.from({ length: [...entry.answer].length }, (_, offset) => entry.start + offset);
     return {
       index: entryIndex,
       answer: entry.answer,
       clue: entry.clue,
+      hiddenClue: Boolean(entry.hiddenClue),
       line: entry.line ?? 0,
       start: entry.start ?? cellsForEntry[0],
       cells: cellsForEntry,
